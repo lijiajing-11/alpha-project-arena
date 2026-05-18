@@ -1,32 +1,44 @@
+"""ARA - Arena Star Tracker."""
+import os
+
 from setuptools import setup, find_packages
+
+
+HERE = os.path.abspath(os.path.dirname(__file__))
+
+with open(os.path.join(HERE, "README.md"), encoding="utf-8") as f:
+    long_description = f.read()
 
 setup(
     name="ara",
     version="0.1.0",
-    description="Arena Star Tracker — track and compare GitHub Stars from your terminal",
-    long_description=open("README.md", encoding="utf-8").read(),
+    description="ARA - Arena Star Tracker: Monitor and compare GitHub Stars",
+    long_description=long_description,
     long_description_content_type="text/markdown",
-    author="Alpha Corp",
-    author_email="",
     url="https://github.com/li1050109098/alpha-project",
-    packages=find_packages(),
+    author="A-Tech Inc.",
+    author_email="dev@alpha-project.dev",
+    license="MIT",
+    classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "Topic :: Software Development :: Version Control :: Git",
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Operating System :: OS Independent",
+    ],
     python_requires=">=3.10",
+    packages=find_packages(exclude=["tests"]),
     entry_points={
         "console_scripts": [
             "ara=ara.cli:main",
         ],
     },
-    classifiers=[
-        "Development Status :: 3 - Alpha",
-        "Environment :: Console",
-        "Intended Audience :: Developers",
-        "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
-        "Topic :: Software Development :: Version Control",
-        "Topic :: Utilities",
-    ],
-    license="MIT",
-    keywords="github stars tracker cli arena battle",
+    project_urls={
+        "Source": "https://github.com/li1050109098/alpha-project",
+        "Bug Reports": "https://github.com/li1050109098/alpha-project/issues",
+    },
 )

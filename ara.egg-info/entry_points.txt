@@ -1,0 +1,2 @@
+[console_scripts]
+ara = ara.cli:main

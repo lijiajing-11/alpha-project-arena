@@ -1,7 +1,7 @@
 """Tests for `ara watch` command (Task 003)."""
 
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 # --- Unit tests for the watch display logic ---
 

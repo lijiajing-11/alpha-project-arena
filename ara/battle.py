@@ -7,7 +7,6 @@ Provides formatting functions for:
 - Winner declaration
 """
 
-import math
 from typing import List, Tuple
 
 # ANSI color codes
@@ -108,11 +107,11 @@ def render_box(content: str) -> str:
         Content wrapped in box-drawing characters.
     """
     lines = content.strip("\n").split("\n")
-    max_len = max(len(l) for l in lines)
+    max_len = max(len(line) for line in lines)
 
     top = f"╔{'═' * (max_len + 2)}╗"
     bottom = f"╚{'═' * (max_len + 2)}╝"
-    middle = "\n".join(f"║ {l}{' ' * (max_len - len(l))} ║" for l in lines)
+    middle = "\n".join(f"║ {line}{' ' * (max_len - len(line))} ║" for line in lines)
 
     return f"{top}\n{middle}\n{bottom}"
 

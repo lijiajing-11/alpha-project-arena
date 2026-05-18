@@ -16,12 +16,9 @@ from ara.display import (
     format_watch_summary,
     format_multi_watch,
     compute_delta,
-    color_for_delta,
-    CLEAR,
     BOLD,
     CYAN,
     RESET,
-    GREEN,
 )
 from ara.battle import format_battle
 
@@ -59,9 +56,13 @@ def run_battle(repos: list, client: GitHubClient) -> str:
 
 
 def cmd_stars(args: argparse.Namespace, client: GitHubClient) -> None:
-    """Handle `ara stars <repo>` command."""
-    stars = client.get_stars(args.repo)
-    print(f"★ {args.repo}: {stars:,} stars")
+    """Handle `ara stars <repo> [<repo> ...]` command."""
+    for repo in args.repos:
+        stars = client.get_stars(repo)
+        if stars is not None:
+            print(f"★ {repo}: {stars:,} stars")
+        else:
+            print(f"✗ {repo}: could not fetch")
 
 
 def cmd_watch(args: argparse.Namespace, client: GitHubClient) -> None:
@@ -122,9 +123,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
-    # ara stars <repo>
-    stars_parser = subparsers.add_parser("stars", help="Fetch star count for a repo")
-    stars_parser.add_argument("repo", help="Repository in owner/name format")
+    # ara stars <repo> [<repo> ...]
+    stars_parser = subparsers.add_parser("stars", help="Fetch star count for repo(s)")
+    stars_parser.add_argument("repos", nargs="+", help="Repository in owner/name format")
     stars_parser.set_defaults(func=cmd_stars)
 
     # ara watch <repo> [<repo> ...]

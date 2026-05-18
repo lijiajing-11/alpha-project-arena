@@ -1,6 +1,6 @@
 """Tests for `ara battle` command (Task 004)."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 # --- Unit tests for battle display logic ---
 

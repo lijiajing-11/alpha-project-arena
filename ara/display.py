@@ -7,7 +7,6 @@ Provides formatting functions for:
 - Multi-repo watch display
 """
 
-import time
 from datetime import datetime
 
 # ANSI color codes
