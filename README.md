@@ -1,139 +1,248 @@
-<div align="center">
 
-# ★ ARA ★ — Arena Star Tracker
+<p align="center">
+  <img src="https://img.shields.io/badge/ARA-Arena%20Star%20Tracker-8A2BE2?style=for-the-badge&logo=github&logoColor=white" alt="ARA Banner"/>
+</p>
 
-**Battle your repos. Dominate the leaderboard.**
+<h1 align="center">⚡ ARA — Arena Star Tracker</h1>
 
-[![GitHub Stars](https://img.shields.io/github/stars/li1050109098/alpha-project?style=for-the-badge&logo=github&label=Stars)](https://github.com/li1050109098/alpha-project)
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python)](https://python.org)
-[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
-[![CI](https://img.shields.io/github/actions/workflow/status/li1050109098/alpha-project/ci.yml?style=for-the-badge&logo=githubactions)](https://github.com/li1050109098/alpha-project/actions)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/li1050109098/alpha-project?style=for-the-badge)
+<p align="center">
+  <b>Track GitHub Stars from your terminal. Compare repos. Win the arena.</b>
+</p>
 
-```
-╔══════════════════════════════════════════════╗
-║               ★  A R A  ★                   ║
-║          Arena Star Tracker v0.1.0            ║
-╚══════════════════════════════════════════════╝
-```
-
-</div>
+<p align="center">
+  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=flat&logo=python&logoColor=white" alt="Python 3.10+"/></a>
+  <a href="#"><img src="https://img.shields.io/badge/version-v0.1.0--alpha-8A2BE2?style=flat" alt="Version"/></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-22c55e?style=flat" alt="MIT"/></a>
+  <a href="#"><img src="https://img.shields.io/github/stars/li1050109098/alpha-project?style=flat&label=stars&color=facc15" alt="Stars"/></a>
+  <a href="#"><img src="https://img.shields.io/badge/status-alpha-f97316?style=flat" alt="Alpha"/></a>
+  <br/>
+  <a href="#-quick-start"><img src="https://img.shields.io/badge/▶️-Quick%20Start-22c55e?style=flat" alt="Quick Start"/></a>
+  <a href="#-commands"><img src="https://img.shields.io/badge/📖-Commands-3b82f6?style=flat" alt="Commands"/></a>
+  <a href="#-development"><img src="https://img.shields.io/badge/🧪-Development-8A2BE2?style=flat" alt="Development"/></a>
+</p>
 
 ---
 
 ## 🎯 What is ARA?
 
-ARA is a **terminal-based GitHub Star tracker** that lets you:
-
-- 📊 **Watch** any repo's stars in real-time
-- ⚔️ **Battle** repos side-by-side and declare a winner
-- 🏆 **Track** your growth against competitors
-- 📈 **Export** data for your README badges
-
-Born from the competitive spirit of open source — because **every star tells a story**.
-
-## ✨ Quick Start
+**ARA** is a sleek CLI tool that monitors **GitHub Stars** in real-time from your terminal.
 
 ```bash
-# Install
-pip install ara
+# Get star counts instantly
+ara stars tensorflow/tensorflow
 
-# Check your stars
-ara stars li1050109098/alpha-project
+# Watch a repo grow in real-time
+ara watch python/cpython
 
-# Battle two repos
-ara battle li1050109098/alpha-project facebook/react
+# Compare two repos head-to-head
+ara battle facebook/react vuejs/core
 
-# Watch a repo in real-time
-ara watch li1050109098/alpha-project
+# Get detailed repo info
+ara info rust-lang/rust
 ```
 
-## 🚀 Commands
+### ✨ Highlights
 
-| Command | Description |
-|---------|-------------|
-| `ara stars <repo...>` | Get star count for one or more repos |
-| `ara watch <repo...>` | Monitor repos in real-time (30s interval) |
-| `ara battle <repo...>` | Side-by-side comparison with leaderboard |
-| `ara info <repo>` | Detailed repo information |
-| `ara leaderboard` | View ranked leaderboard |
+- **🍃 Zero external dependencies** — Pure Python 3.10+, stdlib only
+- **⚡ Real-time watching** — Live polling with color-coded deltas
+- **🎨 Beautiful terminal output** — ANSI colors, ASCII art, emoji indicators
+- **🏆 Arena Battle mode** — Side-by-side comparison with winner declaration
+- **📊 Rate-limit aware** — Caches results, shows remaining API calls
+- **🔧 Extensible** — Info, leaderboard, and more commands coming
 
-## 🎮 Battle Mode
+### 🏁 Who's it for?
 
-The flagship feature. Run comparison and see who's winning:
-
-```
-╔══════════════════════════════════════════════╗
-║          ★  A R E N A   B A T T L E  ★     ║
-╠══════════════════════════════════════════════╣
-║  alpha-project     ▓▓▓▓▓▓▓▓▓▓▓▓░░░░  1,234 ★  ← WINNER! 🏆
-║  beta-project      ▓▓▓▓▓▓░░░░░░░░░░    567 ★  ║
-╚══════════════════════════════════════════════╝
-```
-
-## 🔧 Requirements
-
-- Python 3.10 or higher
-- No external dependencies! (stdlib only — `urllib`, `argparse`, `time`)
-
-## 📦 Installation
-
-### From source
-
-```bash
-git clone https://github.com/li1050109098/alpha-project.git
-cd alpha-project
-pip install -e .
-```
-
-### Authentication
-
-For higher API rate limits (5,000/hr vs 60/hr), set your GitHub token:
-
-```bash
-export GITHUB_TOKEN="ghp_xxxxxxxxxxxx"
-```
-
-Get a token at: [GitHub Settings → Tokens](https://github.com/settings/tokens)
-
-## 🏆 Why ARA?
-
-In the open source arena, **visibility drives growth**. ARA helps you:
-
-1. **Track competitors** — Know exactly how you stack up
-2. **Celebrate milestones** — Watch your star count climb in real-time
-3. **Motivate your team** — Nothing drives contribution like a leaderboard
-4. **Prove your impact** — Star growth = community validation
-
-## 🤝 Contributing
-
-We welcome contributions! Here's how to help:
-
-1. Fork the repo
-2. Create a feature branch: `git checkout -b feature/amazing`
-3. Commit: `git commit -m 'Add amazing feature'`
-4. Push: `git push origin feature/amazing`
-5. Open a Pull Request
-
-### Development
-
-```bash
-pip install -e ".[dev]"
-python -m ara --help
-```
-
-## 📜 License
-
-MIT — use it, share it, battle with it.
+Indie devs launching a new OSS project, startup teams tracking their GitHub presence, hackathon participants, and anyone who loves watching those ⭐ numbers climb.
 
 ---
 
-<div align="center">
+## 🚀 Quick Start
 
-**⭐ Star the repo and join the arena! ⭐**
+```bash
+# Clone and run (no install needed)
+git clone https://github.com/li1050109098/alpha-project.git
+cd alpha-project
+python -m ara stars python/cpython
+```
 
-[![Star History](https://img.shields.io/github/stars/li1050109098/alpha-project?style=social&label=Star)](https://github.com/li1050109098/alpha-project)
+**That's it.** No pip install. No config files. No API tokens. No databases. Two commands and you're tracking Stars.
 
-*Built with ❤️ by Alpha Corp*
+> ⚠️ **Note:** Without a `GITHUB_TOKEN` environment variable, GitHub's unauthenticated API limit is **60 requests per hour**. Set `export GITHUB_TOKEN=ghp_xxx` in your shell for 5,000/hr.
 
-</div>
+---
+
+## 📖 Commands
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| `ara stars <repo...>` | Get current star count for one or more repos | `ara stars owner/project` |
+| `ara watch <repo...>` | Watch repos in real-time (auto-refresh) | `ara watch owner/project -i 10` |
+| `ara battle <repo...>` | Compare repos side-by-side, winner declared | `ara battle teamA/lib teamB/lib` |
+| `ara info <repo>` | Show detailed repo info (stars, forks, language) | `ara info owner/project` |
+| `ara leaderboard` | Show ranked leaderboard of tracked repos | `ara leaderboard` |
+
+### `ara stars` — Quick check
+
+```
+$ python -m ara stars python/cpython tensorflow/tensorflow
+
+    ╔══════════════════════════════════════════════╗
+    ║               ★  A R A  ★                   ║
+    ║          Arena Star Tracker v0.1.0            ║
+    ╚══════════════════════════════════════════════╝
+
+  python/cpython
+    ★ 63,475 stars
+    Interpreted programming language
+
+  tensorflow/tensorflow
+    ★ 187,634 stars
+    An Open Source Machine Learning Framework
+```
+
+### `ara watch` — Real-time monitoring
+
+```
+$ python -m ara watch python/cpython -i 10
+
+  Watching python/cpython
+  Refreshing every 10s | Press Ctrl+C to stop
+
+  NAME                          STARS       Δ    GROWTH
+  ─────────────────────────────────────────────────────
+  python/cpython               ★ 63,475     0         0
+
+  API calls remaining: 58
+```
+
+Press `Ctrl+C` to stop watching and see a session summary.
+
+### `ara battle` — Arena showdown
+
+```
+$ python -m ara battle facebook/react vuejs/core
+
+    ╔══════════════════════════════════════════════╗
+    ║          ★  A R E N A   B A T T L E  ★      ║
+    ╠══════════════════════════════════════════════╣
+    ║  facebook/react     ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░░░░  ★ 230,000  ← WINNER! 🏆
+    ║  vuejs/core         ▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░░░░  ★ 47,000
+    ╠══════════════════════════════════════════════╣
+    ║  facebook/react wins by 183,000 ★!           ║
+    ╚══════════════════════════════════════════════╝
+
+  API calls remaining: 57
+```
+
+### `ara info` — Deep dive
+
+```
+$ python -m ara info rust-lang/rust
+
+    ╔══════════════════════════════════════════════╗
+    ║               ★  A R A  ★                   ║
+    ╚══════════════════════════════════════════════╝
+
+  rust-lang/rust
+  ────────────────────────────────────────
+    Stars:      ★ 101,000
+    Forks:      ★ 13,200
+    Language:   Rust
+    Issues:     5,432
+    About:      Empowering everyone to build reliable and efficient software.
+
+  API calls remaining: 56
+
+  💡 Want to compare?
+    ara battle rust-lang/rust <other-repo>
+```
+
+---
+
+## 🔧 Development
+
+```bash
+# Clone
+git clone https://github.com/li1050109098/alpha-project.git
+cd alpha-project
+
+# Run directly
+python -m ara stars owner/project
+
+# Run tests
+python -m pytest tests/ -v
+
+# Run a specific test
+python -m pytest tests/test_battle.py -v
+```
+
+### Project Structure
+
+```
+alpha-project/
+├── ara/                  # Package source
+│   ├── __init__.py       # Package init, __version__
+│   ├── __main__.py       # Entry point for `python -m ara`
+│   ├── cli.py            # CLI argument parser & all commands
+│   ├── console.py        # Terminal rendering helpers
+│   └── core.py           # Data models & GitHub API client
+├── tests/                # Test suite
+│   ├── __init__.py
+│   ├── conftest.py       # Test fixtures
+│   ├── test_battle.py    # Battle command tests
+│   └── test_watch.py     # Watch command tests
+├── setup.py              # Package metadata
+├── LICENSE               # MIT license
+└── README.md             # You are here! 🎉
+```
+
+---
+
+## 🚢 Installing
+
+```bash
+# From source (recommended for now)
+pip install -e .
+
+# Then use the `ara` command directly
+ara stars python/cpython
+```
+
+---
+
+## ☁️ Rate Limits
+
+GitHub's API has rate limits:
+
+| Auth | Limit | How to set |
+|------|-------|------------|
+| None | 60 req/hr | Just run it |
+| Token | 5,000 req/hr | `export GITHUB_TOKEN=ghp_xxx` |
+
+ARA automatically shows your remaining API calls and caches results for 60 seconds to reduce unnecessary requests.
+
+---
+
+## 🤝 Contributing
+
+All contributions welcome!
+
+1. 🍴 Fork the repo
+2. 🌿 `git checkout -b feat/your-idea`
+3. 🛠️ Make changes
+4. ✅ `python -m pytest tests/ -v`
+5. 📬 Open a Pull Request
+
+**Ideas:** Web UI, Slack/Discord integration, historical charts, GitHub action badge generator, export to CSV/JSON, Grafana datasource, support for private repos, email notifications...
+
+---
+
+## 📝 License
+
+MIT © [li1050109098](https://github.com/li1050109098)
+
+---
+
+<p align="center">
+  <sub>Built with ❤️ by <b>Α-Tech Inc.</b> — <i>"Watch, Compete, Win."</i></sub>
+</p>

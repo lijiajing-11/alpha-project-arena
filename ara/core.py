@@ -1,172 +1,115 @@
-"""Core data models and GitHub API client for ARA."""
+"""Core data model for ARA - Arena Star Tracker.
 
+Provides:
+- star_cache: In-memory cache for star counts (60s TTL)
+- GitHubClient: Fetches star counts from GitHub API
+"""
+
+import time
 import json
 import os
-import time
 import urllib.request
 import urllib.error
 
+# ---------------------------------------------------------------------------
+# In-memory cache
+# ---------------------------------------------------------------------------
 
-# ─── Data Models ────────────────────────────────────────────────────────────
+star_cache: dict = {}
+"""Cache dict: repo_name -> {"count": int, "timestamp": float}.
+60-second TTL enforced on reads. Populated by GitHubClient."""
+
+CACHE_TTL = 60  # seconds
+
+
+def get_cached_stars(repo: str) -> int | None:
+    """Return cached star count if still fresh, else None."""
+    entry = star_cache.get(repo)
+    if entry is None:
+        return None
+    if time.time() - entry["timestamp"] > CACHE_TTL:
+        del star_cache[repo]
+        return None
+    return entry["count"]
+
+
+def set_cached_stars(repo: str, count: int) -> None:
+    """Store a star count in the cache."""
+    star_cache[repo] = {"count": count, "timestamp": time.time()}
+
+
+# ---------------------------------------------------------------------------
+# Data models
+# ---------------------------------------------------------------------------
 
 class Repo:
-    """Represents a GitHub repository with star tracking data."""
+    """Simple repo representation."""
 
-    def __init__(self, full_name: str, stars: int = 0, description: str = ""):
-        self.full_name = full_name  # e.g. "owner/repo"
-        self.stars = stars
-        self.description = description
-        self.previous_stars = 0
-        self.baseline_stars = 0
-        self.last_checked = 0.0
-
-    @property
-    def delta(self) -> int:
-        return self.stars - self.previous_stars
-
-    @property
-    def total_growth(self) -> int:
-        return self.stars - self.baseline_stars
-
-    def update(self, stars: int):
-        self.previous_stars = self.stars
-        self.stars = stars
-        self.last_checked = time.time()
-
-    def display_name(self, max_len: int = 20) -> str:
-        name = self.full_name
-        return name if len(name) <= max_len else name[:max_len - 3] + "..."
+    def __init__(self, full_name: str):
+        self.full_name = full_name
+        self.stars: int = 0
 
     def __repr__(self) -> str:
-        return f"Repo({self.full_name}, ★{self.stars})"
+        return f"Repo({self.full_name}, ★ {self.stars})"
 
 
 class StarSnapshot:
-    """A point-in-time snapshot of star counts for multiple repos."""
+    """A snapshot of a repo's star count at a point in time."""
 
-    def __init__(self, repos: list[Repo], timestamp: float | None = None):
-        self.repos = repos
+    def __init__(self, repo: str, stars: int, timestamp: float | None = None):
+        self.repo = repo
+        self.stars = stars
         self.timestamp = timestamp or time.time()
 
-    def sorted_by_stars(self) -> list[Repo]:
-        return sorted(self.repos, key=lambda r: r.stars, reverse=True)
+    def delta(self, other: "StarSnapshot") -> int:
+        """Star difference from another snapshot."""
+        return self.stars - other.stars
 
-    def leaderboard(self) -> list[tuple[int, Repo]]:
-        """Return list of (rank, repo) tuples, 1-indexed."""
-        return list(enumerate(self.sorted_by_stars(), start=1))
+    def __repr__(self) -> str:
+        return f"StarSnapshot({self.repo}, ★ {self.stars} @ {self.timestamp})"
 
 
-# ─── GitHub API Client ─────────────────────────────────────────────────────
+# ---------------------------------------------------------------------------
+# GitHub API Client
+# ---------------------------------------------------------------------------
+
+GITHUB_API = "https://api.github.com/repos"
+
 
 class GitHubClient:
-    """Minimal GitHub API client for fetching repository star counts."""
-
-    API_BASE = "https://api.github.com"
+    """Client for fetching GitHub star counts."""
 
     def __init__(self, token: str | None = None):
         self.token = token or os.environ.get("GITHUB_TOKEN")
-        self._cache: dict[str, tuple[int, float]] = {}  # repo -> (stars, timestamp)
-        self.cache_ttl = 60  # seconds
-        self.rate_limit_remaining = -1
-        self.rate_limit_reset = 0
 
-    def _get_headers(self) -> dict[str, str]:
-        headers = {
-            "Accept": "application/vnd.github.v3+json",
-            "User-Agent": "ARA-CLI/0.1.0",
-        }
+    def _make_request(self, url: str) -> dict:
+        """Make a GET request to the GitHub API."""
+        req = urllib.request.Request(url)
+        req.add_header("Accept", "application/vnd.github.v3+json")
+        req.add_header("User-Agent", "ARA-CLI/0.1.0")
         if self.token:
-            headers["Authorization"] = f"token {self.token}"
-        return headers
-
-    def _is_cache_valid(self, repo_name: str) -> bool:
-        if repo_name not in self._cache:
-            return False
-        _, cached_at = self._cache[repo_name]
-        return (time.time() - cached_at) < self.cache_ttl
-
-    def get_stars(self, repo_name: str) -> int | None:
-        """Fetch star count for a repo. Returns None on error."""
-        # Check cache first
-        if self._is_cache_valid(repo_name):
-            return self._cache[repo_name][0]
-
-        url = f"{self.API_BASE}/repos/{repo_name}"
-        req = urllib.request.Request(url, headers=self._get_headers())
+            req.add_header("Authorization", f"Bearer {self.token}")
 
         try:
             with urllib.request.urlopen(req, timeout=10) as resp:
-                data = json.loads(resp.read().decode())
-                stars = data.get("stargazers_count", 0)
-                desc = data.get("description", "")
-
-                # Parse rate limit headers
-                self.rate_limit_remaining = int(
-                    resp.headers.get("X-RateLimit-Remaining", -1)
-                )
-                self.rate_limit_reset = int(
-                    resp.headers.get("X-RateLimit-Reset", 0)
-                )
-
-                # Cache it
-                self._cache[repo_name] = (stars, time.time())
-                return stars
-
+                return json.loads(resp.read().decode("utf-8"))
         except urllib.error.HTTPError as e:
             if e.code == 404:
-                print(f"  ⚠  Repo '{repo_name}' not found (404)")
+                raise ValueError(f"Repository not found: {url.rsplit('/', 2)[-2]}/{url.rsplit('/', 1)[-1]}")
             elif e.code == 403:
-                print(f"  ⚠  Rate limited! Reset at {self._reset_time_str()}")
+                raise RuntimeError("GitHub API rate limit exceeded. Set GITHUB_TOKEN for higher limits.")
             else:
-                print(f"  ⚠  HTTP {e.code} for '{repo_name}'")
-            return None
-        except urllib.error.URLError as e:
-            print(f"  ⚠  Network error for '{repo_name}': {e.reason}")
-            return None
-        except Exception as e:
-            print(f"  ⚠  Unexpected error for '{repo_name}': {e}")
-            return None
+                raise RuntimeError(f"GitHub API error {e.code}: {e.reason}")
 
-    def get_repo_info(self, repo_name: str) -> dict | None:
-        """Fetch full repo info. Returns dict with stars, description, etc."""
-        url = f"{self.API_BASE}/repos/{repo_name}"
-        req = urllib.request.Request(url, headers=self._get_headers())
+    def get_stars(self, repo: str) -> int:
+        """Fetch star count for a repo (owner/name format)."""
+        # Check cache first
+        cached = get_cached_stars(repo)
+        if cached is not None:
+            return cached
 
-        try:
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                data = json.loads(resp.read().decode())
-                self.rate_limit_remaining = int(
-                    resp.headers.get("X-RateLimit-Remaining", -1)
-                )
-                self.rate_limit_reset = int(
-                    resp.headers.get("X-RateLimit-Reset", 0)
-                )
-                return {
-                    "stars": data.get("stargazers_count", 0),
-                    "description": data.get("description", ""),
-                    "language": data.get("language", ""),
-                    "forks": data.get("forks_count", 0),
-                    "open_issues": data.get("open_issues_count", 0),
-                    "full_name": data.get("full_name", repo_name),
-                }
-        except urllib.error.HTTPError:
-            return None
-
-    def invalidate_cache(self, repo_name: str | None = None):
-        """Clear cache for a specific repo or all repos."""
-        if repo_name:
-            self._cache.pop(repo_name, None)
-        else:
-            self._cache.clear()
-
-    def _reset_time_str(self) -> str:
-        if self.rate_limit_reset:
-            return time.strftime(
-                "%H:%M:%S", time.localtime(self.rate_limit_reset)
-            )
-        return "unknown"
-
-    def rate_limit_status(self) -> str:
-        if self.rate_limit_remaining >= 0:
-            return f"API calls remaining: {self.rate_limit_remaining}"
-        return "API calls: unknown (no token? 60/hr limit)"
+        url = f"{GITHUB_API}/{repo}"
+        data = self._make_request(url)
+        stars = data.get("stargazers_count", 0)
+        set_cached_stars(repo, stars)
+        return stars

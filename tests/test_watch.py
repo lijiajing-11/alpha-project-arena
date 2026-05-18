@@ -7,18 +7,18 @@ from unittest.mock import MagicMock, patch
 
 
 def test_delta_shows_positive_growth():
-    """Delta display should show +N for growth."""
+    """Delta display should show +N for growth (current > previous)."""
     from ara.display import format_delta
 
-    result = format_delta(100, 105)
+    result = format_delta(105, 100)
     assert "+5" in result, f"Expected '+5' in delta, got: {result}"
 
 
 def test_delta_shows_negative_growth():
-    """Delta display should show -N for loss."""
+    """Delta display should show -N for loss (current < previous)."""
     from ara.display import format_delta
 
-    result = format_delta(105, 100)
+    result = format_delta(100, 105)
     assert "-5" in result, f"Expected '-5' in delta, got: {result}"
 
 
@@ -80,11 +80,11 @@ def test_watch_updates_delta_on_new_fetch():
     """Watch should compute delta between consecutive fetches."""
     from ara.display import compute_delta
 
-    # Simulate two consecutive fetches
-    delta = compute_delta(100, 105)
+    # Simulate two consecutive fetches: current=105, previous=100
+    delta = compute_delta(105, 100)
     assert delta == 5, f"Expected delta 5, got: {delta}"
 
-    delta = compute_delta(100, 90)
+    delta = compute_delta(90, 100)
     assert delta == -10, f"Expected delta -10, got: {delta}"
 
 

@@ -1,5 +1,5 @@
-"""Entry point for `python -m ara`."""
+"""Allow `python -m ara` to invoke the CLI."""
 from ara.cli import main
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
