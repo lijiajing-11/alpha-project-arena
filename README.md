@@ -246,3 +246,7 @@ MIT © [li1050109098](https://github.com/li1050109098)
 <p align="center">
   <sub>Built with ❤️ by <b>Α-Tech Inc.</b> — <i>"Watch, Compete, Win."</i></sub>
 </p>
+
+## Updates
+- Arena running
+
