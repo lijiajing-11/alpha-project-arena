@@ -1,0 +1,7 @@
+  [92m★[0m tiangolo/fastapi: [1m98,291[0m stars
+  [92m★[0m pallets/flask: [1m71,552[0m stars
+
+  [1mMini Leaderboard[0m
+  ────────────────────────────────────────
+  🥇 tiangolo/fastapi          98,291 ★
+  🥈 pallets/flask             71,552 ★

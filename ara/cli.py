@@ -18,6 +18,8 @@ from ara.display import (
     compute_delta,
     BOLD,
     CYAN,
+    GREEN,
+    RED,
     RESET,
 )
 from ara.battle import format_battle
@@ -60,9 +62,23 @@ def cmd_stars(args: argparse.Namespace, client: GitHubClient) -> None:
     for repo in args.repos:
         stars = client.get_stars(repo)
         if stars is not None:
-            print(f"★ {repo}: {stars:,} stars")
+            print(f"  {GREEN}★{RESET} {repo}: {BOLD}{stars:,}{RESET} stars")
         else:
-            print(f"✗ {repo}: could not fetch")
+            print(f"  {RED}✗{RESET} {repo}: could not fetch")
+
+    if len(args.repos) > 1:
+        # Show a mini-leaderboard
+        print(f"\n  {BOLD}Mini Leaderboard{RESET}")
+        print(f"  {'─' * 40}")
+        results = []
+        for repo in args.repos:
+            stars = client.get_stars(repo)
+            if stars is not None:
+                results.append((repo, stars))
+        results.sort(key=lambda x: x[1], reverse=True)
+        for i, (repo, stars) in enumerate(results, 1):
+            medal = {1: "🥇", 2: "🥈", 3: "🥉"}.get(i, f"  {i}.")
+            print(f"  {medal} {repo:<25} {stars:>6,} ★")
 
 
 def cmd_watch(args: argparse.Namespace, client: GitHubClient) -> None:

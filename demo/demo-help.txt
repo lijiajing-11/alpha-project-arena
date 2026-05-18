@@ -1,0 +1,15 @@
+usage: ara [-h] [--version] {stars,watch,battle} ...
+
+ARA - Arena Star Tracker: Monitor and compare GitHub Stars
+
+positional arguments:
+  {stars,watch,battle}  Available commands
+    stars               Fetch star count for repo(s)
+    watch               Watch repos in real-time
+    battle              Battle repos side-by-side
+
+options:
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+
+Battle your way to the top!
