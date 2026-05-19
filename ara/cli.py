@@ -73,6 +73,8 @@ def _cmd_insight_wrapper(args: argparse.Namespace, client: GitHubClient) -> None
     if len(repos) == 1:
         cmd_insight(repos[0], client=client, as_json=as_json, show_trend=show_trend)
     else:
+        if show_trend:
+            print("  --trend is only supported for single-repo insight, ignoring for compare mode.")
         cmd_insight_compare(repos, client=client, as_json=as_json)
 
 

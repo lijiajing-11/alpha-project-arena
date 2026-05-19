@@ -142,3 +142,36 @@ def test_battle_command_integration(MockClient):
     assert mock_instance.get_stars.call_count == 2
     assert "owner/alpha" in result
     assert "owner/beta" in result
+
+
+# ===========================================================================
+# Edge case tests for uncovered lines
+# ===========================================================================
+
+
+def test_make_bar_zero_max():
+    """make_bar with max_stars=0 should produce all-empty bar."""
+    from ara.battle import make_bar
+    bar = make_bar(100, 0, max_width=20)
+    assert bar.count("▓") == 0
+    assert "100" in bar
+
+
+def test_declare_winner_empty():
+    """declare_winner with empty list returns message."""
+    from ara.battle import declare_winner
+    assert declare_winner([]) == "No repos in battle!"
+
+
+def test_format_battle_tie_renders_draw():
+    """format_battle with tied repos should include 'draw' or 'Tie'."""
+    from ara.battle import format_battle
+    result = format_battle([("repo/a", 500), ("repo/b", 500)])
+    assert "draw" in result.lower() or "tie" in result.lower()
+
+
+def test_format_battle_empty():
+    """format_battle with empty list returns usage message."""
+    from ara.battle import format_battle
+    result = format_battle([])
+    assert "Usage" in result or "No repos" in result

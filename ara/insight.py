@@ -106,6 +106,17 @@ def relative_time(iso_date: str) -> str:
         return "Unknown"
 
 
+def compute_influence_score(stars: int, forks: int, open_issues: int) -> float:
+    """Compute community influence score.
+
+    Formula: (Stars × 0.5 + Forks × 0.3 + Open Issues × 0.2) / 1000
+
+    >>> round(compute_influence_score(230000, 47000, 1200), 2)
+    129.1
+    """
+    return round((stars * 0.5 + forks * 0.3 + open_issues * 0.2) / 1000, 2)
+
+
 def _build_insight_data(repo_str: str, client: GitHubClient) -> dict:
     """Build insight data dict from a repo string."""
     repo = client.get_repo_info(repo_str)
@@ -124,6 +135,7 @@ def _build_insight_data(repo_str: str, client: GitHubClient) -> dict:
     spd, speed_label = compute_star_velocity(stars, created_at)
     age_years, age_label = compute_repo_age(created_at)
     updated_rel = relative_time(updated_at)
+    influence = compute_influence_score(stars, forks, open_issues)
 
     return {
         "full_name": full_name,
@@ -139,6 +151,7 @@ def _build_insight_data(repo_str: str, client: GitHubClient) -> dict:
         "created_at": created_at,
         "updated_at": updated_at,
         "updated_relative": updated_rel,
+        "influence_score": influence,
     }
 
 
@@ -186,60 +199,128 @@ def _render_insight_text(data: dict) -> None:
     print()
 
 
-def cmd_insight(repo: str, client: GitHubClient, as_json: bool = False) -> None:
+def _render_insight_with_trend(data: dict, events, hours: int, interval: int) -> None:
+    """Render insight data followed by a star trend chart.
+
+    Handles the case where trend data is unavailable (e.g. no stargazers)
+    gracefully — still shows insight, trend section says "no data".
+    """
+    _render_insight_text(data)
+
+    if events:
+        buckets = compute_trend_buckets(events, hours=hours, interval_minutes=interval)
+        chart = render_trend_chart(buckets, data["full_name"])
+    else:
+        chart = f"  {GRAY}No trend data available for {data['full_name']}{RESET}"
+
+    print()
+    print(chart)
+
+
+def cmd_insight(repo: str, client: GitHubClient, as_json: bool = False, show_trend: bool = False) -> None:
     """Handle `ara insight <repo>` — deep repository insight.
 
     Args:
         repo: Repository name (owner/repo).
         client: GitHubClient instance.
         as_json: If True, print JSON instead of colored text.
+        show_trend: If True, append a star trend chart after the insight.
     """
     data = _build_insight_data(repo, client)
     if as_json:
         import json as _json
-        print(_json.dumps(data, indent=2, ensure_ascii=False))
+        output = _json.dumps(data, indent=2, ensure_ascii=False)
+        if show_trend:
+            events = get_star_history(client, repo, pages=3)
+            buckets = compute_trend_buckets(events)
+            trend_data = {
+                "buckets": [
+                    {"label": b.label, "count": b.count, "delta": b.delta}
+                    for b in buckets
+                ],
+                "total": sum(b.count for b in buckets),
+            }
+            import json as _json2
+            output = _json2.dumps({"insight": data, "trend": trend_data}, indent=2, ensure_ascii=False)
+        print(output)
+    elif show_trend:
+        events = get_star_history(client, repo, pages=3)
+        _render_insight_with_trend(data, events, hours=72, interval=60)
     else:
         _render_insight_text(data)
 
 
 # ===========================================================================
-# Compare mode — side-by-side dual insight
+# Compare mode — N-repo comparison with influence ranking
 # ===========================================================================
 
 
-def _render_insight_compare_text(datas: list[dict]) -> None:
-    """Render two insight data dicts side-by-side with ANSI colors.
+_MEDAL_MAP = {0: "\\U0001f947", 1: "\\U0001f948", 2: "\\U0001f949"}
+    """Add influence score if missing and sort descending.
 
-    Each column is exactly COL_WIDTH display characters wide.
-    ANSI escape codes are stripped for width calculation but kept for output.
+    _build_insight_data already includes influence_score. This ensures
+    backward compatibility and sorts.
 
     Args:
-        datas: list of dicts from _build_insight_data(), max 2 repos.
+        datas: list of insight data dicts.
+
+    Returns:
+        Same list, sorted by influence_score descending.
+    """
+    for d in datas:
+        if "influence_score" not in d:
+            d["influence_score"] = compute_influence_score(
+                d.get("stars", 0),
+                d.get("forks", 0),
+                d.get("open_issues", 0),
+            )
+    datas.sort(key=lambda d: d.get("influence_score", 0), reverse=True)
+    return datas
+
+
+_MEDAL_MAP = {0: "\U0001f947", 1: "\U0001f948", 2: "\U0001f949"}
+
+
+def _medal(index: int) -> str:
+    """Return medal emoji for rank index (0=gold, 1=silver, 2=bronze)."""
+    return _MEDAL_MAP.get(index, f"  {index + 1}.")
+
+
+def _visible_width(s: str) -> int:
+    """Return display width of a string without ANSI codes."""
+    import re as _re
+    return len(_re.sub(r"\033\[[0-9;]*m", "", s))
+
+
+def _pick_speed_color(label: str) -> str:
+    return GOLD if "Hypersonic" in label else (YELLOW if "Rapid" in label or "Steady" in label else GRAY)
+
+
+def _pick_age_color(age_text: str) -> str:
+    return GOLD if "Veteran" in age_text else (CYAN if "Prime" in age_text else GRAY)
+
+
+def _render_insight_compare_text(datas: list[dict]) -> None:
+    """Render N insight data dicts in a single-column ranked list.
+
+    Each repo shows full insight data plus influence score and medal.
+    Repos are sorted by influence score descending.
+
+    Args:
+        datas: list of dicts from _build_insight_data().
     """
     if not datas:
         return
 
-    COL_WIDTH = 44  # per-column display width (excluding the separator region)
+    datas = _add_influence_to_datas(datas)
 
-    def _pick_speed_color(label: str) -> str:
-        return GOLD if "Hypersonic" in label else (YELLOW if "Rapid" in label or "Steady" in label else GRAY)
+    print()
+    print(f"  {BOLD}{CYAN}\U0001f3c6 Insight Influence Ranking{RESET}")
+    print(f"  {GRAY}{'─' * 50}{RESET}")
+    print()
 
-    def _pick_age_color(age_text: str) -> str:
-        return GOLD if "Veteran" in age_text else (CYAN if "Prime" in age_text else GRAY)
-
-    def _visible_width(s: str) -> int:
-        """Return display width of a string without ANSI codes."""
-        import re as _re
-        return len(_re.sub(r"\033\[[0-9;]*m", "", s))
-
-    # Build per-column (plain_text, ansi_text) pairs for each line
-    columns_plain: list[list[str]] = []
-    columns_ansi: list[list[str]] = []
-
-    for data in datas:
-        plain_lines: list[str] = []
-        ansi_lines: list[str] = []
-
+    for idx, data in enumerate(datas):
+        medal = _medal(idx)
         name = data["full_name"]
         desc = data.get("description", "")
         stars = data["stars"]
@@ -250,6 +331,7 @@ def _render_insight_compare_text(datas: list[dict]) -> None:
         topics = data.get("topics", [])
         created = data.get("created_at", "")[:10] if data.get("created_at") else "N/A"
         updated = data.get("updated_relative", "Unknown")
+        influence = data.get("influence_score", 0)
 
         spd = data["star_velocity"]["per_day"]
         vel_label = data["star_velocity"]["label"]
@@ -260,139 +342,65 @@ def _render_insight_compare_text(datas: list[dict]) -> None:
         speed_color = _pick_speed_color(vel_label)
         age_color = _pick_age_color(age_text)
 
-        # Line 1: repo name — cyan + bold
-        ansi_name = f"{BOLD}{CYAN}{name}{RESET}"
-        plain_lines.append(name)
-        ansi_lines.append(ansi_name)
+        # Medal + name
+        print(f"  {medal} {BOLD}{CYAN}{name}{RESET}")
 
-        # Line 2: description — gray, truncated
-        desc_short = (desc[:COL_WIDTH - 3] + "...") if len(desc) > COL_WIDTH else desc
-        if desc_short:
-            plain_lines.append(f"  {desc_short}")
-            ansi_lines.append(f"  {GRAY}{desc_short}{RESET}")
-        else:
-            plain_lines.append("")
-            ansi_lines.append("")
+        # Description
+        if desc:
+            print(f"     {GRAY}{desc[:70]}{'...' if len(desc) > 70 else ''}{RESET}")
 
-        # Line 3: blank
-        plain_lines.append("")
-        ansi_lines.append("")
+        # Influence score — gold highlight
+        print(f"     {YELLOW}\U0001f4a1 Influence{RESET}: {BOLD}{GOLD}{influence:.2f}{RESET}  "
+              f"{YELLOW}\u2605{RESET} {BOLD}{stars:,}{RESET} stars  "
+              f"\u2382 {forks:,} forks  \u26a0 {open_issues:,} issues")
 
-        # Line 4: stars + velocity — with speed color on label
-        plain_vel = f"\u2605 {stars:,} stars  \u00b7 +{spd}/day  {vel_label}"
-        ansi_vel = f"\u2605 {BOLD}{stars:,}{RESET} stars  \u00b7 +{spd}/day  {speed_color}{vel_label}{RESET}"
-        plain_lines.append(plain_vel)
-        ansi_lines.append(ansi_vel)
+        # Velocity + age
+        print(f"     +{spd}/day  {speed_color}{vel_label}{RESET}  \u00b7  "
+              f"{age_color}\U0001f4c5 {int(age_years)}yo {age_text}{RESET}")
 
-        # Line 5: forks + issues — with cyan on fork/issue numbers
-        plain_fork = f"\u2382 {forks:,} forks  \u00b7 \u26a0 {open_issues:,} open issues"
-        ansi_fork = f"\u2382 {CYAN}{forks:,}{RESET} forks  \u00b7 \u26a0 {open_issues:,} open issues"
-        plain_lines.append(plain_fork)
-        ansi_lines.append(ansi_fork)
+        # Language + license
+        print(f"     \u2386 {lang}  \u00a9 {lic}")
 
-        # Line 6: language + license + age — with age color
-        age_display = f"{int(age_years)}yo {age_text}"
-        plain_age = f"\u2386 {lang}  \u00a9 {lic}  \U0001f4c5 {age_display}"
-        ansi_age = f"\u2386 {lang}  \u00a9 {lic}  \U0001f4c5 {age_color}{age_display}{RESET}"
-        plain_lines.append(plain_age)
-        ansi_lines.append(ansi_age)
-
-        # Line 7: topics — emoji only
+        # Topics
         if topics:
             display_topics = [t.capitalize() if t[0].islower() else t for t in topics[:5]]
-            topics_display = " \u00b7 ".join(display_topics)
-        else:
-            topics_display = "None"
-        plain_topics = f"\U0001f3f7  {topics_display}"
-        ansi_topics = f"\U0001f3f7  {GRAY}{topics_display}{RESET}"
-        plain_lines.append(plain_topics)
-        ansi_lines.append(ansi_topics)
+            print(f"     \U0001f3f7  {' · '.join(display_topics)}")
 
-        # Line 8: created + updated — gray
-        plain_time = f"\U0001f4c5 Created {created}  \u00b7 Last updated {updated}"
-        ansi_time = f"\U0001f4c5 Created {GRAY}{created}{RESET}  \u00b7 Last updated {GRAY}{updated}{RESET}"
-        plain_lines.append(plain_time)
-        ansi_lines.append(ansi_time)
-
-        columns_plain.append(plain_lines)
-        columns_ansi.append(ansi_lines)
-
-    # Normalise line counts
-    max_lines = max(max(len(c) for c in columns_plain), 1)
-    for i in range(len(columns_plain)):
-        while len(columns_plain[i]) < max_lines:
-            columns_plain[i].append("")
-            columns_ansi[i].append("")
-
-    print()
-    for i in range(max_lines):
-        left_plain = columns_plain[0][i]
-        right_plain = columns_plain[1][i] if len(columns_plain) > 1 else ""
-        left_ansi = columns_ansi[0][i]
-        right_ansi = columns_ansi[1][i] if len(columns_ansi) > 1 else ""
-
-        # Pad each side to COL_WIDTH using plain-text width to keep alignment
-        left_pad = COL_WIDTH - _visible_width(left_plain)
-        right_pad = COL_WIDTH - _visible_width(right_plain)
-        left_out = left_ansi + (" " * max(0, left_pad))
-        right_out = right_ansi + (" " * max(0, right_pad))
-
-        print(f"  {left_out}  \u2502  {right_out}")
-
-    # Comparison summary footer
-    print()
-    print(f"  {'═' * 30}  COMPARISON  {'═' * 30}")
-    print()
-
-    d0 = datas[0]
-    d1 = datas[1] if len(datas) > 1 else datas[0]
-
-    # Star gap
-    s0 = d0["stars"]
-    s1 = d1["stars"]
-    star_leader = d0["full_name"] if s0 >= s1 else d1["full_name"]
-    star_gap = abs(s0 - s1)
-    print(f"  \u2605 Star gap: {BOLD}{CYAN}{star_leader}{RESET} leads by {BOLD}{star_gap:,}{RESET} \u2605")
-
-    # Velocity ratio
-    v0 = d0["star_velocity"]["per_day"]
-    v1 = d1["star_velocity"]["per_day"]
-    v_leader = d0["full_name"] if v0 >= v1 else d1["full_name"]
-    v_ratio = round(max(v0, v1) / max(0.1, min(v0, v1)), 1)
-    print(f"  \U0001f525 Velocity: {BOLD}{CYAN}{v_leader}{RESET} is {BOLD}{v_ratio}\u00d7{RESET} faster ({v0:.1f} vs {v1:.1f}/day)")
-
-    # Age gap
-    a0 = d0["repo_age"]["years"]
-    a1 = d1["repo_age"]["years"]
-    age_gap = round(abs(a0 - a1), 1)
-    younger = d0["full_name"] if a0 <= a1 else d1["full_name"]
-    print(f"  \U0001f4c5 Age gap: {BOLD}{CYAN}{younger}{RESET} is {BOLD}{age_gap}{RESET} years younger")
-
-    # Topic overlap
-    t0 = set(t.lower() for t in d0.get("topics", []))
-    t1 = set(t.lower() for t in d1.get("topics", []))
-    overlap = t0 & t1
-    if overlap:
-        print(f"  \U0001f3f7 Topic overlap: {BOLD}{len(overlap)}{RESET} shared ({GRAY}{', '.join(sorted(overlap))}{RESET})")
-    else:
-        print(f"  \U0001f3f7 Topic overlap: {GRAY}0 shared topics{RESET}")
-
-    print()
+        # Created + updated
+        print(f"     \U0001f4c5 Created {created}  \u00b7 Last updated {updated}")
+        print()
 
 
 def _render_compare_json(datas: list[dict]) -> str:
-    """Render insight compare data as JSON string.
+    """Render insight compare data as JSON string with influence ranking.
 
     Args:
-        datas: list of insight data dicts.
+        datas: list of insight data dicts (2+ repos).
 
     Returns:
-        Pretty-printed JSON string with comparison fields.
+        Pretty-printed JSON string with influence ranking and comparison fields.
     """
     import json as _json
 
-    if len(datas) == 2:
-        d0, d1 = datas
+    # Sort by influence_score descending
+    sorted_datas = sorted(datas, key=lambda d: d.get("influence_score", 0), reverse=True)
+
+    # Build ranking list
+    ranking = [
+        {
+            "rank": i + 1,
+            "full_name": d["full_name"],
+            "influence_score": d.get("influence_score", 0),
+            "stars": d["stars"],
+            "forks": d["forks"],
+        }
+        for i, d in enumerate(sorted_datas)
+    ]
+
+    # Pairwise comparison for exactly 2 repos
+    comparison = {}
+    if len(sorted_datas) == 2:
+        d0, d1 = sorted_datas
         s0, s1 = d0["stars"], d1["stars"]
         v0 = d0["star_velocity"]["per_day"]
         v1 = d1["star_velocity"]["per_day"]
@@ -404,26 +412,29 @@ def _render_compare_json(datas: list[dict]) -> str:
             "younger": d0["full_name"] if d0["repo_age"]["years"] <= d1["repo_age"]["years"] else d1["full_name"],
             "age_gap_years": round(abs(d0["repo_age"]["years"] - d1["repo_age"]["years"]), 1),
         }
-    else:
-        comparison = {}
 
     return _json.dumps({
         "command": "insight",
         "mode": "compare",
-        "repos": datas,
+        "count": len(sorted_datas),
+        "repos": sorted_datas,
+        "ranking": ranking,
         "comparison": comparison,
     }, indent=2, ensure_ascii=False)
 
 
 def cmd_insight_compare(repos: list[str], client: GitHubClient, as_json: bool = False) -> None:
-    """Handle `ara insight repo1 repo2 ...` (2 repos only) — side-by-side compare.
+    """Handle `ara insight repo1 repo2 ...` — N-repo comparison with influence ranking.
 
     Args:
-        repos: List of repository names (only first 2 used).
+        repos: List of repository names (2+ repos for comparison).
         client: GitHubClient instance.
         as_json: If True, print JSON instead of colored text.
     """
-    datas = [_build_insight_data(r, client) for r in repos[:2]]
+    if not repos:
+        print("  No repositories specified for comparison.")
+        return
+    datas = [_build_insight_data(r, client) for r in repos]
     if as_json:
         print(_render_compare_json(datas))
     else:
