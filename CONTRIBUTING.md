@@ -65,10 +65,12 @@ Open an issue with:
 
 ## Feature Wishlist
 
-- [ ] Desktop notifications for watch threshold
+- [x] **Desktop notifications** (`ara watch --notify`) — ✅ shipped in v0.3.1
+- [x] **Multi-repo compare** (`ara history repo1 repo2 repo3`) — ✅ shipped in v0.3.1
 - [ ] CSV/Excel export
-- [ ] Multi-repo compare (3+)
 - [ ] PyPI release automation
+- [ ] GitHub Actions CI badge auto-update
+- [ ] `ara compare` — 4+ repos side-by-side
 
 ## License
 

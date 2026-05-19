@@ -59,6 +59,9 @@
   <a href="https://img.shields.io/badge/code_style-ruff-22c55e">
     <img src="https://img.shields.io/badge/code_style-ruff-22c55e" alt="Ruff"/>
   </a>
+  <a href="https://img.shields.io/badge/coverage-95%25-22c55e">
+    <img src="https://img.shields.io/badge/coverage-95%25-22c55e" alt="Coverage 95%"/>
+  </a>
 </p>
 
 ---
