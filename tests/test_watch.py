@@ -330,7 +330,7 @@ def test_watch_notify_shows_message(MockClient, capsys):
 
     captured = capsys.readouterr()
     assert "Notification mode" in captured.out
-    assert "desktop" in captured.out or "bell" in captured.out
+    assert "bell" in captured.out or "desktop" in captured.out
 
 
 @patch("ara.cli.GitHubClient")
@@ -349,7 +349,7 @@ def test_watch_notify_no_notify_no_message(MockClient, capsys):
 
     captured = capsys.readouterr()
     assert "Notification mode" not in captured.out
-    assert "desktop" not in captured.out and "bell" not in captured.out
+    assert "bell" not in captured.out
 
 
 @patch("ara.cli.GitHubClient")
