@@ -437,7 +437,8 @@ def build_parser() -> argparse.ArgumentParser:
         help="Deep repository insight -- star velocity, topics, age, and more",
     )
     insight_parser.add_argument("repo", help="Repository (owner/repo)")
-    insight_parser.set_defaults(func=lambda args, _client: cmd_insight(args.repo, _client))
+    insight_parser.add_argument("--json", action="store_true", help="Output as JSON")
+    insight_parser.set_defaults(func=cmd_insight)
 
     # ara rank [--top N] [--json] [<repo> ...]
     rank_parser = subparsers.add_parser(
@@ -474,6 +475,7 @@ def main(argv: list | None = None) -> int:
         "trends": trends_cmd,
         "dashboard": cmd_dashboard,
         "summary": cmd_summary_json,
+        "insight": cmd_insight_json,
         "rank": cmd_rank_json,
     }
     if getattr(args, "json", False) and args.command in json_handlers:

@@ -151,7 +151,11 @@ def test_cmd_insight_with_mock(monkeypatch):
         }
 
     monkeypatch.setattr("ara.core.GitHubClient.get_repo_info", mock_get_repo_info)
-    cmd_insight("facebook/react")
+
+    class FakeArgs:
+        repo = "facebook/react"
+
+    cmd_insight(FakeArgs(), mock_get_repo_info)
     # Should not raise
 
 
@@ -175,5 +179,9 @@ def test_cmd_insight_minimal_data(monkeypatch):
         }
 
     monkeypatch.setattr("ara.core.GitHubClient.get_repo_info", mock_minimal)
-    cmd_insight("empty/repo")
+
+    class FakeArgs:
+        repo = "empty/repo"
+
+    cmd_insight(FakeArgs(), mock_minimal)
     # Should not raise
