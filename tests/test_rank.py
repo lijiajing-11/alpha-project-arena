@@ -122,12 +122,11 @@ def test_cmd_rank_basic(capsys):
     assert "47,000" in captured.out
 
 
-@patch("ara.rank.GitHubClient")
-def test_cmd_rank_respects_top_n(MockClient, capsys):
+def test_cmd_rank_respects_top_n(capsys):
     """cmd_rank should limit results to --top N."""
     from ara.rank import cmd_rank
 
-    mock_client = MockClient.return_value
+    mock_client = MagicMock()
     infos = [REPO_A, REPO_B, REPO_C]
 
     def mock_get_repo_info(repo):
@@ -149,12 +148,11 @@ def test_cmd_rank_respects_top_n(MockClient, capsys):
     assert "47,000" not in captured.out  # #3 should not appear
 
 
-@patch("ara.rank.GitHubClient")
-def test_cmd_rank_graceful_error(MockClient, capsys):
+def test_cmd_rank_graceful_error(capsys):
     """cmd_rank should skip failed repos and show errors."""
     from ara.rank import cmd_rank
 
-    mock_client = MockClient.return_value
+    mock_client = MagicMock()
 
     def mock_get_repo_info(repo):
         if repo == "facebook/react":
@@ -173,12 +171,11 @@ def test_cmd_rank_graceful_error(MockClient, capsys):
     assert "Error" in captured.out or "errors" in captured.out.lower()
 
 
-@patch("ara.rank.GitHubClient")
-def test_cmd_rank_default_repos(MockClient, capsys):
+def test_cmd_rank_default_repos(capsys):
     """cmd_rank should use DEFAULT_REPOS when no repos given."""
     from ara.rank import cmd_rank, DEFAULT_REPOS
 
-    mock_client = MockClient.return_value
+    mock_client = MagicMock()
 
     def mock_get_repo_info(repo):
         # Return minimal info for default repos
@@ -207,12 +204,11 @@ def test_cmd_rank_default_repos(MockClient, capsys):
 # ===========================================================================
 
 
-@patch("ara.rank.GitHubClient")
-def test_cmd_rank_json_output(MockClient, capsys):
+def test_cmd_rank_json_output(capsys):
     """cmd_rank_json should print valid JSON with sorted ranking."""
     from ara.rank import cmd_rank_json
 
-    mock_client = MockClient.return_value
+    mock_client = MagicMock()
 
     def mock_get_repo_info(repo):
         mapping = {
