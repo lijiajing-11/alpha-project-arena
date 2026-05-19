@@ -118,17 +118,3 @@ def render_header() -> str:
         A formatted header string with star characters.
     """
     return f"{BOLD}{CYAN}★ ARENA BATTLE ★{RESET}"
-
-
-def repos_from_leaderboard(cache: dict) -> List[Tuple[str, int]]:
-    """Extract repos from the star cache for leaderboard.
-
-    Args:
-        cache: The star_cache dict (repo -> {"count": int, "timestamp": float}).
-
-    Returns:
-        Sorted list of (repo_name, star_count) tuples by star count ascending.
-    """
-    repos = [(name, data["count"]) for name, data in cache.items()]
-    repos.sort(key=lambda x: x[1])  # Sort by star count ascending
-    return repos

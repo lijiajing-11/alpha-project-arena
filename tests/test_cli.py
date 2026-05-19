@@ -181,8 +181,8 @@ def test_run_watch_returns_star_count():
     mock_client.get_stars.assert_called_once_with("owner/repo")
 
 
-def test_run_watch_passes_previous():
-    """run_watch should accept and ignore previous parameter."""
+def test_run_watch_accepts_previous_param():
+    """run_watch should accept (and ignore) the previous parameter."""
     from ara.cli import run_watch
 
     mock_client = MagicMock()

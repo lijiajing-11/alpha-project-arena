@@ -122,21 +122,6 @@ def test_battle_header():
     assert "★" in result or "*" in result, f"Expected star in header: {result}"
 
 
-def test_battle_no_args_uses_leaderboard():
-    """Battle with no args should use all repos from leaderboard cache."""
-    from ara.battle import repos_from_leaderboard
-
-    # Simulate cache with 3 repos
-    cache_data = {
-        "repo/a": {"count": 1000, "timestamp": 1},
-        "repo/b": {"count": 750, "timestamp": 2},
-        "repo/c": {"count": 500, "timestamp": 3},
-    }
-    repos = repos_from_leaderboard(cache_data)
-    assert len(repos) == 3
-    assert repos[0] == ("repo/c", 500), f"Expected sorted, got: {repos}"
-
-
 # --- Integration tests ---
 
 
