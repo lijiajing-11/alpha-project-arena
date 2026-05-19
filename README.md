@@ -105,7 +105,7 @@ $ ara battle facebook/react vuejs/core
   ╚══════════════════════════════════════════╝
 ```
 
-### 📡 `ara watch` — Real-Time Monitoring
+### 📡 `ara watch` — Real-Time Monitoring (with Desktop Notifications)
 
 ```text
 $ ara watch owner/repo
@@ -124,6 +124,9 @@ $ ara watch owner/repo
 │ 🕐 Updated         │ 2026-05-19 14:30:22     │
 └────────────────────┴────────────────────────┘
 ```
+
+> 💡 **Pro tip:** Add `--notify` to get desktop notifications when stars change
+> — works via `plyer` on macOS/Linux/Windows, with graceful stderr fallback.
 
 ### 🧠 `ara insight` — Deep Repository Intelligence
 
@@ -252,7 +255,8 @@ ara stars --json python/cpython tensorflow/tensorflow
 
 ### 👀 `ara watch` — Real-Time Dashboard
 
-Watch a single repo with a **multi-field dashboard** — stars, forks, issues, language, license, and color-coded deltas. Press `Ctrl+C` to stop.
+Watch a single repo with a **multi-field dashboard** — stars, forks, issues, language, license, and color-coded deltas. Press `Ctrl+C` to stop.  
+Add `--notify` to receive desktop notifications when star count changes.
 
 ```text
 $ ara watch owner/repo
@@ -533,7 +537,7 @@ cd alpha-project-arena
 python -m venv venv && source venv/bin/activate
 pip install -e .
 
-# Run the full test suite (242+ tests passing)
+# Run the full test suite (251+ tests passing)
 pytest tests/ -v
 
 # Lint with ruff
@@ -575,7 +579,7 @@ git clone https://github.com/your-username/alpha-project-arena.git
 cd alpha-project-arena
 python -m venv venv && source venv/bin/activate
 pip install -e '.[dev]'
-pytest tests/ -v      # 242+ tests should all pass
+pytest tests/ -v      # 251+ tests should all pass
 ruff check .          # zero warnings
 ```
 
