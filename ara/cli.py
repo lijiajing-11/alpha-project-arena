@@ -191,6 +191,67 @@ def _resolve_winner(repos_data: list[dict]) -> str | None:
     return winners[0] if len(winners) == 1 else "Tie — Draw!"
 
 
+# ---------------------------------------------------------------------------
+# Info command
+# ---------------------------------------------------------------------------
+
+
+def cmd_info(args: argparse.Namespace, client: GitHubClient) -> None:
+    """Handle `ara info <repo>` — show detailed repo information."""
+    for repo in args.repos:
+        info = client.get_repo_info(repo)
+        print(format_repo_info(info))
+
+
+def cmd_info_json(args: argparse.Namespace, client: GitHubClient) -> None:
+    """Handle `ara info --json <repo>`."""
+    results = []
+    errors = []
+    for repo in args.repos:
+        try:
+            info = client.get_repo_info(repo)
+            results.append(info)
+        except (ValueError, RuntimeError) as e:
+            errors.append({"repo": repo, "error": str(e)})
+    print(json_result({"command": "info", "repos": results, "errors": errors or None}))
+
+
+# ---------------------------------------------------------------------------
+# Compare command
+# ---------------------------------------------------------------------------
+
+
+def cmd_compare(args: argparse.Namespace, client: GitHubClient) -> None:
+    """Handle `ara compare <repo1> <repo2>`."""
+    repo1, repo2 = args.repos[0], args.repos[1]
+    info1 = client.get_repo_info(repo1)
+    info2 = client.get_repo_info(repo2)
+    print(format_compare(info1, info2))
+
+
+def cmd_compare_json(args: argparse.Namespace, client: GitHubClient) -> None:
+    """Handle `ara compare --json <repo1> <repo2>`."""
+    repo1, repo2 = args.repos[0], args.repos[1]
+    errors = []
+    try:
+        info1 = client.get_repo_info(repo1)
+    except (ValueError, RuntimeError) as e:
+        info1 = None
+        errors.append({"repo": repo1, "error": str(e)})
+
+    try:
+        info2 = client.get_repo_info(repo2)
+    except (ValueError, RuntimeError) as e:
+        info2 = None
+        errors.append({"repo": repo2, "error": str(e)})
+
+    print(json_result({
+        "command": "compare",
+        "repos": [info1, info2],
+        "errors": errors or None,
+    }))
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build the argument parser for the CLI."""
     parser = argparse.ArgumentParser(
@@ -224,6 +285,23 @@ def build_parser() -> argparse.ArgumentParser:
     battle_parser.add_argument("--json", action="store_true", help="Output as JSON")
     battle_parser.set_defaults(func=cmd_battle)
 
+    # ara info <repo> [<repo> ...]
+    info_parser = subparsers.add_parser("info", help="Show detailed repository info")
+    info_parser.add_argument("repos", nargs="+", help="Repository in owner/name format")
+    info_parser.add_argument("--json", action="store_true", help="Output as JSON")
+    info_parser.set_defaults(func=cmd_info)
+
+    # ara compare <repo1> <repo2>
+    compare_parser = subparsers.add_parser(
+        "compare", help="Compare two repositories side-by-side"
+    )
+    compare_parser.add_argument(
+        "repos", nargs=2, metavar=("REPO1", "REPO2"),
+        help="Two repositories to compare (owner/name)"
+    )
+    compare_parser.add_argument("--json", action="store_true", help="Output as JSON")
+    compare_parser.set_defaults(func=cmd_compare)
+
     return parser
 
 
@@ -241,6 +319,8 @@ def main(argv: list | None = None) -> int:
         "stars": cmd_stars_json,
         "watch": cmd_watch_json,
         "battle": cmd_battle_json,
+        "info": cmd_info_json,
+        "compare": cmd_compare_json,
     }
     if getattr(args, "json", False) and args.command in json_handlers:
         args.func = json_handlers[args.command]
