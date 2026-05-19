@@ -2,7 +2,7 @@
 
 <p align="center">
   <b>Track, watch, battle, and compare any GitHub repo — right from your terminal.</b><br>
-  <i>Zero dependencies. One command. Real-time.</i>
+  <i>Zero dependencies. One command. Real-time. No browser needed.</i>
 </p>
 
 <p align="center">
@@ -10,7 +10,7 @@
     <img src="https://img.shields.io/github/actions/workflow/status/lijiajing-11/alpha-project-arena/ci.yml?style=for-the-badge&logo=githubactions&label=CI" alt="CI"/>
   </a>
   <a href="https://github.com/lijiajing-11/alpha-project-arena">
-    <img src="https://img.shields.io/badge/tests-276_passing-22c55e?style=for-the-badge" alt="Tests"/>
+    <img src="https://img.shields.io/github/stars/lijiajing-11/alpha-project-arena?style=for-the-badge&logo=github&color=gold" alt="Stars"/>
   </a>
   <a href="https://www.python.org/downloads/">
     <img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.10+"/>
@@ -18,34 +18,82 @@
   <a href="https://opensource.org/licenses/MIT">
     <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="MIT"/>
   </a>
+  <a href="https://pypi.org/project/ara/">
+    <img src="https://img.shields.io/pypi/v/ara?style=for-the-badge&logo=pypi&color=blue" alt="PyPI"/>
+  </a>
   <a href="http://makeapullrequest.com">
     <img src="https://img.shields.io/badge/PRs-welcome-brightgreen?style=for-the-badge" alt="PRs Welcome"/>
   </a>
 </p>
 
+<p align="center">
+  <sub><b>v0.3.2</b> · 13 commands · 16 modules · 276+ tests · stdlib-only</sub>
+</p>
+
 ---
 
-## ⚡ Quickstart
+## 👀 What Is ARA?
+
+Ever caught yourself opening 5 browser tabs to compare GitHub repos?  
+Or refreshing a repo page every hour to watch its star count grow?
+
+**ARA is the antidote.**
+
+A single Python CLI that puts GitHub's pulse in your terminal — star counts,
+growth velocity, head-to-head battles, live watches, and ranked leaderboards.
+All from one command. No browser scrolling. No context switching.
 
 ```bash
-# Watch a repo live — 30s auto-refresh
+# 2 seconds. One command. Done.
 pip install ara
-ara watch tensorflow/tensorflow
-
-# Settle which framework is hotter — ASCII arena showdown
-ara battle facebook/react vuejs/core
-
-# See how fast a repo is growing — star velocity
-ara insight facebook/react
+ara stars tensorflow/tensorflow
 ```
 
-**Every command supports `--json` for CI pipelines.** → see [JSON output](#-json-output--pipe-into-everything)
+> **Think of it as `htop` for GitHub.** 🖥️
 
 ---
 
-## 🎬 Gallery — See ARA in Action
+## 🚀 Install in 5 Seconds
 
-> Five commands, five vibes. Get a feel for what ARA can do in under 10 seconds.
+```bash
+pip install ara
+```
+
+**That's it.** No npm, no Docker, no config file. Pure Python from the standard library.
+
+> ⚙️ **Rate limits:** Unauthenticated = 60 req/h. Set `export GITHUB_TOKEN=ghp_...` for 5,000/h.
+> ARA auto-retries on 429s with exponential backoff + jitter.
+
+```bash
+# No pip? Clone and run directly — same zero-dependency experience.
+git clone https://github.com/lijiajing-11/alpha-project-arena.git
+cd alpha-project-arena
+python -m ara stars python/cpython
+```
+
+---
+
+## ⚡ 3 Commands to Get Hooked
+
+```bash
+# 1. Quick star check — 2 seconds, zero fuss
+ara stars python/cpython
+# → ★ python/cpython: 63,475 stars
+
+# 2. Pit frameworks against each other — ASCII arena showdown
+ara battle facebook/react vuejs/core sveltejs/svelte
+# → React dominates with 230,000 ★ — Vue trails at 47,000
+
+# 3. Watch a repo live (30s auto-refresh with desktop notifications)
+ara watch --notify tensorflow/tensorflow
+# → Live dashboard: stars, forks, issues — colour-coded deltas
+```
+
+Every command supports `--json` for CI pipelines, dashboards, and `jq` piping.
+
+---
+
+## 🎬 In Action — See It in Under 10 Seconds
 
 ### 🏆 `ara rank` — Live Repository Leaderboard
 
@@ -85,30 +133,25 @@ $ ara battle facebook/react vuejs/core
   ╚══════════════════════════════════════════╝
 ```
 
-### 📡 `ara watch` — Real-Time Monitoring (with Desktop Notifications)
+### 📡 `ara watch` — Real-Time Dashboard
 
 ```text
-$ ara watch owner/repo
+$ ara watch tensorflow/tensorflow
 
 ╔════════════════════════════════════════════╗
 ║        📡 ARA Star Tracker — WATCH         ║
 ╚════════════════════════════════════════════╝
 ┌────────────────────┬────────────────────────┐
-│ Repository         │ owner/repo              │
+│ Repository         │ tensorflow/tensorflow   │
 ├────────────────────┼────────────────────────┤
-│ ⭐ Stars           │ 12,345  (+5)            │
-│ ⑂ Forks            │ 234     (+1)            │
-│ ⚠ Issues           │ 12     (-2)             │
+│ ⭐ Stars           │ 187,634  (+5)           │
+│ ⑂ Forks            │ 78,234   (+1)           │
+│ ⚠ Issues           │ 1,200    (-2)           │
 │ 🔤 Language        │ Python                  │
-│ 📜 License         │ MIT                     │
+│ 📜 License         │ Apache 2.0              │
 │ 🕐 Updated         │ 2026-05-19 14:30:22     │
 └────────────────────┴────────────────────────┘
 ```
-
-> 💡 **Pro tip:** Add `--notify` to get desktop notifications when stars change
-> — works via `plyer` on macOS/Linux/Windows, with graceful stderr fallback.
-> On WSL/headless environments, ARA falls back to an ANSI bell (`\a`) + coloured
-> stderr message so you never miss a star jump.
 
 ### 🧠 `ara insight` — Deep Repository Intelligence
 
@@ -145,8 +188,6 @@ $ ara watch owner/repo
 
 ### 🆚 `ara history --compare` — Multi-Repo Showdown
 
-Compare up to 5 repos on the same axis — each gets a coloured bar proportional to its star count:
-
 ```text
 $ ara history --compare facebook/react vuejs/core sveltejs/svelte
 
@@ -160,63 +201,6 @@ $ ara history --compare facebook/react vuejs/core sveltejs/svelte
 
   📅 Timeline: 2013-05-29 — 2026-05-19
 ```
-
-```bash
-# JSON mode for CI
-ara history --compare --json facebook/react vuejs/core | jq '.facebook'
-```
-
-> 💡 **Tip:** Add `--since 2024` to filter the comparison to data after a specific date.
-
----
-
-## 🚀 Install in 5 seconds
-
-```bash
-pip install ara
-```
-
-**That's it.** No npm, no Docker, no `requirements.txt`, no config file. Just pure Python from the standard library.
-
-> ⚙️ **Rate limits:** Unauthenticated = 60 req/h. Set `export GITHUB_TOKEN=ghp_...` for 5,000/h. ARA auto-retries on 429s with exponential backoff + jitter.
-
-> 💡 **pip install ara** is the fastest path. If PyPI isn't available (private
-> network, air-gapped, or pre-release features), just `git clone` and run it
-> directly — zero dependencies beyond stdlib + optional `plyer`.
-
-### Try it now — no install required
-
-```bash
-git clone https://github.com/lijiajing-11/alpha-project-arena.git
-cd alpha-project-arena
-python -m ara stars python/cpython
-```
-
-### Run in the AI Startup Arena
-
-```bash
-# Inside the Α-Tech Inc. arena environment:
-hermes setup arena
-cd alpha/repo
-python -m ara battle facebook/react vuejs/core
-```
-
----
-
-## 🔥 Quick Start — 3 Commands to Get Hooked
-
-```bash
-# 1. Quick star check — 2 seconds, zero fuss
-ara stars python/cpython
-
-# 2. Compare frameworks head-to-head
-ara battle facebook/react vuejs/core sveltejs/svelte
-
-# 3. Watch a repo live (30s auto-refresh)
-ara watch tensorflow/tensorflow
-```
-
-Every command supports `--json` for CI pipelines, dashboards, and `jq` piping.
 
 ---
 
@@ -243,11 +227,7 @@ Every command supports `--json` for CI pipelines, dashboards, and `jq` piping.
 >
 > 🆕 **v0.3.0:** `ara rank` — live Top 10 repo leaderboard. Try `ara rank --top 20`!
 >
-> 🆕 **Hot off the press:** `ara insight` — star velocity, topics, age, and more. Try `ara insight facebook/react`!
->
-> 📦 **v0.3.2** — 16 modules, 276+ passing tests, stdlib-only + optional `plyer`
-
----
+> 🆕 **Hot off the press:** `ara insight` — star velocity, topics, age, and more.
 
 ### 🔍 `ara stars` — Quick Check
 
@@ -268,11 +248,9 @@ $ ara stars python/cpython tensorflow/tensorflow
 ara stars --json python/cpython tensorflow/tensorflow
 ```
 
----
-
 ### 👀 `ara watch` — Real-Time Dashboard
 
-Watch a single repo with a **multi-field dashboard** — stars, forks, issues, language, license, and color-coded deltas. Press `Ctrl+C` to stop.  
+Watch a single repo with a **multi-field dashboard** — stars, forks, issues, language, license, and color-coded deltas. Press `Ctrl+C` to stop.
 Add `--notify` to receive desktop notifications when star count changes.
 
 ```text
@@ -323,8 +301,6 @@ Watching 2 repos  ·  14:30:52  ·  Ctrl+C to stop
 ara watch --json owner/repo-a owner/repo-b
 ```
 
----
-
 ### 🏟️ `ara battle` — Arena Showdown
 
 ```text
@@ -348,8 +324,6 @@ $ ara battle facebook/react vuejs/core
 ara battle --json facebook/react vuejs/core
 ```
 
----
-
 ### 📋 `ara info` — Repository Details
 
 ```text
@@ -371,8 +345,6 @@ $ ara info python/cpython
 ```bash
 ara info --json python/cpython
 ```
-
----
 
 ### ⚖️ `ara compare` — Head-to-Head
 
@@ -403,23 +375,6 @@ $ ara compare facebook/react vuejs/core
 ```bash
 ara compare --json facebook/react vuejs/core
 ```
-
-```json
-{
-  "command": "compare",
-  "repos": [
-    { "full_name": "facebook/react", "stars": 230000, "forks": 48000, "open_issues": 1200, "language": "JavaScript", "license": "MIT" },
-    { "full_name": "vuejs/core", "stars": 47000, "forks": 7000, "open_issues": 800, "language": "TypeScript", "license": "MIT" }
-  ],
-  "winner": "facebook/react",
-  "lead_by": 183000,
-  "fork_leader": "facebook/react",
-  "issue_leader": "vuejs/core",
-  "errors": null
-}
-```
-
----
 
 ### 📈 `ara trends` — Star Trend Analysis
 
@@ -460,20 +415,6 @@ ara trends owner/repo --hours 24 --interval 30
 ara trends --json owner/repo
 ```
 
-```json
-{
-  "repo": "owner/repo",
-  "hours": 72,
-  "buckets": [
-    {"label": "2026-05-18 09:00", "count": 12, "delta": 3}
-  ],
-  "total": 85,
-  "best_hour": "06:00"
-}
-```
-
----
-
 ### 📦 JSON Output — Pipe into Everything
 
 Every ARA command accepts `--json` for machine-readable output — perfect for CI pipelines, dashboards, and scripts:
@@ -509,17 +450,16 @@ ARA is designed as a **single-file-per-responsibility** Python package — no fr
 |--------|---------------|
 | `ara/__init__.py` | Package init, `__version__` |
 | `ara/__main__.py` | Entry point for `python -m ara` |
-| `ara/cli.py` | Argument parsing + command dispatch (13 commands, incl. compare) |
+| `ara/cli.py` | Argument parsing + command dispatch (13 commands) |
 | `ara/core.py` | GitHub API client, cache, data models |
 | `ara/summary.py` | One-line repo overview |
 | `ara/dashboard.py` | Full repo overview panel |
 | `ara/rank.py` | Top N repo leaderboard |
 | `ara/insight.py` | Deep repo intelligence (star velocity, topics) |
-| `ara/display.py` | Live watch terminal UI, watch/compare/info formatting |
+| `ara/display.py` | Live watch terminal UI, formatting |
 | `ara/battle.py` | Arena battle ASCII bars |
 | `ara/trends.py` | Star trend analysis + ASCII charts |
 | `ara/history.py` | Star growth ASCII timeline chart |
-| *compare is in `cli.py`* | Head-to-head repo comparison (inline) |
 | `ara/generate_stars.py` | Stargazer JSON export |
 | `ara/chart.py` | Shared ASCII chart engine (bars, sparklines) |
 | `ara/colors.py` | ANSI color constants |
@@ -583,19 +523,18 @@ python scripts/demo.py
 
 ---
 
-## ⏳ Rate Limits & Reliability
+## 🎯 Why ARA?
 
-<details>
-<summary>Click to expand</summary>
+| You could... | Or just... |
+|--------------|------------|
+| 🕸️ Open GitHub every time → refresh, scroll, squint | `ara stars tensorflow/tensorflow` — 2 seconds |
+| 📝 Tabulate 5 repos in a spreadsheet | `ara battle react vue svelte angular` — instant arena |
+| 🔄 Manually check star trends | `ara watch pytorch/pytorch` — live dashboard auto-refreshes |
+| 🔍 Google "most starred repos" | `ara rank --top 20` — live leaderboard from the terminal |
 
-| Auth | Limit | Setup |
-|------|-------|-------|
-| None | 60 req/h | Just works — fine for casual use |
-| Token | 5,000 req/h | `export GITHUB_TOKEN=ghp_...` |
+**ARA exists because you shouldn't need a browser to stalk repos.** 🔭
 
-ARA automatically **retries** on rate limits (429), server errors (5xx), and transient network failures using exponential backoff with jitter. Results are cached for **60 seconds** to minimize unnecessary API calls.
-
-</details>
+> 📋 See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 
 ---
 
@@ -622,28 +561,33 @@ ruff check ara/ tests/ # zero warnings
 
 ---
 
-## 📝 License
+## 👤 Who Should Use ARA?
 
-MIT © [lijiajing-11](https://github.com/lijiajing-11) — see [LICENSE](LICENSE) for details.
+| You are… | And you… | ARA is for you ✅ |
+|-----------|----------|-------------------|
+| 🐱 **Open-source maintainer** | Watch your star count hourly | `ara watch your/repo --notify` — live dashboard + desktop alerts |
+| 📊 **Tech journalist / analyst** | Compare repos for a write-up | `ara battle react vue svelte` — instant chart |
+| 🎯 **Investor / scout** | Track which projects are heating up | `ara rank --top 50` — pulse of GitHub |
+| 🛠️ **CI pipeline** | Need star data in your dashboard | `ara stars --json owner/repo \| jq` |
+| 🧑‍💻 **Curious dev** | Just want to know "is this repo popular?" | `ara summary facebook/react` — 1 line answer |
 
----
-
-## 🎯 Why ARA?
-
-| You could... | Or just... |
-|--------------|------------|
-| 🕸️ Open GitHub every time → refresh, scroll, squint | `ara stars tensorflow/tensorflow` — 2 seconds |
-| 📝 Tabulate 5 repos in a spreadsheet | `ara battle react vue svelte angular` — instant arena |
-| 🔄 Manually check star trends | `ara watch pytorch/pytorch` — live dashboard auto-refreshes |
-| 🔍 Google "most starred repos" | `ara rank --top 20` — live leaderboard from the terminal |
-
-**ARA exists because you shouldn't need a browser to stalk repos.** 🔭
-
-> 📋 See [CHANGELOG.md](CHANGELOG.md) for the full version history.
+> **tl;dr** — If you breathe repos, ARA is your pulse check. One command, zero clicks. No browser needed.
 
 ---
 
-## 🎛️ Feature Matrix
+## ⏳ Rate Limits & Reliability
+
+<details>
+<summary>Click to expand</summary>
+
+| Auth | Limit | Setup |
+|------|-------|-------|
+| None | 60 req/h | Just works — fine for casual use |
+| Token | 5,000 req/h | `export GITHUB_TOKEN=ghp_...` |
+
+ARA automatically **retries** on rate limits (429), server errors (5xx), and transient network failures using exponential backoff with jitter. Results are cached for **60 seconds** to minimize unnecessary API calls.
+
+### Feature Matrix
 
 | Feature | Status | Notes |
 |---------|--------|-------|
@@ -668,19 +612,13 @@ MIT © [lijiajing-11](https://github.com/lijiajing-11) — see [LICENSE](LICENSE
 | **Zero dependencies** | ✅ | Stdlib only + optional `plyer` |
 | **Rate-limit retry** | ✅ | Exponential backoff + jitter |
 
+</details>
+
 ---
 
-## 👤 Who Should Use ARA?
+## 📝 License
 
-| You are… | And you… | ARA is for you ✅ |
-|-----------|----------|-------------------|
-| 🐱 **Open-source maintainer** | Watch your star count hourly | `ara watch your/repo --notify` — live dashboard + desktop alerts |
-| 📊 **Tech journalist / analyst** | Compare repos for a write-up | `ara battle react vue svelte` — instant chart |
-| 🎯 **Investor / scout** | Track which projects are heating up | `ara rank --top 50` — pulse of GitHub |
-| 🛠️ **CI pipeline** | Need star data in your dashboard | `ara stars --json owner/repo \| jq` |
-| 🧑‍💻 **Curious dev** | Just want to know "is this repo popular?" | `ara summary facebook/react` — 1 line answer |
-
-> **tl;dr** — If you breathe repos, ARA is your pulse check. One command, zero clicks. No browser needed.
+MIT © [lijiajing-11](https://github.com/lijiajing-11) — see [LICENSE](LICENSE) for details.
 
 ---
 
@@ -693,20 +631,6 @@ MIT © [lijiajing-11](https://github.com/lijiajing-11) — see [LICENSE](LICENSE
 | 🐦 **X / Twitter** | [@ATechInc](https://x.com/ATechInc) | Announcements, teasers |
 | 📧 **Email** | dev@alpha-project.dev | Direct feedback |
 | ⭐ **Star us** | [Click here](https://github.com/lijiajing-11/alpha-project-arena) | Every star fuels the arena! |
-
----
-
-## ⭐ Star Us — Fuel the Arena
-
-ARA is still young. Every star is a vote that says *"this CLI deserves to exist."*
-
-```bash
-# One click, zero cost:
-open https://github.com/lijiajing-11/alpha-project-arena
-# Then smash that ⭐ button
-```
-
-> Star History chart will appear here once we hit 10+ stars! 🚀
 
 ---
 
