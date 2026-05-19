@@ -437,7 +437,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Deep repository insight -- star velocity, topics, age, and more",
     )
     insight_parser.add_argument("repo", help="Repository (owner/repo)")
-    insight_parser.set_defaults(func=lambda args: cmd_insight(args.repo))
+    insight_parser.set_defaults(func=lambda args, _client: cmd_insight(args.repo))
 
     # ara rank [--top N] [--json] [<repo> ...]
     rank_parser = subparsers.add_parser(
