@@ -489,7 +489,7 @@ def format_multi_compare_table(infos: list[dict]) -> str:
     """
     lines = []
     lines.append(f"  {BOLD}{CYAN}Multi-Repo Comparison{RESET}")
-    lines.append(f"  {GRAY}─" * 50 + RESET)
+    lines.append(f"  {GRAY}{'─' * 61}{RESET}")
 
     # Sort by stars descending
     sorted_infos = sorted(infos, key=lambda x: x.get("stars", 0), reverse=True)
