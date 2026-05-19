@@ -311,6 +311,129 @@ def test_get_stars_other_http_error(mock_urlopen):
 
 
 @patch("ara.core.urllib.request.urlopen")
+def test_make_request_retries_on_429(mock_urlopen):
+    """_make_request should retry on 429 (rate-limiting)."""
+    from ara.core import GitHubClient, star_cache
+    import urllib.error
+
+    star_cache.clear()
+
+    # Two 429s, then success
+    mock_resp = MagicMock()
+    mock_resp.read.return_value = json.dumps({"stargazers_count": 42}).encode("utf-8")
+    mock_resp.__enter__.return_value = mock_resp
+
+    mock_urlopen.side_effect = [
+        urllib.error.HTTPError("url", 429, "Too Many Requests", {}, None),
+        urllib.error.HTTPError("url", 429, "Too Many Requests", {}, None),
+        mock_resp,
+    ]
+
+    client = GitHubClient(max_retries=2, retry_delay=0.01)
+    stars = client.get_stars("owner/repo")
+    assert stars == 42
+    assert mock_urlopen.call_count == 3
+
+
+@patch("ara.core.urllib.request.urlopen")
+def test_make_request_retries_on_503(mock_urlopen):
+    """_make_request should retry on 503 (Service Unavailable)."""
+    from ara.core import GitHubClient, star_cache
+    import urllib.error
+
+    star_cache.clear()
+
+    mock_resp = MagicMock()
+    mock_resp.read.return_value = json.dumps({"stargazers_count": 99}).encode("utf-8")
+    mock_resp.__enter__.return_value = mock_resp
+
+    mock_urlopen.side_effect = [
+        urllib.error.HTTPError("url", 503, "Service Unavailable", {}, None),
+        mock_resp,
+    ]
+
+    client = GitHubClient(max_retries=1, retry_delay=0.01)
+    stars = client.get_stars("owner/repo")
+    assert stars == 99
+    assert mock_urlopen.call_count == 2
+
+
+@patch("ara.core.urllib.request.urlopen")
+def test_make_request_exhausts_retries(mock_urlopen):
+    """_make_request should raise after exhausting retries on 5xx."""
+    from ara.core import GitHubClient, star_cache
+    import urllib.error
+
+    star_cache.clear()
+
+    mock_urlopen.side_effect = urllib.error.HTTPError(
+        "url", 502, "Bad Gateway", {}, None
+    )
+
+    client = GitHubClient(max_retries=2, retry_delay=0.01)
+    with pytest.raises(RuntimeError, match="502"):
+        client.get_stars("owner/repo")
+    assert mock_urlopen.call_count == 3  # initial + 2 retries
+
+
+@patch("ara.core.urllib.request.urlopen")
+def test_make_request_retries_on_urlerror(mock_urlopen):
+    """_make_request should retry on transient URLError."""
+    from ara.core import GitHubClient, star_cache
+    import urllib.error
+
+    star_cache.clear()
+
+    mock_resp = MagicMock()
+    mock_resp.read.return_value = json.dumps({"stargazers_count": 77}).encode("utf-8")
+    mock_resp.__enter__.return_value = mock_resp
+
+    mock_urlopen.side_effect = [
+        urllib.error.URLError("Connection refused"),
+        mock_resp,
+    ]
+
+    client = GitHubClient(max_retries=1, retry_delay=0.01)
+    stars = client.get_stars("owner/repo")
+    assert stars == 77
+    assert mock_urlopen.call_count == 2
+
+
+def test_retryable_http_error_429():
+    """_retryable_http_error should return True for 429."""
+    from ara.core import _retryable_http_error
+    import urllib.error
+
+    exc = urllib.error.HTTPError("url", 429, "Rate Limit", {}, None)
+    assert _retryable_http_error(exc) is True
+
+
+def test_retryable_http_error_404():
+    """_retryable_http_error should return False for 404."""
+    from ara.core import _retryable_http_error
+    import urllib.error
+
+    exc = urllib.error.HTTPError("url", 404, "Not Found", {}, None)
+    assert _retryable_http_error(exc) is False
+
+
+def test_retry_delay_increases():
+    """_retry_delay should increase with attempt number."""
+    from ara.core import _retry_delay
+
+    d1 = _retry_delay(0, base=1.0)
+    d2 = _retry_delay(1, base=1.0)
+    d3 = _retry_delay(2, base=1.0)
+    assert d1 < d2 < d3
+    # Should be roughly: 1, 2, 4 + small jitter
+    assert 0.9 <= d1 <= 2.0
+    assert 1.9 <= d2 <= 3.0
+    assert 3.9 <= d3 <= 5.0
+    assert d2 >= d1 * 1.5  # at least double minus jitter
+    assert d3 >= d2 * 1.5
+
+
+@patch("ara.core.urllib.request.urlopen")
 def test_get_stars_populates_cache(mock_urlopen):
     """get_stars should cache the result after fetching."""
     from ara.core import GitHubClient, get_cached_stars, star_cache

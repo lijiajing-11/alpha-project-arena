@@ -8,8 +8,16 @@ Provides:
 import time
 import json
 import os
+import random
 import urllib.request
 import urllib.error
+
+# ---------------------------------------------------------------------------
+# Constants
+# ---------------------------------------------------------------------------
+
+DEFAULT_MAX_RETRIES = 3
+DEFAULT_RETRY_DELAY = 1.0  # seconds, doubles each attempt
 
 # ---------------------------------------------------------------------------
 # In-memory cache
@@ -76,30 +84,78 @@ class StarSnapshot:
 GITHUB_API = "https://api.github.com/repos"
 
 
+def _retryable_http_error(exc: urllib.error.HTTPError) -> bool:
+    """Return True if the HTTP error is worth retrying (server-side)."""
+    return exc.code in (429, 500, 502, 503, 504)
+
+
+def _retry_delay(attempt: int, base: float = DEFAULT_RETRY_DELAY) -> float:
+    """Exponential backoff with jitter: base * 2^attempt + random(0, 0.5)."""
+    return base * (2 ** attempt) + random.uniform(0, 0.5)
+
+
 class GitHubClient:
     """Client for fetching GitHub star counts."""
 
-    def __init__(self, token: str | None = None):
+    def __init__(
+        self,
+        token: str | None = None,
+        max_retries: int = DEFAULT_MAX_RETRIES,
+        retry_delay: float = DEFAULT_RETRY_DELAY,
+    ):
         self.token = token or os.environ.get("GITHUB_TOKEN")
+        self.max_retries = max_retries
+        self.retry_delay = retry_delay
 
     def _make_request(self, url: str) -> dict:
-        """Make a GET request to the GitHub API."""
-        req = urllib.request.Request(url)
-        req.add_header("Accept", "application/vnd.github.v3+json")
-        req.add_header("User-Agent", "ARA-CLI/0.1.0")
-        if self.token:
-            req.add_header("Authorization", f"Bearer {self.token}")
+        """Make a GET request to the GitHub API with automatic retry.
 
-        try:
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                return json.loads(resp.read().decode("utf-8"))
-        except urllib.error.HTTPError as e:
-            if e.code == 404:
-                raise ValueError(f"Repository not found: {url.rsplit('/', 2)[-2]}/{url.rsplit('/', 1)[-1]}")
-            elif e.code == 403:
-                raise RuntimeError("GitHub API rate limit exceeded. Set GITHUB_TOKEN for higher limits.")
-            else:
+        Retries on 429 (rate-limit), 500, 502, 503, 504 with exponential
+        backoff + jitter. Non-retryable errors (404, 403, etc.) are raised
+        immediately.
+        """
+        last_exc: Exception | None = None
+
+        for attempt in range(self.max_retries + 1):
+            req = urllib.request.Request(url)
+            req.add_header("Accept", "application/vnd.github.v3+json")
+            req.add_header("User-Agent", "ARA-CLI/0.1.0")
+            if self.token:
+                req.add_header("Authorization", f"Bearer {self.token}")
+
+            try:
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    return json.loads(resp.read().decode("utf-8"))
+            except urllib.error.HTTPError as e:
+                if _retryable_http_error(e) and attempt < self.max_retries:
+                    last_exc = e
+                    delay = _retry_delay(attempt, self.retry_delay)
+                    time.sleep(delay)
+                    continue
+                if e.code == 404:
+                    raise ValueError(
+                        f"Repository not found: "
+                        f"{url.rsplit('/', 2)[-2]}/{url.rsplit('/', 1)[-1]}"
+                    )
+                elif e.code == 403:
+                    raise RuntimeError(
+                        "GitHub API rate limit exceeded. "
+                        "Set GITHUB_TOKEN for higher limits."
+                    )
                 raise RuntimeError(f"GitHub API error {e.code}: {e.reason}")
+            except urllib.error.URLError as e:
+                # Transient network errors are retryable
+                if attempt < self.max_retries:
+                    last_exc = e
+                    delay = _retry_delay(attempt, self.retry_delay)
+                    time.sleep(delay)
+                    continue
+                raise RuntimeError(f"Network error after {self.max_retries} retries: {e.reason}")
+
+        # If we exhaust retries, raise the last HTTP error we saw
+        raise RuntimeError(
+            f"GitHub API error {last_exc.code}: {last_exc.reason}"  # type: ignore[union-attr]
+        )
 
     def get_stars(self, repo: str) -> int:
         """Fetch star count for a repo (owner/name format)."""

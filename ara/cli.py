@@ -56,6 +56,22 @@ def run_battle(repos: list, client: GitHubClient) -> str:
     return format_battle(data)
 
 
+# ---------------------------------------------------------------------------
+# JSON helpers
+# ---------------------------------------------------------------------------
+
+
+def json_result(data: dict) -> str:
+    """Return a pretty-printed JSON string with indent 2."""
+    import json as _json
+    return _json.dumps(data, indent=2, ensure_ascii=False)
+
+
+# ---------------------------------------------------------------------------
+# Command handlers
+# ---------------------------------------------------------------------------
+
+
 def cmd_stars(args: argparse.Namespace, client: GitHubClient) -> None:
     """Handle `ara stars <repo> [<repo> ...]` command.
 
@@ -78,6 +94,19 @@ def cmd_stars(args: argparse.Namespace, client: GitHubClient) -> None:
         for i, (repo, stars) in enumerate(results, 1):
             medal = {1: "🥇", 2: "🥈", 3: "🥉"}.get(i, f"  {i}.")
             print(f"  {medal} {repo:<25} {stars:>6,} ★")
+
+
+def cmd_stars_json(args: argparse.Namespace, client: GitHubClient) -> None:
+    """Handle `ara stars --json <repo> ...`."""
+    repos_data = []
+    errors = []
+    for repo in args.repos:
+        try:
+            stars = client.get_stars(repo)
+            repos_data.append({"repo": repo, "stars": stars})
+        except (ValueError, RuntimeError) as e:
+            errors.append({"repo": repo, "error": str(e)})
+    print(json_result({"command": "stars", "repos": repos_data, "errors": errors or None}))
 
 
 def cmd_watch(args: argparse.Namespace, client: GitHubClient) -> None:
@@ -109,6 +138,22 @@ def cmd_watch(args: argparse.Namespace, client: GitHubClient) -> None:
             print(f"  {repo}: ★ {count:,}")
 
 
+def cmd_watch_json(args: argparse.Namespace, client: GitHubClient) -> None:
+    """Handle `ara watch --json <repo> ...` — one JSON line per tick."""
+    repos = args.repos
+    print(json_result({"command": "watch", "repos": repos, "status": "started"}))
+    try:
+        while True:
+            snapshots = []
+            for repo in repos:
+                stars = client.get_stars(repo)
+                snapshots.append({"repo": repo, "stars": stars})
+            print(json_result({"command": "watch", "tick": snapshots}))
+            time.sleep(30)
+    except KeyboardInterrupt:
+        print(json_result({"command": "watch", "status": "ended"}))
+
+
 def cmd_battle(args: argparse.Namespace, client: GitHubClient) -> None:
     """Handle `ara battle <repo1> <repo2> [<repo3> ...]` command."""
     repos = args.repos
@@ -119,6 +164,29 @@ def cmd_battle(args: argparse.Namespace, client: GitHubClient) -> None:
 
     result = format_battle(data)
     print(result)
+
+
+def cmd_battle_json(args: argparse.Namespace, client: GitHubClient) -> None:
+    """Handle `ara battle --json <repo1> <repo2> ...`."""
+    repos = args.repos
+    data = []
+    errors = []
+    for repo in repos:
+        try:
+            stars = client.get_stars(repo)
+            data.append({"repo": repo, "stars": stars})
+        except (ValueError, RuntimeError) as e:
+            errors.append({"repo": repo, "error": str(e)})
+    print(json_result({"command": "battle", "repos": data, "winner": _resolve_winner(data), "errors": errors or None}))
+
+
+def _resolve_winner(repos_data: list[dict]) -> str | None:
+    """Return the winner repo name from a list of {'repo', 'stars'} dicts."""
+    if not repos_data:
+        return None
+    max_stars = max(r["stars"] for r in repos_data)
+    winners = [r["repo"] for r in repos_data if r["stars"] == max_stars]
+    return winners[0] if len(winners) == 1 else "Tie — Draw!"
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -137,11 +205,13 @@ def build_parser() -> argparse.ArgumentParser:
     # ara stars <repo> [<repo> ...]
     stars_parser = subparsers.add_parser("stars", help="Fetch star count for repo(s)")
     stars_parser.add_argument("repos", nargs="+", help="Repository in owner/name format")
+    stars_parser.add_argument("--json", action="store_true", help="Output as JSON")
     stars_parser.set_defaults(func=cmd_stars)
 
     # ara watch <repo> [<repo> ...]
     watch_parser = subparsers.add_parser("watch", help="Watch repos in real-time")
     watch_parser.add_argument("repos", nargs="+", help="Repos to watch (owner/name)")
+    watch_parser.add_argument("--json", action="store_true", help="Output as JSON")
     watch_parser.set_defaults(func=cmd_watch)
 
     # ara battle <repo1> <repo2> [<repo3> ...]
@@ -149,6 +219,7 @@ def build_parser() -> argparse.ArgumentParser:
     battle_parser.add_argument(
         "repos", nargs="+", help="Repos to battle (owner/name)"
     )
+    battle_parser.add_argument("--json", action="store_true", help="Output as JSON")
     battle_parser.set_defaults(func=cmd_battle)
 
     return parser
@@ -162,6 +233,15 @@ def main(argv: list | None = None) -> int:
     if not args.command:
         parser.print_help()
         return 1
+
+    # Dispatch to JSON handler when --json is set
+    json_handlers = {
+        "stars": cmd_stars_json,
+        "watch": cmd_watch_json,
+        "battle": cmd_battle_json,
+    }
+    if getattr(args, "json", False) and args.command in json_handlers:
+        args.func = json_handlers[args.command]
 
     client = GitHubClient()
 

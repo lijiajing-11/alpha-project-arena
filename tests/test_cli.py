@@ -403,3 +403,174 @@ def test_main_runtime_error_handling(MockClient):
 
     result = main(["stars", "owner/repo"])
     assert result == 1
+
+
+# ===========================================================================
+# JSON output tests
+# ===========================================================================
+
+
+def test_parser_stars_json_flag():
+    """Parser should accept --json with stars command."""
+    from ara.cli import build_parser
+
+    parser = build_parser()
+    args = parser.parse_args(["stars", "--json", "owner/repo"])
+    assert args.json is True
+    assert args.repos == ["owner/repo"]
+
+
+def test_parser_watch_json_flag():
+    """Parser should accept --json with watch command."""
+    from ara.cli import build_parser
+
+    parser = build_parser()
+    args = parser.parse_args(["watch", "--json", "owner/repo"])
+    assert args.json is True
+
+
+def test_parser_battle_json_flag():
+    """Parser should accept --json with battle command."""
+    from ara.cli import build_parser
+
+    parser = build_parser()
+    args = parser.parse_args(["battle", "--json", "owner/a", "owner/b"])
+    assert args.json is True
+    assert args.repos == ["owner/a", "owner/b"]
+
+
+@patch("ara.cli.GitHubClient")
+def test_main_stars_json_dispatches_json_handler(MockClient):
+    """main() should dispatch cmd_stars_json when --json is set."""
+    from ara.cli import main
+
+    mock_instance = MagicMock()
+    MockClient.return_value = mock_instance
+    mock_instance.get_stars.return_value = 42
+
+    result = main(["stars", "--json", "owner/repo"])
+    assert result == 0
+
+
+def test_cmd_stars_json_output(capsys):
+    """cmd_stars_json should print valid JSON with stars data."""
+    from ara.cli import cmd_stars_json
+
+    mock_client = MagicMock()
+    mock_client.get_stars.return_value = 1234
+
+    args = argparse.Namespace(repos=["owner/alpha"])
+    cmd_stars_json(args, mock_client)
+
+    captured = capsys.readouterr()
+    import json
+
+    data = json.loads(captured.out)
+    assert data["command"] == "stars"
+    assert data["repos"] == [{"repo": "owner/alpha", "stars": 1234}]
+    assert data["errors"] is None
+
+
+def test_cmd_stars_json_multiple(capsys):
+    """cmd_stars_json should handle multiple repos in JSON output."""
+    from ara.cli import cmd_stars_json
+
+    mock_client = MagicMock()
+
+    def mock_get_stars(repo):
+        return {"owner/a": 100, "owner/b": 200}.get(repo, 0)
+
+    mock_client.get_stars.side_effect = mock_get_stars
+
+    args = argparse.Namespace(repos=["owner/a", "owner/b"])
+    cmd_stars_json(args, mock_client)
+
+    captured = capsys.readouterr()
+    import json
+
+    data = json.loads(captured.out)
+    assert data["command"] == "stars"
+    assert len(data["repos"]) == 2
+    assert {"repo": "owner/a", "stars": 100} in data["repos"]
+    assert {"repo": "owner/b", "stars": 200} in data["repos"]
+
+
+def test_cmd_stars_json_with_errors(capsys):
+    """cmd_stars_json should capture errors per repo."""
+    from ara.cli import cmd_stars_json
+
+    mock_client = MagicMock()
+
+    def mock_get_stars(repo):
+        if repo == "owner/bad":
+            raise RuntimeError("GitHub API error 500")
+        return {"owner/good": 42}.get(repo, 0)
+
+    mock_client.get_stars.side_effect = mock_get_stars
+
+    args = argparse.Namespace(repos=["owner/good", "owner/bad"])
+    cmd_stars_json(args, mock_client)
+
+    captured = capsys.readouterr()
+    import json
+
+    data = json.loads(captured.out)
+    assert data["command"] == "stars"
+    assert len(data["repos"]) == 1
+    assert data["repos"][0] == {"repo": "owner/good", "stars": 42}
+    assert len(data["errors"]) == 1
+    assert data["errors"][0]["repo"] == "owner/bad"
+    assert "500" in data["errors"][0]["error"]
+
+
+def test_cmd_battle_json_output(capsys):
+    """cmd_battle_json should print valid JSON with battle data."""
+    from ara.cli import cmd_battle_json
+
+    mock_client = MagicMock()
+
+    def mock_get_stars(repo):
+        return {"owner/alpha": 1000, "owner/beta": 500}.get(repo, 0)
+
+    mock_client.get_stars.side_effect = mock_get_stars
+
+    args = argparse.Namespace(repos=["owner/alpha", "owner/beta"])
+    cmd_battle_json(args, mock_client)
+
+    captured = capsys.readouterr()
+    import json
+
+    data = json.loads(captured.out)
+    assert data["command"] == "battle"
+    assert len(data["repos"]) == 2
+    assert data["winner"] == "owner/alpha"
+    assert data["errors"] is None
+
+
+def test_resolve_winner():
+    """_resolve_winner should pick the repo with the most stars."""
+    from ara.cli import _resolve_winner
+
+    data = [
+        {"repo": "owner/a", "stars": 100},
+        {"repo": "owner/b", "stars": 200},
+    ]
+    assert _resolve_winner(data) == "owner/b"
+
+
+def test_resolve_winner_tie():
+    """_resolve_winner should return 'Tie — Draw!' for tied repos."""
+    from ara.cli import _resolve_winner
+
+    data = [
+        {"repo": "owner/a", "stars": 100},
+        {"repo": "owner/b", "stars": 100},
+    ]
+    assert _resolve_winner(data) == "Tie — Draw!"
+
+
+def test_resolve_winner_empty():
+    """_resolve_winner should return None for empty list."""
+    from ara.cli import _resolve_winner
+
+    assert _resolve_winner([]) is None
