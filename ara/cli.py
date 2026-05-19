@@ -195,8 +195,6 @@ def cmd_watch(args: argparse.Namespace, client: GitHubClient) -> None:
                     print(f"  {RED}Error fetching {repo}: {e}{RESET}")
                     # Keep the previous info to continue monitoring
                     info = previous_infos.get(repo) or {}
-                    if not info:
-                        continue  # No baseline yet, skip display
                 prev = previous_infos.get(repo)
                 current_stars = info.get("stars", 0)
 
@@ -254,6 +252,11 @@ def cmd_watch_json(args: argparse.Namespace, client: GitHubClient) -> None:
                     if stars > previous_stars[repo]:
                         changed = True
                         total_changes += 1
+                        _send_notification(
+                            "ARA Star Tracker",
+                            f"{repo} gained +{stars - previous_stars[repo]} star(s) "
+                            f"({previous_stars[repo]:,} → {stars:,})",
+                        )
                 snapshots.append({"repo": repo, "stars": stars, "changed": changed})
                 previous_stars[repo] = stars
             print(json_result({"command": "watch", "tick": snapshots, "total_changes": total_changes}))
