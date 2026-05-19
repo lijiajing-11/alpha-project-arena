@@ -153,24 +153,56 @@ ara stars --json python/cpython tensorflow/tensorflow
 
 ---
 
-### 👀 `ara watch` — Real-Time Monitoring
+### 👀 `ara watch` — Real-Time Dashboard
+
+Watch a single repo with a **multi-field dashboard** — stars, forks, issues, language, license, and color-coded deltas. Press `Ctrl+C` to stop.
 
 ```text
-$ ara watch python/cpython
+$ ara watch owner/repo
 
-  ARA Star Tracker v0.1.0
-  Watching 1 repo(s). Press Ctrl+C to stop.
+╔════════════════════════════════════════════╗
+║        📡 ARA Star Tracker — WATCH         ║
+╚════════════════════════════════════════════╝
 
-  ╔══ ARA Multi-Watch @ 14:32:01 ══╗
-  ║  python/cpython               ★ 63,475  (0)
-  ╚══════════════════════════════════╝
+┌────────────────────┬────────────────────────┐
+│ Repository         │ owner/repo              │
+├────────────────────┼────────────────────────┤
+│ ⭐ Stars           │ 12,345  (+5)            │
+│ ⑂ Forks            │ 234     (+1)            │
+│ ⚠ Issues           │ 12     (-2)             │
+│ 🔤 Language        │ Python                  │
+│ 📜 License         │ MIT                     │
+│ 🕐 Updated         │ 2026-05-19 14:30:22     │
+│ 📅 Created         │ 2020-01-15              │
+└────────────────────┴────────────────────────┘
+
+Last updated: 14:30:52  |  Press Ctrl+C to stop
 ```
 
-Press `Ctrl+C` to stop — ARA prints a session summary with final counts and elapsed time.
+Delta values are **color-coded**: green for growth, red for decline.
+
+Watch **multiple repos** side-by-side in a compact table:
+
+```text
+$ ara watch owner/repo-a owner/repo-b
+
+╔══════════════════════════════════════════════════════════════════╗
+║        📡 ARA Multi-Watch                                       ║
+╚══════════════════════════════════════════════════════════════════╝
+
+┌──────────┬──────────┬───────┬────────┬────────┬────────┐
+│ Repo     │ ⭐ Stars │ ⑂ Forks│ ⚠ Issues│ 🔤 Lang│ 📜 Lic │
+├──────────┼──────────┼───────┼────────┼────────┼────────┤
+│ owner/a  │ 12,345   │ 234   │ 12     │ Python │ MIT    │
+│ owner/b  │ 567      │ 12    │ 3      │ Rust   │ Apache │
+└──────────┴──────────┴───────┴────────┴────────┴────────┘
+
+Watching 2 repos  ·  14:30:52  ·  Ctrl+C to stop
+```
 
 ```bash
-# One JSON tick per line, pipe to your own dashboard
-ara watch --json python/cpython
+# JSON mode — one JSON object per tick
+ara watch --json owner/repo-a owner/repo-b
 ```
 
 ---
@@ -241,14 +273,71 @@ $ ara compare facebook/react vuejs/core
   │ ⚠ Issues    │ 1,200            │ 800              │ 🏆 b  │
   │ 🔤 Language │ JavaScript       │ TypeScript       │ —      │
   │ 📜 License  │ MIT              │ MIT              │ —      │
+  │ 📅 Created  │ 2013-05-29       │ 2019-12-14       │ —      │
+  │ 🕐 Updated  │ 2026-05-19       │ 2026-05-18       │ —      │
   └─────────────┴──────────────────┴──────────────────┴────────┘
 
   🏆 facebook/react WINS!
      Leads by 183,000 stars over vuejs/core
+     Also leads in forks: 41,000 more
 ```
 
 ```bash
 ara compare --json facebook/react vuejs/core
+```
+
+```json
+{
+  "command": "compare",
+  "repos": [
+    {
+      "full_name": "facebook/react",
+      "stars": 230000,
+      "forks": 48000,
+      "open_issues": 1200,
+      "language": "JavaScript",
+      "license": "MIT",
+      "created_at": "2013-05-29T00:00:00Z",
+      "updated_at": "2026-05-19T12:00:00Z"
+    },
+    {
+      "full_name": "vuejs/core",
+      "stars": 47000,
+      "forks": 7000,
+      "open_issues": 800,
+      "language": "TypeScript",
+      "license": "MIT",
+      "created_at": "2019-12-14T00:00:00Z",
+      "updated_at": "2026-05-18T10:00:00Z"
+    }
+  ],
+  "winner": "facebook/react",
+  "lead_by": 183000,
+  "fork_leader": "facebook/react",
+  "issue_leader": "vuejs/core",
+  "errors": null
+}
+```
+
+---
+
+### 📦 JSON Output
+
+Every ARA command accepts `--json` for machine-readable output — perfect for CI pipelines, dashboards, and scripts:
+
+| Command | JSON flag | What you get |
+|---------|-----------|--------------|
+| `ara stars --json owner/repo` | ✅ | Array of `{repo, stars}` objects |
+| `ara watch --json owner/repo` | ✅ | One JSON object per 30s tick |
+| `ara battle --json owner/a owner/b` | ✅ | Battle results with `winner` field |
+| `ara compare --json owner/a owner/b` | ✅ | Full comparison with `winner`, `lead_by`, `fork_leader` |
+| `ara info --json owner/repo` | ✅ | Full repo metadata as JSON |
+
+```bash
+# Example: pipe to jq for quick analysis
+ara compare --json facebook/react vuejs/core | jq '.winner'
+
+# Output: "facebook/react"
 ```
 
 ---
