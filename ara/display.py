@@ -255,43 +255,18 @@ def format_multi_watch_dashboard(
                 s = f"{RED}{s}{RESET}"
         return s
 
-    rows = []
-    # Header row
+    # Build header row
     header_parts = [f"│ {'Repo'.ljust(repo_w)} "]
     for label, w in col_defs:
         header_parts.append(f"│ {label.ljust(w)} ")
     header_parts.append("│")
-    header = "".join(header_parts)
+    header_str = "".join(header_parts)
 
-    # Separator
-    sep_parts = ["├"]
-    sep_parts.append("─" * (repo_w + 2))
-    sep_parts.append("┤")
+    # Build separator
+    sep_parts = ["├" + "─" * (repo_w + 2) + "┤"]
     for _, w in col_defs:
-        sep_parts.append("─" * (w + 2))
-        sep_parts.append("┤")
-    sep = "".join(sep_parts[:-1])  # remove last extra
-
-    top_sep = "┌" + "─" * (len(header) - 2) + "┐"
-    bot_sep = "└" + "─" * (len(header) - 2) + "┘"
-
-    # Fix top separator — measure actual header width
-    header_len = len(header)
-    top_sep = "┌" + "─" * (header_len - 2) + "┐"
-    bot_sep = "└" + "─" * (header_len - 2) + "┘"
-
-    _headers = []
-    _headers.append(f"│ {'Repo'.ljust(repo_w)} ")
-    for label, w in col_defs:
-        _headers.append(f"│ {label.ljust(w)} ")
-    _headers.append("│")
-    header_str = "".join(_headers)
-
-    _sep = []
-    _sep.append("├" + "─" * (repo_w + 2) + "┤")
-    for _, w in col_defs:
-        _sep.append("─" * (w + 2) + "┤")
-    sep_str = "".join(_sep)
+        sep_parts.append("─" * (w + 2) + "┤")
+    sep_str = "".join(sep_parts)
 
     _top = "┌" + "─" * (len(header_str) - 2) + "┐"
     _bot = "└" + "─" * (len(header_str) - 2) + "┘"

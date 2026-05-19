@@ -30,10 +30,11 @@ def main():
     
     # Use known popular repos for a good demo
     demos = [
-        ("ara --help", "demo-help.txt"),
+        ("python -m ara --help", "demo-help.txt"),
         ("python -m ara stars tiangolo/fastapi pallets/flask", "demo-stars.txt"),
         ("python -m ara battle tiangolo/fastapi pallets/flask psf/requests facebook/react", "demo-battle.txt"),
-        ("python -m ara stars tiangolo/fastapi", "demo-info.txt"),
+        ("python -m ara info tiangolo/fastapi", "demo-info.txt"),
+        ("python -m ara compare tiangolo/fastapi pallets/flask", "demo-compare.txt"),
     ]
     
     for cmd, filename in demos:
