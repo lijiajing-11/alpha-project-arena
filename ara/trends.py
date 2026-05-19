@@ -228,9 +228,11 @@ def cmd_trends(args, client) -> str:
     buckets = compute_trend_buckets(events, hours=args.hours, interval_minutes=args.interval)
 
     if getattr(args, "json", False):
-        return _json_output(buckets, args.repo)
-
-    return render_trend_chart(buckets, args.repo)
+        result = _json_output(buckets, args.repo)
+    else:
+        result = render_trend_chart(buckets, args.repo)
+    print(result)
+    return result
 
 
 def _json_output(buckets: list[TrendBucket], repo: str) -> str:
