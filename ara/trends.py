@@ -3,9 +3,8 @@
 import json
 import re
 import time
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import List, Optional
+from dataclasses import dataclass
+from datetime import datetime
 
 from ara.colors import BOLD, GREEN, RED, RESET
 
@@ -42,7 +41,7 @@ def _parse_link_header(headers: dict) -> dict[str, str]:
     return result
 
 
-def get_star_history(client, repo: str, pages: int = 3) -> List[StarEvent]:
+def get_star_history(client, repo: str, pages: int = 3) -> list[StarEvent]:
     """Fetch star history by paginating stargazers.
 
     Uses /repos/{owner}/{repo}/stargazers with per_page=100.
@@ -94,10 +93,10 @@ def _parse_iso8601(iso_str: str) -> float:
 
 
 def compute_trend_buckets(
-    events: List[StarEvent],
+    events: list[StarEvent],
     hours: int = 72,
     interval_minutes: int = 60,
-) -> List[TrendBucket]:
+) -> list[TrendBucket]:
     """Group star events into time buckets.
 
     Args:
@@ -154,7 +153,7 @@ def _format_bucket_label(start: float, end: float, total_hours: int) -> str:
     return dt.strftime("%b %d %H:%M")
 
 
-def render_trend_chart(buckets: List[TrendBucket], repo: str) -> str:
+def render_trend_chart(buckets: list[TrendBucket], repo: str) -> str:
     """Render ASCII trend table.
 
     Uses ━━━ box-drawing borders, ▲/▼ delta indicators.
@@ -212,7 +211,7 @@ def _compute_window_label(buckets: list[TrendBucket]) -> str:
         return "N/A"
     first = buckets[0].label
     last = buckets[-1].label
-    return f"{first} – {last}"
+    return f"{first} - {last}"
 
 
 def _format_delta(delta: int, padded: bool = False) -> str:

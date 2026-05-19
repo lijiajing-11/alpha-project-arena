@@ -9,8 +9,7 @@ Provides `ara insight <repo>`:
 
 from datetime import datetime, timezone
 
-from .colors import BOLD, CYAN, GOLD, GRAY, GREEN, RESET, YELLOW
-
+from .colors import BOLD, CYAN, GOLD, GRAY, RESET, YELLOW
 from .core import GitHubClient
 
 

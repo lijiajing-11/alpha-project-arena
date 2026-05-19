@@ -1,7 +1,7 @@
 """Tests for `ara watch` command (Task 003)."""
 
 import time
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 # --- Unit tests for the watch display logic ---
 
@@ -450,3 +450,232 @@ def test_watch_network_error_handled_gracefully(MockClient, capsys):
     assert "Error" in captured.out or "error" in captured.out
     # Should still show the repo info on the successful second tick
     assert "owner/repo" in captured.out
+
+
+# ===========================================================================
+# _send_notification unit tests (Task 015-C)
+# ===========================================================================
+
+
+def test_send_notification_fallback_stderr(capsys):
+    """When plyer is unavailable, _send_notification should fall back to stderr."""
+    from ara.cli import _send_notification
+
+    _send_notification("Test Title", "Test Message")
+    captured = capsys.readouterr()
+    # Nothing on stdout
+    assert captured.out == ""
+    # Fallback message should go to stderr
+    assert "Test Title" in captured.err
+    assert "Test Message" in captured.err
+
+
+@patch("ara.cli._notify_engine", False)
+def test_send_notification_engine_false(capsys):
+    """When _notify_engine is False (plyer failed), should use stderr fallback."""
+    from ara.cli import _send_notification
+
+    _send_notification("Engine Off", "Fallback check")
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "Engine Off" in captured.err
+
+
+@patch("ara.cli._send_notification")
+def test_cmd_watch_notify_calls_send_notification(mock_notify):
+    """Notify mode should call _send_notification when stars increase."""
+    from ara.cli import cmd_watch
+    from unittest.mock import patch as _patch
+
+    mock_client = Mock()
+    mock_client.get_repo_info.side_effect = [
+        _make_info(stars=1000),
+        _make_info(stars=1005),
+    ]
+
+    args = type("Args", (), {"repos": ["owner/repo"], "notify": True, "json": False})()
+
+    with _patch("ara.cli.time.sleep", side_effect=[None, KeyboardInterrupt]):
+        cmd_watch(args, mock_client)
+
+    # _send_notification should have been called exactly once (on the increase)
+    mock_notify.assert_called_once()
+    call_title, call_message = mock_notify.call_args[0]
+    assert "ARA Star Tracker" in call_title
+    assert "owner/repo" in call_message
+    assert "+5" in call_message
+
+
+@patch("ara.cli._send_notification")
+def test_cmd_watch_notify_no_call_without_change(mock_notify):
+    """Notify mode should NOT call _send_notification when stars are unchanged."""
+    from ara.cli import cmd_watch
+    from unittest.mock import patch as _patch
+
+    mock_client = Mock()
+    mock_client.get_repo_info.side_effect = [
+        _make_info(stars=1000),
+        _make_info(stars=1000),
+    ]
+
+    args = type("Args", (), {"repos": ["owner/repo"], "notify": True, "json": False})()
+
+    with _patch("ara.cli.time.sleep", side_effect=[None, KeyboardInterrupt]):
+        cmd_watch(args, mock_client)
+
+    mock_notify.assert_not_called()
+
+
+@patch("ara.cli._send_notification")
+def test_cmd_watch_notify_no_call_on_decrease(mock_notify):
+    """Notify mode should NOT call _send_notification when stars decrease."""
+    from ara.cli import cmd_watch
+    from unittest.mock import patch as _patch
+
+    mock_client = Mock()
+    mock_client.get_repo_info.side_effect = [
+        _make_info(stars=1000),
+        _make_info(stars=995),
+    ]
+
+    args = type("Args", (), {"repos": ["owner/repo"], "notify": True, "json": False})()
+
+    with _patch("ara.cli.time.sleep", side_effect=[None, KeyboardInterrupt]):
+        cmd_watch(args, mock_client)
+
+    mock_notify.assert_not_called()
+
+
+@patch("ara.cli._send_notification")
+def test_cmd_watch_notify_two_repos_one_change(mock_notify):
+    """Multi-repo notify: only the repo that gained stars should trigger notification."""
+    from ara.cli import cmd_watch
+    from unittest.mock import patch as _patch
+
+    mock_client = Mock()
+    # Two repos: one changes, one stays
+    mock_client.get_repo_info.side_effect = [
+        _make_info(full_name="owner/alpha", stars=1000),
+        _make_info(full_name="owner/beta", stars=500),
+        # Second tick
+        _make_info(full_name="owner/alpha", stars=1005),
+        _make_info(full_name="owner/beta", stars=500),
+    ]
+
+    args = type("Args", (), {"repos": ["owner/alpha", "owner/beta"], "notify": True, "json": False})()
+
+    with _patch("ara.cli.time.sleep", side_effect=[None, KeyboardInterrupt]):
+        cmd_watch(args, mock_client)
+
+    # Should be called exactly once (only alpha changed)
+    assert mock_notify.call_count == 1
+    call_message = mock_notify.call_args[0][1]
+    assert "owner/alpha" in call_message
+    assert "+5" in call_message
+
+
+@patch("ara.cli._send_notification")
+def test_cmd_watch_notify_two_repos_both_change(mock_notify):
+    """Multi-repo notify: both repos gain stars, both trigger notifications."""
+    from ara.cli import cmd_watch
+    from unittest.mock import patch as _patch
+
+    mock_client = Mock()
+    mock_client.get_repo_info.side_effect = [
+        _make_info(full_name="owner/alpha", stars=1000),
+        _make_info(full_name="owner/beta", stars=500),
+        # Second tick: both gained
+        _make_info(full_name="owner/alpha", stars=1010),
+        _make_info(full_name="owner/beta", stars=510),
+    ]
+
+    args = type("Args", (), {"repos": ["owner/alpha", "owner/beta"], "notify": True, "json": False})()
+
+    with _patch("ara.cli.time.sleep", side_effect=[None, KeyboardInterrupt]):
+        cmd_watch(args, mock_client)
+
+    # Should be called twice (alpha: +10, beta: +10)
+    assert mock_notify.call_count == 2
+
+
+def _parse_json_blocks(text: str) -> list[dict]:
+    """Split multi-line JSON output into individual JSON objects.
+
+    ``cmd_watch_json`` prints *indented* JSON objects (2-space indent),
+    separated by newlines.  This helper splits them back into individual
+    dicts using a simple bracket-matching parser.
+    """
+    import json
+
+    blocks = []
+    depth = 0
+    start = None
+    for i, ch in enumerate(text):
+        if ch == "{":
+            if depth == 0:
+                start = i
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0 and start is not None:
+                blocks.append(json.loads(text[start : i + 1]))
+                start = None
+    return blocks
+
+
+@patch("ara.cli.GitHubClient")
+def test_cmd_watch_json_notify_increase(MockClient, capsys):
+    """cmd_watch_json should send notification when notify=True and stars increase."""
+    from ara.cli import cmd_watch_json
+    from unittest.mock import patch as _patch
+
+    mock_client = MockClient.return_value
+    mock_client.get_stars.side_effect = [1000, 1005]
+
+    args = type("Args", (), {"repos": ["owner/repo"], "notify": True, "json": True})()
+
+    with _patch("ara.cli.time.sleep", side_effect=[None, KeyboardInterrupt]):
+        cmd_watch_json(args, mock_client)
+
+    captured = capsys.readouterr()
+    blocks = _parse_json_blocks(captured.out)
+
+    # 4 blocks: start + tick-1000 + tick-1005 + end
+    assert len(blocks) == 4
+    assert blocks[0]["status"] == "started"
+    # First tick: 1000 stars, no previous so no notification
+    assert blocks[1]["tick"][0]["repo"] == "owner/repo"
+    assert blocks[1]["tick"][0]["stars"] == 1000
+    assert blocks[1]["tick"][0]["changed"] is False
+    # Second tick: 1005 stars, increase triggers notification
+    assert blocks[2]["tick"][0]["repo"] == "owner/repo"
+    assert blocks[2]["tick"][0]["stars"] == 1005
+    assert blocks[2]["tick"][0]["changed"] is True
+    # End block
+    assert blocks[3]["status"] == "ended"
+    assert blocks[3]["total_changes"] == 1
+
+
+@patch("ara.cli.GitHubClient")
+def test_cmd_watch_json_notify_no_change(MockClient, capsys):
+    """cmd_watch_json should NOT set changed=True when stars don't change."""
+    from ara.cli import cmd_watch_json
+    from unittest.mock import patch as _patch
+
+    mock_client = MockClient.return_value
+    mock_client.get_stars.side_effect = [1000, 1000]
+
+    args = type("Args", (), {"repos": ["owner/repo"], "notify": True, "json": True})()
+
+    with _patch("ara.cli.time.sleep", side_effect=[None, KeyboardInterrupt]):
+        cmd_watch_json(args, mock_client)
+
+    captured = capsys.readouterr()
+    blocks = _parse_json_blocks(captured.out)
+
+    assert len(blocks) == 4
+    # First tick: 1000 stars, no change
+    assert blocks[1]["tick"][0]["changed"] is False
+    # Second tick: 1000 stars, still no change
+    assert blocks[2]["tick"][0]["changed"] is False
+    assert blocks[2]["total_changes"] == 0

@@ -7,7 +7,6 @@ Provides formatting functions for:
 - Winner declaration
 """
 
-from typing import List, Tuple
 
 from ara.colors import BOLD, CYAN, GREEN, RESET, YELLOW
 
@@ -35,7 +34,7 @@ def make_bar(stars: int, max_stars: int, max_width: int = MAX_BAR_WIDTH) -> str:
     return f"{bar} {stars:,} ★"
 
 
-def declare_winner(repos: List[Tuple[str, int]]) -> str:
+def declare_winner(repos: list[tuple[str, int]]) -> str:
     """Declare the winner of a battle.
 
     Args:
@@ -56,7 +55,7 @@ def declare_winner(repos: List[Tuple[str, int]]) -> str:
         return "Tie — Draw!"
 
 
-def format_battle(repos: List[Tuple[str, int]]) -> str:
+def format_battle(repos: list[tuple[str, int]]) -> str:
     """Format the full battle layout.
 
     Args:

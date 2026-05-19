@@ -122,9 +122,9 @@ def format_rank_table(results: list[dict], top_n: int = 10) -> str:
         if i == 1:
             rank_str = f"{GREEN}🥇{RESET} 1".rjust(rank_w + 6)
         elif i == 2:
-            rank_str = f"🥈 2".rjust(rank_w + 4)
+            rank_str = "🥈 2".rjust(rank_w + 4)
         elif i == 3:
-            rank_str = f"🥉 3".rjust(rank_w + 4)
+            rank_str = "🥉 3".rjust(rank_w + 4)
 
         row = (
             f"│ {rank_str:<{rank_w + 5 if i <= 3 else 0}} "

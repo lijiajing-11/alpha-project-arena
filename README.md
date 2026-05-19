@@ -127,6 +127,8 @@ $ ara watch owner/repo
 
 > 💡 **Pro tip:** Add `--notify` to get desktop notifications when stars change
 > — works via `plyer` on macOS/Linux/Windows, with graceful stderr fallback.
+> On WSL/headless environments, ARA falls back to an ANSI bell (`\a`) + coloured
+> stderr message so you never miss a star jump.
 
 ### 🧠 `ara insight` — Deep Repository Intelligence
 
@@ -172,6 +174,10 @@ pip install ara
 **That's it.** No npm, no Docker, no `requirements.txt`, no config file. Just pure Python from the standard library.
 
 > ⚙️ **Rate limits:** Unauthenticated = 60 req/h. Set `export GITHUB_TOKEN=ghp_...` for 5,000/h. ARA auto-retries on 429s with exponential backoff + jitter.
+
+> 💡 **pip install ara** is the fastest path. If PyPI isn't available (private
+> network, air-gapped, or pre-release features), just `git clone` and run it
+> directly — zero dependencies beyond stdlib + optional `plyer`.
 
 ### Try it now — no install required
 
@@ -487,18 +493,19 @@ ARA is designed as a **single-file-per-responsibility** Python package — no fr
 
 | Module | Responsibility |
 |--------|---------------|
-| `ara/cli.py` | Argument parsing + command dispatch (13 commands) |
+| `ara/cli.py` | Argument parsing + command dispatch (12 commands) |
 | `ara/core.py` | GitHub API client, cache, data models |
 | `ara/summary.py` | One-line repo overview |
 | `ara/dashboard.py` | Full repo overview panel |
 | `ara/rank.py` | Top N repo leaderboard |
 | `ara/insight.py` | Deep repo intelligence (star velocity, topics) |
-| `ara/display.py` | Live watch terminal UI |
+| `ara/display.py` | Live watch terminal UI, watch/compare/info formatting |
 | `ara/battle.py` | Arena battle ASCII bars |
 | `ara/trends.py` | Star trend analysis + ASCII charts |
 | `ara/history.py` | Star growth ASCII timeline chart |
 | `ara/compare.py` | Head-to-head repo comparison table |
 | `ara/generate_stars.py` | Stargazer JSON export |
+| `ara/chart.py` | Shared ASCII chart engine (bars, sparklines) |
 | `ara/colors.py` | ANSI color constants |
 | `ara/console.py` | Console entry point (`console_scripts`) |
 

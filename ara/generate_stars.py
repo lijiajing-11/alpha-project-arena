@@ -4,9 +4,9 @@ import json
 from collections import defaultdict
 from datetime import datetime, timezone
 
+from ara.colors import BOLD, RESET
 from ara.core import GitHubClient
-from ara.trends import get_star_history, compute_trend_buckets
-from ara.colors import BOLD, GREEN, RESET
+from ara.trends import compute_trend_buckets, get_star_history
 
 
 def _safe_filename(repo: str) -> str:
@@ -51,14 +51,13 @@ def cmd_generate_stars(args, client: GitHubClient) -> str:
     # Show quick stats using trends bucket analysis
     buckets = compute_trend_buckets(events, hours=72, interval_minutes=60)
     if buckets:
-        total = sum(b.count for b in buckets)
         best = max(buckets, key=lambda b: b.count)
 
         print()
         print(f"Quick stats for {BOLD}{repo}{RESET} stargazers:")
         print("━" * 45)
         print(f"Total stargazers fetched:  {len(events)}")
-        print(f"Time span:                 {buckets[0].label} – {buckets[-1].label}")
+        print(f"Time span:                 {buckets[0].label} - {buckets[-1].label}")
         print(f"Peak hour:                 {best.label} ({best.count} stars)")
 
         # Compute daily totals

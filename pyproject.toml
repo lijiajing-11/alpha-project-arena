@@ -3,6 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
+minversion = "7.0"
 testpaths = [
     "tests",
 ]
@@ -15,6 +16,9 @@ filterwarnings = [
 ]
 python_files = [
     "test_*.py",
+]
+python_functions = [
+    "test_*",
 ]
 
 [tool.ruff]
@@ -34,8 +38,14 @@ select = [
     "RUF", # ruff-specific
 ]
 ignore = [
-    "E501",   # line-too-long (handled by formatter)
-    "N802",   # allow lowercase function names
-    "N803",   # allow lowercase argument names
+    "E501",    # line-too-long (handled by formatter)
+    "N802",    # allow lowercase function names
+    "N803",    # allow lowercase argument names
     "PLR2004", # magic-value-comparison
+    "PLC0415", # allow lazy/guarded imports (plyer, optional deps)
+    "PLR0911", # allow functions with many return statements
+    "PLR0912", # allow functions with many branches
+    "PLR0915", # allow functions with many statements
+    "PLW2901", # allow loop variable reassignment
+    "RUF001",  # allow ambiguous unicode chars (en-dash in output)
 ]

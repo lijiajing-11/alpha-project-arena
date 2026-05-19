@@ -5,12 +5,12 @@ Provides:
 - GitHubClient: Fetches star counts from GitHub API
 """
 
-import time
 import json
 import os
 import random
-import urllib.request
+import time
 import urllib.error
+import urllib.request
 
 # ---------------------------------------------------------------------------
 # Constants

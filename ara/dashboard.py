@@ -10,8 +10,8 @@ license, last updated time, and description for each repo.
 
 import json
 
+from ara.colors import BOLD, GREEN, RESET
 from ara.core import GitHubClient
-from ara.colors import BOLD, RESET, GREEN
 
 
 def _format_number(n: int) -> str:

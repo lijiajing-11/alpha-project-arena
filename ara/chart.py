@@ -4,7 +4,7 @@ Provides generic ASCII bar/line chart rendering functions
 that can be reused across commands (history, trends, etc.).
 """
 
-from .colors import BOLD, CYAN, GRAY, GREEN, RESET, YELLOW
+from .colors import BOLD, GRAY, GREEN, RESET, YELLOW
 
 
 def render_line_chart(

@@ -11,26 +11,26 @@ import sys
 import time
 
 from ara import __version__
+from ara.battle import format_battle
 from ara.core import GitHubClient
+from ara.dashboard import cmd_dashboard
 from ara.display import (
-    format_multi_watch_dashboard,
-    format_repo_info,
-    format_compare_table,
-    format_watch_dashboard,
     BOLD,
     CYAN,
     GREEN,
     RED,
     RESET,
+    format_compare_table,
+    format_multi_watch_dashboard,
+    format_repo_info,
+    format_watch_dashboard,
 )
-from ara.battle import format_battle
-from ara.trends import cmd_trends as trends_cmd
 from ara.generate_stars import cmd_generate_stars
-from ara.dashboard import cmd_dashboard
-from ara.summary import cmd_summary, cmd_summary_json
-from ara.rank import cmd_rank, cmd_rank_json
-from ara.insight import cmd_insight, cmd_insight_json
 from ara.history import cmd_history
+from ara.insight import cmd_insight, cmd_insight_json
+from ara.rank import cmd_rank, cmd_rank_json
+from ara.summary import cmd_summary, cmd_summary_json
+from ara.trends import cmd_trends as trends_cmd
 
 
 def run_watch(repo: str, client: GitHubClient, previous: int | None = None) -> int:
