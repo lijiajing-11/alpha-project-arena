@@ -136,7 +136,7 @@ def compute_trend_buckets(
     # Compute deltas
     prev = 0
     for b in buckets:
-        b.delta = b.count - prev if prev is not None else 0
+        b.delta = b.count - prev
         prev = b.count
 
     return buckets

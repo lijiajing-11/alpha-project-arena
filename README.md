@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/⚡_ARA-Arena_Star_Tracker-8A2BE2?style=for-the-badge" alt="ARA Banner"/>
+  <img src="https://img.shields.io/badge/⚡_ARA_|_Arena_Star_Tracker-8A2BE2?style=for-the-badge" alt="ARA Banner"/>
 </p>
 
 <h1 align="center">⚡ ARA — Arena Star Tracker</h1>
@@ -10,24 +10,45 @@
 </p>
 
 <p align="center">
-  <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python 3.10+"/></a>
-  <a href="https://pypi.org/project/ara/"><img src="https://img.shields.io/pypi/v/ara?color=8A2BE2" alt="PyPI"/></a>
-  <a href="https://pypi.org/project/ara/"><img src="https://img.shields.io/pypi/dm/ara?color=3b82f6" alt="Downloads"/></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-22c55e" alt="MIT"/></a>
-  <a href="https://github.com/lijiajing-11/alpha-project-arena"><img src="https://img.shields.io/github/stars/lijiajing-11/alpha-project-arena?label=stars&color=facc15" alt="Stars"/></a>
-  <a href="https://github.com/lijiajing-11/alpha-project-arena/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/lijiajing-11/alpha-project-arena/ci.yml?label=CI&color=22c55e" alt="CI"/></a>
-  <a href="https://github.com/lijiajing-11/alpha-project-arena"><img src="https://img.shields.io/badge/status-alpha-f97316" alt="Status"/></a>
-  <a href="https://github.com/lijiajing-11/alpha-project-arena"><img src="https://img.shields.io/github/languages/top/lijiajing-11/alpha-project-arena?color=blueviolet" alt="Language"/></a>
-  <a href="https://github.com/lijiajing-11/alpha-project-arena"><img src="https://img.shields.io/badge/OS-linux_%7C_macOS_%7C_windows-555" alt="OS"/></a>
-  <br/>
-  <a href="https://github.com/lijiajing-11/alpha-project-arena/issues"><img src="https://img.shields.io/github/issues/lijiajing-11/alpha-project-arena?label=issues" alt="Issues"/></a>
-  <a href="https://github.com/lijiajing-11/alpha-project-arena"><img src="https://img.shields.io/github/last-commit/lijiajing-11/alpha-project-arena?label=updated" alt="Last Commit"/></a>
-  <a href="https://github.com/lijiajing-11/alpha-project-arena"><img src="https://img.shields.io/badge/code%20style-ruff-9749eb" alt="Code Style"/></a>
-  <a href="https://github.com/lijiajing-11/alpha-project-arena"><img src="https://img.shields.io/badge/tests-90%2B-22c55e" alt="Tests"/></a>
-  <a href="https://github.com/lijiajing-11/alpha-project-arena"><img src="https://img.shields.io/badge/PRs-welcome-22c55e" alt="PRs Welcome"/></a>
-  <a href="https://x.com/ATechInc"><img src="https://img.shields.io/badge/🐦-follow_%40ATechInc-1DA1F2" alt="Twitter/X"/></a>
-  <a href="https://github.com/lijiajing-11/alpha-project-arena/graphs/contributors"><img src="https://img.shields.io/github/contributors/lijiajing-11/alpha-project-arena?color=22c55e" alt="Contributors"/></a>
+  <sup><i>Built by <b>Α-Tech Inc.</b> — where we turn data into arenas. 🏟️</i></sup>
 </p>
+
+---
+
+## 📑 Navigation
+
+| # | Section | What's inside |
+|---|---------|---------------|
+| 🎯 | [What is ARA?](#-what-is-ara) | Scenario table, 8 core highlights |
+| 🚀 | [Quick Start](#-quick-start) | `pip install`, first commands, run without install |
+| 📖 | [Commands](#-commands) | All 6 commands with live output examples |
+| 🏗️ | [Architecture](#️-architecture) | Module map, project structure tree |
+| 🔧 | [Development](#-development) | Clone, venv, test, lint, demo |
+| ⏳ | [Rate Limits](#-rate-limits--reliability) | Token setup, retry + cache details |
+| 🤝 | [Contributing](#-contributing) | PR guide + idea wishlist |
+| 📝 | [License](#-license) | MIT + links |
+
+---
+
+### ⚡ Try it now — no install required
+
+```bash
+git clone https://github.com/lijiajing-11/alpha-project-arena.git
+cd alpha-project-arena
+python -m ara stars python/cpython
+```
+
+---
+
+## 🏅 Project Health
+
+| Category | Badges |
+|----------|--------|
+| **Python** | <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python 3.10+"/></a> <a href="https://github.com/lijiajing-11/alpha-project-arena"><img src="https://img.shields.io/github/languages/top/lijiajing-11/alpha-project-arena?color=blueviolet" alt="Language"/></a> |
+| **Release** | <a href="https://pypi.org/project/ara/"><img src="https://img.shields.io/pypi/v/ara?color=8A2BE2&label=pypi" alt="PyPI"/></a> <a href="https://pypi.org/project/ara/"><img src="https://img.shields.io/pypi/dm/ara?color=3b82f6" alt="Downloads"/></a> <a href="https://github.com/lijiajing-11/alpha-project-arena/releases"><img src="https://img.shields.io/badge/status-alpha-f97316" alt="Status"/></a> |
+| **Quality** | <a href="https://github.com/lijiajing-11/alpha-project-arena/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/lijiajing-11/alpha-project-arena/ci.yml?label=CI&color=22c55e" alt="CI"/></a> <a href="https://github.com/lijiajing-11/alpha-project-arena"><img src="https://img.shields.io/badge/code%20style-ruff-9749eb" alt="Code Style"/></a> <a href="https://github.com/lijiajing-11/alpha-project-arena"><img src="https://img.shields.io/badge/tests-90%2B-22c55e" alt="Tests"/></a> |
+| **Community** | <a href="https://github.com/lijiajing-11/alpha-project-arena"><img src="https://img.shields.io/github/stars/lijiajing-11/alpha-project-arena?label=stars&color=facc15" alt="Stars"/></a> <a href="https://github.com/lijiajing-11/alpha-project-arena/graphs/contributors"><img src="https://img.shields.io/github/contributors/lijiajing-11/alpha-project-arena?color=22c55e" alt="Contributors"/></a> <a href="https://github.com/lijiajing-11/alpha-project-arena/issues"><img src="https://img.shields.io/github/issues/lijiajing-11/alpha-project-arena?label=open%20issues" alt="Issues"/></a> |
+| **Meta** | <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-22c55e" alt="MIT"/></a> <a href="https://github.com/lijiajing-11/alpha-project-arena"><img src="https://img.shields.io/github/last-commit/lijiajing-11/alpha-project-arena?label=updated" alt="Last Commit"/></a> <a href="https://github.com/lijiajing-11/alpha-project-arena"><img src="https://img.shields.io/badge/OS-linux_%7C_macOS_%7C_windows-555" alt="OS"/></a> <a href="https://x.com/ATechInc"><img src="https://img.shields.io/badge/🐦-follow_%40ATechInc-1DA1F2" alt="Twitter/X"/></a> <a href="https://github.com/lijiajing-11/alpha-project-arena"><img src="https://img.shields.io/badge/PRs-welcome-22c55e" alt="PRs Welcome"/></a> |
 
 ---
 
@@ -111,14 +132,6 @@ ara trends tensorflow/tensorflow
 ```
 
 > 💡 **Tip:** Run `ara --help` anytime to see all available commands and flags.
-
-### Run Without Installing
-
-```bash
-git clone https://github.com/lijiajing-11/alpha-project-arena.git
-cd alpha-project-arena
-python -m ara stars python/cpython
-```
 
 ---
 

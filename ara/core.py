@@ -89,6 +89,21 @@ def _retryable_http_error(exc: urllib.error.HTTPError) -> bool:
     return exc.code in (429, 500, 502, 503, 504)
 
 
+def _raise_api_error(exc: urllib.error.HTTPError, url: str) -> None:
+    """Map HTTP errors to appropriate ARA exceptions."""
+    if exc.code == 404:
+        raise ValueError(
+            f"Repository not found: "
+            f"{url.rsplit('/', 2)[-2]}/{url.rsplit('/', 1)[-1]}"
+        )
+    elif exc.code == 403:
+        raise RuntimeError(
+            "GitHub API rate limit exceeded. "
+            "Set GITHUB_TOKEN for higher limits."
+        )
+    raise RuntimeError(f"GitHub API error {exc.code}: {exc.reason}")
+
+
 def _retry_delay(attempt: int, base: float = DEFAULT_RETRY_DELAY) -> float:
     """Exponential backoff with jitter: base * 2^attempt + random(0, 0.5)."""
     return base * (2 ** attempt) + random.uniform(0, 0.5)
@@ -107,59 +122,10 @@ class GitHubClient:
         self.max_retries = max_retries
         self.retry_delay = retry_delay
 
-    def _make_request_raw(self, url: str) -> any:
-        """Make a GET request and return raw parsed JSON (dict or list).
+    def _request(self, url: str) -> tuple[any, dict]:
+        """Core request method — returns (parsed_json, headers_dict).
 
-        Same retry logic as _make_request but returns the raw JSON
-        without enforcing dict type — used for endpoints that return
-        arrays (e.g. stargazers).
-        """
-        last_exc: Exception | None = None
-
-        for attempt in range(self.max_retries + 1):
-            req = urllib.request.Request(url)
-            req.add_header("Accept", "application/vnd.github.v3+json")
-            req.add_header("User-Agent", "ARA-CLI/0.1.0")
-            if self.token:
-                req.add_header("Authorization", f"Bearer {self.token}")
-
-            try:
-                with urllib.request.urlopen(req, timeout=10) as resp:
-                    return json.loads(resp.read().decode("utf-8"))
-            except urllib.error.HTTPError as e:
-                if _retryable_http_error(e) and attempt < self.max_retries:
-                    last_exc = e
-                    delay = _retry_delay(attempt, self.retry_delay)
-                    time.sleep(delay)
-                    continue
-                if e.code == 404:
-                    raise ValueError(
-                        f"Repository not found: "
-                        f"{url.rsplit('/', 2)[-2]}/{url.rsplit('/', 1)[-1]}"
-                    )
-                elif e.code == 403:
-                    raise RuntimeError(
-                        "GitHub API rate limit exceeded. "
-                        "Set GITHUB_TOKEN for higher limits."
-                    )
-                raise RuntimeError(f"GitHub API error {e.code}: {e.reason}")
-            except urllib.error.URLError as e:
-                if attempt < self.max_retries:
-                    last_exc = e
-                    delay = _retry_delay(attempt, self.retry_delay)
-                    time.sleep(delay)
-                    continue
-                raise RuntimeError(f"Network error after {self.max_retries} retries: {e.reason}")
-
-        raise RuntimeError(
-            f"GitHub API error {last_exc.code}: {last_exc.reason}"
-        )
-
-    def _fetch_page_with_headers(self, url: str) -> tuple[any, dict]:
-        """Fetch a URL and return (parsed_json, headers_dict) with retry support.
-
-        Used for paginated endpoints (e.g. stargazers) where the Link
-        header is needed to discover the next page URL.
+        Handles retries, auth, and common error mapping for all callers.
         """
         last_exc: Exception | None = None
 
@@ -173,36 +139,43 @@ class GitHubClient:
             try:
                 with urllib.request.urlopen(req, timeout=10) as resp:
                     data = json.loads(resp.read().decode("utf-8"))
-                    headers = dict(resp.headers)
-                    return data, headers
+                    return data, dict(resp.headers)
             except urllib.error.HTTPError as e:
                 if _retryable_http_error(e) and attempt < self.max_retries:
                     last_exc = e
                     delay = _retry_delay(attempt, self.retry_delay)
                     time.sleep(delay)
                     continue
-                if e.code == 404:
-                    raise ValueError(
-                        f"Repository not found: "
-                        f"{url.rsplit('/', 2)[-2]}/{url.rsplit('/', 1)[-1]}"
-                    )
-                elif e.code == 403:
-                    raise RuntimeError(
-                        "GitHub API rate limit exceeded. "
-                        "Set GITHUB_TOKEN for higher limits."
-                    )
-                raise RuntimeError(f"GitHub API error {e.code}: {e.reason}")
+                _raise_api_error(e, url)
             except urllib.error.URLError as e:
                 if attempt < self.max_retries:
                     last_exc = e
                     delay = _retry_delay(attempt, self.retry_delay)
                     time.sleep(delay)
                     continue
-                raise RuntimeError(f"Network error after {self.max_retries} retries: {e.reason}")
+                raise RuntimeError(
+                    f"Network error after {self.max_retries} retries: {e.reason}"
+                )
 
         raise RuntimeError(
             f"GitHub API error {last_exc.code}: {last_exc.reason}"
         )
+
+    def _make_request_raw(self, url: str) -> any:
+        """Make a GET request and return raw parsed JSON (dict or list).
+
+        Used for endpoints that return arrays (e.g. stargazers).
+        """
+        data, _ = self._request(url)
+        return data
+
+    def _fetch_page_with_headers(self, url: str) -> tuple[any, dict]:
+        """Fetch a URL and return (parsed_json, headers_dict) with retry support.
+
+        Used for paginated endpoints (e.g. stargazers) where the Link
+        header is needed to discover the next page URL.
+        """
+        return self._request(url)
 
     def _make_request(self, url: str) -> dict:
         """Make a GET request to the GitHub API with automatic retry.
