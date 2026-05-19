@@ -26,7 +26,7 @@ from ara.display import (
     format_watch_dashboard,
 )
 from ara.generate_stars import cmd_generate_stars
-from ara.history import cmd_history
+from ara.history import cmd_history, cmd_history_compare
 from ara.insight import cmd_insight, cmd_insight_json
 from ara.rank import cmd_rank, cmd_rank_json
 from ara.summary import cmd_summary, cmd_summary_json
@@ -66,8 +66,17 @@ def run_battle(repos: list, client: GitHubClient) -> str:
 
 
 def _cmd_history_wrapper(args: argparse.Namespace, client: GitHubClient) -> None:
-    """Handle `ara history <repo>` — dispatch to cmd_history."""
-    cmd_history(args.repo, client=client, as_json=getattr(args, "json", False))
+    """Handle `ara history <repo> [<repo> ...]` — dispatch to cmd_history or cmd_history_compare."""
+    repos = getattr(args, "repos", []) or []
+    if len(repos) == 1:
+        cmd_history(repos[0], client=client, as_json=getattr(args, "json", False))
+    else:
+        cmd_history_compare(
+            repos,
+            client=client,
+            since=getattr(args, "since", None),
+            as_json=getattr(args, "json", False),
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -502,13 +511,20 @@ def build_parser() -> argparse.ArgumentParser:
     insight_parser.add_argument("--json", action="store_true", help="Output as JSON")
     insight_parser.set_defaults(func=cmd_insight)
 
-    # ara history <repo>
+    # ara history <repo> [<repo> ...]
     history_parser = subparsers.add_parser(
         "history",
         help="Show star growth history as an ASCII chart",
     )
-    history_parser.add_argument("repo", help="Repository (owner/repo)")
+    history_parser.add_argument(
+        "repos", nargs="+",
+        help="Repository(owner/repo) — 1 for line chart, 2+ for compare mode",
+    )
     history_parser.add_argument("--json", action="store_true", help="Output as JSON")
+    history_parser.add_argument(
+        "--since", type=str, default=None,
+        help="Only show data since this date (YYYY-MM-DD)",
+    )
     history_parser.set_defaults(func=_cmd_history_wrapper)
 
     # ara rank [--top N] [--json] [<repo> ...]

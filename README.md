@@ -53,8 +53,8 @@
   <a href="https://github.com/lijiajing-11/alpha-project-arena/actions/workflows/ci.yml">
     <img src="https://img.shields.io/github/actions/workflow/status/lijiajing-11/alpha-project-arena/ci.yml?branch=main&label=CI&logo=github" alt="CI"/>
   </a>
-  <a href="https://img.shields.io/badge/tests-251_passing-22c55e">
-    <img src="https://img.shields.io/badge/tests-251_passing-22c55e" alt="Tests"/>
+  <a href="https://img.shields.io/badge/tests-260_passing-22c55e">
+    <img src="https://img.shields.io/badge/tests-260_passing-22c55e" alt="Tests"/>
   </a>
   <a href="https://img.shields.io/badge/code_style-ruff-22c55e">
     <img src="https://img.shields.io/badge/code_style-ruff-22c55e" alt="Ruff"/>
@@ -163,6 +163,31 @@ $ ara watch owner/repo
      2013-05-24   2026-05-18
 ```
 
+### 🆚 `ara history --compare` — Multi-Repo Showdown
+
+Compare up to 5 repos on the same axis — each gets a coloured bar proportional to its star count:
+
+```text
+$ ara history --compare facebook/react vuejs/core sveltejs/svelte
+
+  ╔══════════════════════════════════════════╗
+  ║     ⭐ Star History Comparison (all-time) ║
+  ╚══════════════════════════════════════════╝
+
+  facebook/react            ██████████████████████████████████████████████████ 230,000 ★
+  vuejs/core                ██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  47,000 ★
+  sveltejs/svelte           ██████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  82,000 ★
+
+  📅 Timeline: 2013-05-29 — 2026-05-19
+```
+
+```bash
+# JSON mode for CI
+ara history --compare --json facebook/react vuejs/core | jq '.facebook'
+```
+
+> 💡 **Tip:** Add `--since 2024` to filter the comparison to data after a specific date.
+
 ---
 
 ## 🚀 Install in 5 seconds
@@ -224,6 +249,7 @@ Every command supports `--json` for CI pipelines, dashboards, and `jq` piping.
 | 🔍 `ara stars <repo...>` | Quick star count(s) | `ara stars owner/project` |
 | 👀 `ara watch <repo...>` | Real-time live watch (30s refresh) | `ara watch owner/project` |
 | 📈 `ara history <repo>` | Star growth ASCII timeline chart | `ara history owner/project` |
+| 📈 `ara history --compare <repo...>` | Multi-repo star history comparison (coloured bars) | `ara history --compare react vue svelte` |
 | 🏟️ `ara battle <repo...>` | Arena bar-chart battle | `ara battle libA libB libC` |
 | 🏆 `ara rank [--top N]` | Live Top N repo leaderboard 🔥 | `ara rank --top 10` |
 | 📈 `ara trends <repo>` | Star trend chart over time | `ara trends owner/repo` |
@@ -239,7 +265,7 @@ Every command supports `--json` for CI pipelines, dashboards, and `jq` piping.
 >
 > 🆕 **Hot off the press:** `ara insight` — star velocity, topics, age, and more. Try `ara insight facebook/react`!
 >
-> 📦 **v0.3.1** — 17 modules, 251+ passing tests, stdlib-only + optional `plyer`
+> 📦 **v0.3.1** — 17 modules, 260+ passing tests, stdlib-only + optional `plyer`
 
 ---
 
@@ -483,6 +509,7 @@ Every ARA command accepts `--json` for machine-readable output — perfect for C
 | `ara trends --json owner/repo` | ✅ | Trend data with `buckets`, `total`, `best_hour` |
 | `ara info --json owner/repo` | ✅ | Full repo metadata as JSON |
 | `ara history --json owner/repo` | ✅ | Timeline array with `current_stars`, `created_at` |
+| `ara history --compare --json <repos>` | ✅ | Dict of repos → timeline arrays |
 
 ```bash
 # Example: pipe to jq for quick analysis
@@ -539,7 +566,7 @@ alpha-project-arena/
 │   ├── generate_stars.py # Stargazer JSON tool
 │   ├── colors.py         # Shared ANSI colour constants
 │   └── console.py        # Console entry point
-├── tests/                # Test suite (pytest, 251+ tests)
+├── tests/                # Test suite (pytest, 260+ tests)
 ├── scripts/
 │   └── demo.py           # Demo output generator
 ├── docs/                 # Documentation & screenshots (coming soon)
@@ -560,7 +587,7 @@ cd alpha-project-arena
 python -m venv venv && source venv/bin/activate
 pip install -e '.[dev]'
 
-# Run the full test suite (251+ tests passing)
+# Run the full test suite (260+ tests passing)
 pytest tests/ -v
 
 # Lint with ruff
@@ -604,7 +631,7 @@ git clone https://github.com/your-username/alpha-project-arena.git
 cd alpha-project-arena
 python -m venv venv && source venv/bin/activate
 pip install -e '.[dev]'
-pytest tests/ -v      # 251+ tests should all pass
+pytest tests/ -v      # 260+ tests should all pass
 ruff check ara/ tests/ # zero warnings
 ```
 
@@ -633,6 +660,33 @@ MIT © [lijiajing-11](https://github.com/lijiajing-11) — see [LICENSE](LICENSE
 **ARA exists because you shouldn't need a browser to stalk repos.** 🔭
 
 > 📋 See [CHANGELOG.md](CHANGELOG.md) for the full version history.
+
+---
+
+## 🎛️ Feature Matrix
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| `ara stars` | ✅ | Quick star count(s) |
+| `ara summary` | ✅ | One-line repo overview |
+| `ara dashboard` | ✅ | Full repo overview panel |
+| `ara info` | ✅ | Full repo metadata dump |
+| `ara rank` | ✅ | Live Top N repo leaderboard |
+| `ara battle` | ✅ | Arena bar-chart showdown |
+| `ara compare` | ✅ | Head-to-head comparison table |
+| `ara watch` | ✅ | Real-time live dashboard (30s refresh) |
+| `ara watch --notify` | ✅ | Desktop notifications on star changes |
+| `ara history` | ✅ | Star growth ASCII timeline chart |
+| `ara history --compare` | ✅ | Multi-repo star history comparison |
+| `ara trends` | ✅ | Star trend analysis over time |
+| `ara insight` | ✅ | Deep repo intelligence |
+| `ara generate-stars` | ✅ | Stargazer JSON export tool |
+| `--json` support | ✅ | Every command pipes to jq |
+| **Total commands** | **13** | `ara --help` to see them all |
+| **Test suite** | ✅ | **260+ passing, 0 failed** |
+| **Coverage report** | 🟢 | HTML report via `coverage html` |
+| **Zero dependencies** | ✅ | Stdlib only + optional `plyer` |
+| **Rate-limit retry** | ✅ | Exponential backoff + jitter |
 
 ---
 
