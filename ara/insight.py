@@ -76,14 +76,8 @@ def relative_time(iso_date: str) -> str:
         return "Unknown"
 
 
-def cmd_insight(repo_str: str, client: GitHubClient | None = None):
-    """Execute the insight command for a single repo.
-
-    Args:
-        repo_str: Repository name (owner/repo).
-        client: Optional GitHubClient instance. Creates one if not provided.
-    """
-    client = client or GitHubClient()
+def _build_insight_data(repo_str: str, client: GitHubClient) -> dict:
+    """Build insight data dict from a repo string."""
     repo = client.get_repo_info(repo_str)
 
     stars = repo.get("stars", 0)
@@ -99,27 +93,62 @@ def cmd_insight(repo_str: str, client: GitHubClient | None = None):
 
     spd, speed_label = compute_star_velocity(stars, created_at)
     updated_rel = relative_time(updated_at)
-    topics_display = ", ".join(topics[:5]) if topics else "None"
 
-    # ── Render ──
+    return {
+        "full_name": full_name,
+        "description": description,
+        "stars": stars,
+        "forks": forks,
+        "open_issues": open_issues,
+        "language": language or "N/A",
+        "license": license_name or "None",
+        "topics": topics[:5],
+        "star_velocity": {"per_day": spd, "label": speed_label},
+        "created_at": created_at,
+        "updated_at": updated_at,
+        "updated_relative": updated_rel,
+    }
+
+
+def _render_insight_text(data: dict) -> None:
+    """Render insight data as colored text output."""
     print()
-
-    # Header
-    print(f"  {BOLD}{CYAN}{full_name}{RESET}  {GRAY}\u2014 Insight{RESET}")
-    if description:
-        print(f"  {GRAY}{description}{RESET}")
+    print(f"  {BOLD}{CYAN}{data['full_name']}{RESET}  {GRAY}\u2014 Insight{RESET}")
+    if data["description"]:
+        print(f"  {GRAY}{data['description']}{RESET}")
         print()
 
-    # Stars + velocity
-    print(f"  {YELLOW}\u2605{RESET} {BOLD}{stars:,}{RESET} stars  \u00b7  {spd}/day  {speed_label}")
-    print(f"  {CYAN}\u2382{RESET} {forks:,} forks  \u00b7  \u26a0 {open_issues:,} open issues")
-
-    lang_str = language or "N/A"
-    lic_str = license_name or "None"
+    spd = data["star_velocity"]["per_day"]
+    label = data["star_velocity"]["label"]
+    print(f"  {YELLOW}\u2605{RESET} {BOLD}{data['stars']:,}{RESET} stars  \u00b7  {spd}/day  {label}")
+    print(f"  {CYAN}\u2382{RESET} {data['forks']:,} forks  \u00b7  \u26a0 {data['open_issues']:,} open issues")
+    lang_str = data["language"]
+    lic_str = data["license"]
     print(f"  {GRAY}\u2386{RESET} {lang_str}  \u00b7  {GRAY}\u00a9{RESET} {lic_str}")
 
+    topics_display = ", ".join(data["topics"]) if data["topics"] else "None"
     print(f"  \U0001f3f7  {topics_display}")
 
-    created_short = created_at[:10] if created_at else "N/A"
-    print(f"  {GRAY}\U0001f4c5{RESET} Created {created_short}  \u00b7  Last updated {updated_rel}")
+    created_short = data["created_at"][:10] if data["created_at"] else "N/A"
+    print(f"  {GRAY}\U0001f4c5{RESET} Created {created_short}  \u00b7  Last updated {data['updated_relative']}")
     print()
+
+
+def cmd_insight(repo_str: str, client: GitHubClient | None = None):
+    """Execute the insight command for a single repo.
+
+    Args:
+        repo_str: Repository name (owner/repo).
+        client: Optional GitHubClient instance. Creates one if not provided.
+    """
+    client = client or GitHubClient()
+    data = _build_insight_data(repo_str, client)
+    _render_insight_text(data)
+
+
+def cmd_insight_json(args, client: GitHubClient):
+    """Handle `ara insight --json <repo>`."""
+    repo = args.repo
+    data = _build_insight_data(repo, client)
+    import json as _json
+    print(_json.dumps(data, indent=2, ensure_ascii=False))

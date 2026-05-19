@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Version bump to 0.3.0
 - README Gallery section — showcase rank, summary, watch-notify, dashboard outputs
 - Test suite expanded to 183 tests (0 failed)
-- CLI now has 10 commands accessible via `ara --help`
+- CLI now has 11 commands accessible via `ara --help`
 
 ### Fixed
 - Syntax error in cli.py (duplicate closing brace) — fixed

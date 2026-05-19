@@ -583,8 +583,12 @@ ARA is designed as a **single-file-per-responsibility** Python package — no fr
 
 | Module | Responsibility |
 |--------|---------------|
-| `ara/cli.py` | Argument parsing + command dispatch |
+| `ara/cli.py` | Argument parsing + command dispatch (11 commands) |
 | `ara/core.py` | GitHub API client, cache, data models |
+| `ara/summary.py` | One-line repo overview |
+| `ara/dashboard.py` | Full repo overview panel |
+| `ara/rank.py` | Top N repo leaderboard |
+| `ara/insight.py` | Deep repo intelligence (star velocity, topics) |
 | `ara/display.py` | Live watch terminal UI |
 | `ara/battle.py` | Arena battle ASCII bars |
 | `ara/trends.py` | Star trend analysis + ASCII charts |
@@ -694,6 +698,20 @@ MIT © [lijiajing-11](https://github.com/lijiajing-11) — see [LICENSE](LICENSE
 **ARA exists because you shouldn't need a browser to stalk repos.** 🔭
 
 > 📋 See [CHANGELOG.md](CHANGELOG.md) for the full version history.
+
+---
+
+## 👤 Who Should Use ARA?
+
+| You are… | And you… | ARA is for you ✅ |
+|-----------|----------|-------------------|
+| 🐱 **Open-source maintainer** | Watch your star count hourly | `ara watch your/repo` — live dashboard |
+| 📊 **Tech journalist / analyst** | Compare repos for a write-up | `ara battle react vue svelte` — instant chart |
+| 🎯 **Investor / scout** | Track which projects are heating up | `ara rank --top 50` — pulse of GitHub |
+| 🛠️ **CI pipeline** | Need star data in your dashboard | `ara stars --json owner/repo \| jq` |
+| 🧑‍💻 **Curious dev** | Just want to know "is this repo popular?" | `ara summary facebook/react` — 1 line answer |
+
+> **tl;dr** — If you breathe repos, ARA is your pulse check. One command, zero clicks. No browser needed.
 
 ---
 
