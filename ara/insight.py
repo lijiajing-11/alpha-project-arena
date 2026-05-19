@@ -9,11 +9,9 @@ Provides `ara insight <repo>`:
 
 from datetime import datetime, timezone
 
-from .colors import BOLD, CYAN, RESET, YELLOW
+from .colors import BOLD, CYAN, GRAY, RESET, YELLOW
 
 from .core import GitHubClient
-
-GRAY = "\033[90m"
 
 
 def compute_star_velocity(stars: int, created_at: str) -> tuple:
