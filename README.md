@@ -1,68 +1,45 @@
-<p align="center">
-  <img src="https://img.shields.io/badge/⚡_ARA_|_Arena_Star_Tracker-8A2BE2?style=for-the-badge" alt="ARA Banner"/>
-</p>
-
 <h1 align="center">⚡ ARA — Arena Star Tracker</h1>
 
 <p align="center">
-  <b>Zero-dependency CLI that tracks, watches, compares, and battles GitHub repos — right from your terminal.</b><br>
-  <i>Think Google Analytics for GitHub Stars, but you never leave the command line.</i>
+  <b>Track, watch, battle, and compare any GitHub repo — right from your terminal.</b><br>
+  <i>Zero dependencies. One command. Real-time.</i>
 </p>
 
 <p align="center">
-  <sup><i>Built by <b>Α-Tech Inc.</b> — where we turn data into arenas. 🏟️</i></sup>
-</p>
-
-<p align="center">
-  <a href="https://github.com/lijiajing-11/alpha-project-arena/stargazers">
-    <img src="https://img.shields.io/github/stars/lijiajing-11/alpha-project-arena?style=social" alt="GitHub Stars"/>
+  <a href="https://github.com/lijiajing-11/alpha-project-arena/actions">
+    <img src="https://img.shields.io/github/actions/workflow/status/lijiajing-11/alpha-project-arena/ci.yml?style=for-the-badge&logo=githubactions&label=CI" alt="CI"/>
   </a>
-  <a href="https://github.com/lijiajing-11/alpha-project-arena/forks">
-    <img src="https://img.shields.io/github/forks/lijiajing-11/alpha-project-arena?style=social" alt="GitHub Forks"/>
-  </a>
-  <a href="https://x.com/ATechInc">
-    <img src="https://img.shields.io/twitter/follow/ATechInc?style=social" alt="Follow on X"/>
-  </a>
-</p>
-
-<p align="center">
-  <a href="https://pypi.org/project/ara/">
-    <img src="https://img.shields.io/pypi/v/ara?color=8A2BE2&label=PyPI%20v0.3.1" alt="PyPI"/>
-  </a>
-  <a href="https://pypi.org/project/ara/">
-    <img src="https://img.shields.io/pypi/dm/ara?color=3b82f6&label=downloads" alt="Downloads"/>
+  <a href="https://github.com/lijiajing-11/alpha-project-arena">
+    <img src="https://img.shields.io/badge/tests-276_passing-22c55e?style=for-the-badge" alt="Tests"/>
   </a>
   <a href="https://www.python.org/downloads/">
-    <img src="https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python 3.10+"/>
+    <img src="https://img.shields.io/badge/python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.10+"/>
   </a>
-  <a href="https://github.com/lijiajing-11/alpha-project-arena/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/license-MIT-22c55e" alt="MIT"/>
+  <a href="https://opensource.org/licenses/MIT">
+    <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="MIT"/>
   </a>
-  <a href="https://github.com/lijiajing-11/alpha-project-arena/graphs/contributors">
-    <img src="https://img.shields.io/github/contributors/lijiajing-11/alpha-project-arena?color=22c55e" alt="Contributors"/>
-  </a>
-  <a href="https://github.com/lijiajing-11/alpha-project-arena/issues">
-    <img src="https://img.shields.io/github/issues/lijiajing-11/alpha-project-arena?label=open%20issues" alt="Issues"/>
-  </a>
-  <a href="https://github.com/lijiajing-11/alpha-project-arena">
-    <img src="https://img.shields.io/github/last-commit/lijiajing-11/alpha-project-arena?label=updated" alt="Last Commit"/>
-  </a>
-  <a href="https://github.com/lijiajing-11/alpha-project-arena">
-    <img src="https://img.shields.io/badge/PRs-welcome-22c55e" alt="PRs Welcome"/>
-  </a>
-  <a href="https://github.com/lijiajing-11/alpha-project-arena/actions/workflows/ci.yml">
-    <img src="https://img.shields.io/github/actions/workflow/status/lijiajing-11/alpha-project-arena/ci.yml?branch=main&label=CI&logo=github" alt="CI"/>
-  </a>
-  <a href="https://img.shields.io/badge/tests-260_passing-22c55e">
-    <img src="https://img.shields.io/badge/tests-260_passing-22c55e" alt="Tests"/>
-  </a>
-  <a href="https://img.shields.io/badge/code_style-ruff-22c55e">
-    <img src="https://img.shields.io/badge/code_style-ruff-22c55e" alt="Ruff"/>
-  </a>
-  <a href="https://img.shields.io/badge/coverage-95%25-22c55e">
-    <img src="https://img.shields.io/badge/coverage-95%25-22c55e" alt="Coverage 95%"/>
+  <a href="http://makeapullrequest.com">
+    <img src="https://img.shields.io/badge/PRs-welcome-brightgreen?style=for-the-badge" alt="PRs Welcome"/>
   </a>
 </p>
+
+---
+
+## ⚡ Quickstart
+
+```bash
+# Watch a repo live — 30s auto-refresh
+pip install ara
+ara watch tensorflow/tensorflow
+
+# Settle which framework is hotter — ASCII arena showdown
+ara battle facebook/react vuejs/core
+
+# See how fast a repo is growing — star velocity
+ara insight facebook/react
+```
+
+**Every command supports `--json` for CI pipelines.** → see [JSON output](#-json-output--pipe-into-everything)
 
 ---
 
@@ -261,14 +238,14 @@ Every command supports `--json` for CI pipelines, dashboards, and `jq` piping.
 | 🛠️ `ara generate-stars <repo>` | Fetch stargazers to JSON (demo tool) | `ara generate-stars python/cpython` |
 | ⚖️ `ara compare <r1> <r2>` | Head-to-head comparison table | `ara compare a/A b/B` |
 
-> 💡 **New in v0.3.1:** `ara watch --notify` — desktop notifications when star count changes.
+> 💡 **New in v0.3.2:** `ara watch --notify` — desktop notifications when star count changes.
 > Terminal bell + plyer desktop notification with graceful fallback on WSL.
 >
 > 🆕 **v0.3.0:** `ara rank` — live Top 10 repo leaderboard. Try `ara rank --top 20`!
 >
 > 🆕 **Hot off the press:** `ara insight` — star velocity, topics, age, and more. Try `ara insight facebook/react`!
 >
-> 📦 **v0.3.1** — 17 modules, 260+ passing tests, stdlib-only + optional `plyer`
+> 📦 **v0.3.2** — 16 modules, 276+ passing tests, stdlib-only + optional `plyer`
 
 ---
 
@@ -532,7 +509,7 @@ ARA is designed as a **single-file-per-responsibility** Python package — no fr
 |--------|---------------|
 | `ara/__init__.py` | Package init, `__version__` |
 | `ara/__main__.py` | Entry point for `python -m ara` |
-| `ara/cli.py` | Argument parsing + command dispatch (12 commands) |
+| `ara/cli.py` | Argument parsing + command dispatch (13 commands, incl. compare) |
 | `ara/core.py` | GitHub API client, cache, data models |
 | `ara/summary.py` | One-line repo overview |
 | `ara/dashboard.py` | Full repo overview panel |
@@ -542,12 +519,12 @@ ARA is designed as a **single-file-per-responsibility** Python package — no fr
 | `ara/battle.py` | Arena battle ASCII bars |
 | `ara/trends.py` | Star trend analysis + ASCII charts |
 | `ara/history.py` | Star growth ASCII timeline chart |
-| `ara/compare.py` | Head-to-head repo comparison table |
+| *compare is in `cli.py`* | Head-to-head repo comparison (inline) |
 | `ara/generate_stars.py` | Stargazer JSON export |
 | `ara/chart.py` | Shared ASCII chart engine (bars, sparklines) |
 | `ara/colors.py` | ANSI color constants |
 | `ara/console.py` | Console entry point (`console_scripts`) |
-| **Total** | **17 modules** — pure Python, zero framework |
+| **Total** | **16 modules** — pure Python, zero framework |
 
 ```
 alpha-project-arena/
@@ -562,14 +539,14 @@ alpha-project-arena/
 │   ├── rank.py           # Top N repo leaderboard
 │   ├── insight.py        # Deep repo intelligence
 │   ├── battle.py         # Battle display & ASCII bars
-│   ├── compare.py        # Head-to-head comparison table
+│   ├── *compare in cli.py* # Head-to-head comparison
 │   ├── trends.py         # Star trend analysis
 │   ├── history.py        # Star growth timeline chart
 │   ├── chart.py          # Shared ASCII chart engine
 │   ├── generate_stars.py # Stargazer JSON tool
 │   ├── colors.py         # Shared ANSI colour constants
 │   └── console.py        # Console entry point
-├── tests/                # Test suite (pytest, 260+ tests)
+├── tests/                # Test suite (pytest, 276+ tests)
 ├── scripts/
 │   └── demo.py           # Demo output generator
 ├── docs/                 # Documentation & screenshots (coming soon)
@@ -590,7 +567,7 @@ cd alpha-project-arena
 python -m venv venv && source venv/bin/activate
 pip install -e '.[dev]'
 
-# Run the full test suite (260+ tests passing)
+# Run the full test suite (276+ tests passing)
 pytest tests/ -v
 
 # Lint with ruff
@@ -634,7 +611,7 @@ git clone https://github.com/your-username/alpha-project-arena.git
 cd alpha-project-arena
 python -m venv venv && source venv/bin/activate
 pip install -e '.[dev]'
-pytest tests/ -v      # 260+ tests should all pass
+pytest tests/ -v      # 276+ tests should all pass
 ruff check ara/ tests/ # zero warnings
 ```
 
@@ -686,7 +663,7 @@ MIT © [lijiajing-11](https://github.com/lijiajing-11) — see [LICENSE](LICENSE
 | `ara generate-stars` | ✅ | Stargazer JSON export tool |
 | `--json` support | ✅ | Every command pipes to jq |
 | **Total commands** | **13** | `ara --help` to see them all |
-| **Test suite** | ✅ | **260+ passing, 0 failed** |
+| **Test suite** | ✅ | **276+ passing, 0 failed** |
 | **Coverage report** | 🟢 | HTML report via `coverage html` |
 | **Zero dependencies** | ✅ | Stdlib only + optional `plyer` |
 | **Rate-limit retry** | ✅ | Exponential backoff + jitter |

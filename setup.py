@@ -11,7 +11,7 @@ with open(os.path.join(HERE, "README.md"), encoding="utf-8") as f:
 
 setup(
     name="ara",
-    version="0.3.0",
+    version="0.3.2",
     description="ARA - Arena Star Tracker: Monitor and compare GitHub Stars",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -23,7 +23,7 @@ setup(
         "plyer>=2.1",
     ],
     classifiers=[
-        "Development Status :: 3 - Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Version Control :: Git",
         "Programming Language :: Python :: 3",

@@ -1,57 +1,42 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-
-## [0.3.0] - 2026-05-19
+## [0.3.2] — 2026-05-19
 
 ### Added
-- `ara dashboard <repo...>` — Full repo overview dashboard panel
-- `ara summary <repo>` — One-line repo overview (stars, forks, issues, language, license, description)
-- `ara rank [--top N] [--json] [<repo> ...]` — Live Top N repo leaderboard 🔥
-- `ara insight <repo>` — Deep repository intelligence (star velocity, topics, age, relative time)
-- `ara compare` 3+ repos — N-way multi-repo comparison with 🥇🥈🥉 ranking
-- `ara history <repo>` — Star growth ASCII timeline chart (simulated from created_at + current stars)
-- `ara watch --notify` — Desktop notification (terminal bell) on star changes
+- `ara history --compare` — 多仓库星史对比条形图
+- `ara insight --compare` — 双栏仓库洞察对比
+- pytest-cov coverage 报告配置
 
 ### Changed
-- Version bump to 0.3.0
-- README v13 — Updated architecture table (added `chart.py`), BLOAT status synced, test count badge updated
-- Test suite expanded to **251 tests** (0 failed) — chart engine extracted from history.py
-- CLI now has **13 commands** accessible via `ara --help`
+- `ara history` 接受多个 repos (nargs="+")
+- Development Status → 4 - Beta
 
 ### Fixed
-- Syntax error in cli.py (duplicate closing brace) — fixed
-- Import error for cmd_summary_json — now properly exported
-- `ara watch` terminal flicker — replaced full-screen clear with cursor-position refresh
+- setup.py 版本与 __init__.py 同步 (0.3.0 → 0.3.2)
 
-## [0.2.0] - 2026-05-19
+## [0.3.1] — 2026-05-19
 
 ### Added
-- `ara trends <repo>` — Star trend analysis with ASCII chart and JSON output
-- `ara generate-stars <repo>` — Fetch stargazers and save to JSON file
-- `pyproject.toml` build configuration
+- `ara watch --notify` — 桌面通知功能 (plyer + stderr fallback)
+- `ara insight` — 深度仓库洞察命令
 
 ### Changed
-- CLI help output includes trends command
-- README restructured with navigation table, health badges, try-it-now hero
-- core.py: refactored `_fetch_page_with_headers()` into shared `_request()` with header return
-- core.py: extracted `_raise_api_error()` for centralized HTTP error handling
+- pyproject.toml 完善 pytest + ruff 配置
 
-### Fixed
-- setup.py URLs corrected from li1050109098 → lijiajing-11
-- Test suite expanded to 140+ tests with trends edge cases
-
-## [0.1.0] - 2026-05-18
+## [0.3.0] — 2026-05-19
 
 ### Added
-- `ara stars <repo...>` — Quick star count(s) with mini leaderboard
-- `ara watch <repo...>` — Real-time star watching with 30s refresh
-- `ara battle <repo...>` — Side-by-side ASCII arena bar chart
-- `ara info <repo...>` — Full repository metadata
-- `ara compare <repo1> <repo2>` — Head-to-head comparison table
-- JSON output mode (`--json`) on every command
-- CI workflow (`.github/workflows/ci.yml`)
-- Zero external dependencies (stdlib only)
-- 126 initial tests (83% coverage)
+- `ara rank` — 实时 Top N 仓库排行榜
+- `ara dashboard` — 仓库全貌信息面板
+- `ara summary` — 一行仓库概览
+- `ara history` — 星史 ASCII 折线图
+- `ara compare` — 双仓库对比 + 奖牌 🥇🥈🥉
+- `ara watch` — 实时监控 (30s 轮询)
+- `ara battle` — 仓库对战 ASCII 图
+- `ara stars` — 快速查看星数
+- `ara info` — 仓库详情
+- `ara trends` — 趋势分析 + ASCII 图
+- `ara generate-stars` — 获取 stargazers
+- JSON 输出支持（所有命令）
+- GitHub Actions CI 配置
+- Desktop notification (plyer)

@@ -183,15 +183,208 @@ def _render_insight_text(data: dict) -> None:
     print()
 
 
-def cmd_insight(args, client: GitHubClient):
-    """Handle `ara insight <repo>` — deep repository insight."""
-    data = _build_insight_data(args.repo, client)
-    _render_insight_text(data)
+def cmd_insight(repo: str, client: GitHubClient, as_json: bool = False) -> None:
+    """Handle `ara insight <repo>` — deep repository insight.
 
-
-def cmd_insight_json(args, client: GitHubClient):
-    """Handle `ara insight --json <repo>`."""
-    repo = args.repo
+    Args:
+        repo: Repository name (owner/repo).
+        client: GitHubClient instance.
+        as_json: If True, print JSON instead of colored text.
+    """
     data = _build_insight_data(repo, client)
+    if as_json:
+        import json as _json
+        print(_json.dumps(data, indent=2, ensure_ascii=False))
+    else:
+        _render_insight_text(data)
+
+
+# ===========================================================================
+# Compare mode — side-by-side dual insight
+# ===========================================================================
+
+
+def _render_insight_compare_text(datas: list[dict]) -> None:
+    """Render two insight data dicts side-by-side.
+
+    Args:
+        datas: list of dicts from _build_insight_data(), max 2 repos.
+    """
+    if not datas:
+        return
+
+    # Compute each column text
+    columns: list[list[str]] = []
+    for data in datas:
+        lines = []
+        name = data["full_name"]
+        desc = data.get("description", "")
+        stars = data["stars"]
+        forks = data["forks"]
+        open_issues = data["open_issues"]
+        lang = data.get("language", "N/A")
+        lic = data.get("license", "None")
+        topics = data.get("topics", [])
+        created = data.get("created_at", "")[:10] if data.get("created_at") else "N/A"
+        updated = data.get("updated_relative", "Unknown")
+
+        spd = data["star_velocity"]["per_day"]
+        vel_label = data["star_velocity"]["label"]
+
+        age_label = data["repo_age"]["label"]
+        age_text = age_label.split(" ", 1)[-1] if " " in age_label else age_label
+        age_years = data["repo_age"]["years"]
+
+        # Line 1: repo name
+        lines.append(f"{name}")
+
+        # Line 2: description (truncated to 40 chars)
+        desc_short = (desc[:37] + "...") if len(desc) > 40 else desc
+        lines.append(f"  {desc_short}" if desc_short else "")
+
+        # Line 3: blank
+        lines.append("")
+
+        # Line 4: stars + velocity
+        lines.append(f"\u2605 {stars:,} stars  \u00b7 +{spd}/day  {vel_label}")
+
+        # Line 5: forks + issues
+        lines.append(f"\u2382 {forks:,} forks  \u00b7 \u26a0 {open_issues:,} open issues")
+
+        # Line 6: language + license + age
+        age_display = f"{int(age_years)}yo {age_text}"
+        lines.append(f"\u2386 {lang}  \u00a9 {lic}  \U0001f4c5 {age_display}")
+
+        # Line 7: topics
+        if topics:
+            display_topics = [t.capitalize() if t[0].islower() else t for t in topics[:5]]
+            topics_display = " \u00b7 ".join(display_topics)
+        else:
+            topics_display = "None"
+        lines.append(f"\U0001f3f7  {topics_display}")
+
+        # Line 8: created + updated
+        lines.append(f"\U0001f4c5 Created {created}  \u00b7 Last updated {updated}")
+
+        columns.append(lines)
+
+    # Ensure both columns have same number of lines
+    max_lines = max(len(c) for c in columns)
+    for c in columns:
+        while len(c) < max_lines:
+            c.append("")
+
+    # Determine column width: find the widest name across both columns
+    name_width_left = max(len(columns[0][0]), 30)
+    name_width_right = max(len(columns[1][0]), 30) if len(columns) > 1 else name_width_left
+    col_width_left = max(name_width_left, 42)
+    col_width_right = max(name_width_right, 42)
+
+    print()
+    for i in range(max_lines):
+        left = columns[0][i] if i < len(columns[0]) else ""
+        right = columns[1][i] if len(columns) > 1 and i < len(columns[1]) else ""
+
+        # Repo name line (line 0) gets left-aligned in its column
+        if i == 0:
+            left_padded = left.ljust(col_width_left)
+            right_padded = right.ljust(col_width_right)
+        elif i == 1:
+            # Description line — grey
+            left_padded = left.ljust(col_width_left)
+            right_padded = right.ljust(col_width_right)
+        else:
+            left_padded = left.ljust(col_width_left)
+            right_padded = right.ljust(col_width_right)
+
+        print(f"  {left_padded}  \u2502  {right_padded}")
+
+    # Comparison summary footer
+    print()
+    print(f"  {'═' * 30}  COMPARISON  {'═' * 30}")
+    print()
+
+    d0 = datas[0]
+    d1 = datas[1] if len(datas) > 1 else datas[0]
+
+    # Star gap
+    s0 = d0["stars"]
+    s1 = d1["stars"]
+    star_leader = d0["full_name"] if s0 >= s1 else d1["full_name"]
+    star_gap = abs(s0 - s1)
+    print(f"  \u2605 Star gap: {star_leader} leads by {star_gap:,} \u2605")
+
+    # Velocity ratio
+    v0 = d0["star_velocity"]["per_day"]
+    v1 = d1["star_velocity"]["per_day"]
+    v_leader = d0["full_name"] if v0 >= v1 else d1["full_name"]
+    v_ratio = round(max(v0, v1) / max(0.1, min(v0, v1)), 1)
+    print(f"  \U0001f525 Velocity: {v_leader} is {v_ratio}\u00d7 faster ({v0:.1f} vs {v1:.1f}/day)")
+
+    # Age gap
+    a0 = d0["repo_age"]["years"]
+    a1 = d1["repo_age"]["years"]
+    age_gap = round(abs(a0 - a1), 1)
+    younger = d0["full_name"] if a0 <= a1 else d1["full_name"]
+    print(f"  \U0001f4c5 Age gap: {younger} is {age_gap} years younger")
+
+    # Topic overlap
+    t0 = set(t.lower() for t in d0.get("topics", []))
+    t1 = set(t.lower() for t in d1.get("topics", []))
+    overlap = t0 & t1
+    if overlap:
+        print(f"  \U0001f3f7 Topic overlap: {len(overlap)} shared ({', '.join(sorted(overlap))})")
+    else:
+        print(f"  \U0001f3f7 Topic overlap: 0 shared topics")
+
+    print()
+
+
+def _render_compare_json(datas: list[dict]) -> str:
+    """Render insight compare data as JSON string.
+
+    Args:
+        datas: list of insight data dicts.
+
+    Returns:
+        Pretty-printed JSON string with comparison fields.
+    """
     import json as _json
-    print(_json.dumps(data, indent=2, ensure_ascii=False))
+
+    if len(datas) == 2:
+        d0, d1 = datas
+        s0, s1 = d0["stars"], d1["stars"]
+        v0 = d0["star_velocity"]["per_day"]
+        v1 = d1["star_velocity"]["per_day"]
+        comparison = {
+            "star_leader": d0["full_name"] if s0 >= s1 else d1["full_name"],
+            "star_gap": abs(s0 - s1),
+            "velocity_leader": d0["full_name"] if v0 >= v1 else d1["full_name"],
+            "velocity_ratio": round(max(v0, v1) / max(0.1, min(v0, v1)), 1),
+            "younger": d0["full_name"] if d0["repo_age"]["years"] <= d1["repo_age"]["years"] else d1["full_name"],
+            "age_gap_years": round(abs(d0["repo_age"]["years"] - d1["repo_age"]["years"]), 1),
+        }
+    else:
+        comparison = {}
+
+    return _json.dumps({
+        "command": "insight",
+        "mode": "compare",
+        "repos": datas,
+        "comparison": comparison,
+    }, indent=2, ensure_ascii=False)
+
+
+def cmd_insight_compare(repos: list[str], client: GitHubClient, as_json: bool = False) -> None:
+    """Handle `ara insight repo1 repo2 ...` (2 repos only) — side-by-side compare.
+
+    Args:
+        repos: List of repository names (only first 2 used).
+        client: GitHubClient instance.
+        as_json: If True, print JSON instead of colored text.
+    """
+    datas = [_build_insight_data(r, client) for r in repos[:2]]
+    if as_json:
+        print(_render_compare_json(datas))
+    else:
+        _render_insight_compare_text(datas)

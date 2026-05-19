@@ -27,7 +27,7 @@ from ara.display import (
 )
 from ara.generate_stars import cmd_generate_stars
 from ara.history import cmd_history, cmd_history_compare
-from ara.insight import cmd_insight, cmd_insight_json
+from ara.insight import cmd_insight, cmd_insight_compare
 from ara.rank import cmd_rank, cmd_rank_json
 from ara.summary import cmd_summary, cmd_summary_json
 from ara.trends import cmd_trends as trends_cmd
@@ -63,6 +63,16 @@ def run_battle(repos: list, client: GitHubClient) -> str:
         stars = client.get_stars(repo)
         data.append((repo, stars))
     return format_battle(data)
+
+
+def _cmd_insight_wrapper(args: argparse.Namespace, client: GitHubClient) -> None:
+    """Handle `ara insight <repo> [<repo> ...]` — dispatch to single or compare mode."""
+    repos = getattr(args, "repos", []) or []
+    as_json = getattr(args, "json", False)
+    if len(repos) == 1:
+        cmd_insight(repos[0], client=client, as_json=as_json)
+    else:
+        cmd_insight_compare(repos, client=client, as_json=as_json)
 
 
 def _cmd_history_wrapper(args: argparse.Namespace, client: GitHubClient) -> None:
@@ -510,14 +520,16 @@ def build_parser() -> argparse.ArgumentParser:
     )
     summary_parser.set_defaults(func=cmd_summary)
 
-    # ara insight <repo>
+    # ara insight <repo> [<repo> ...]
     insight_parser = subparsers.add_parser(
         "insight",
         help="Deep repository insight -- star velocity, topics, age, and more",
     )
-    insight_parser.add_argument("repo", help="Repository (owner/repo)")
+    insight_parser.add_argument(
+        "repos", nargs="+", help="Repository(es) (owner/repo), 2+ for compare mode"
+    )
     insight_parser.add_argument("--json", action="store_true", help="Output as JSON")
-    insight_parser.set_defaults(func=cmd_insight)
+    insight_parser.set_defaults(func=_cmd_insight_wrapper)
 
     # ara history <repo> [<repo> ...]
     history_parser = subparsers.add_parser(
@@ -570,7 +582,7 @@ def main(argv: list | None = None) -> int:
         "trends": trends_cmd,
         "dashboard": cmd_dashboard,
         "summary": cmd_summary_json,
-        "insight": cmd_insight_json,
+        "insight": _cmd_insight_wrapper,
         "rank": cmd_rank_json,
     }
     if getattr(args, "json", False) and args.command in json_handlers:
