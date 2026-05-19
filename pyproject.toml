@@ -3,18 +3,39 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.pytest.ini_options]
-minversion = "7.0"
-testpaths = ["tests"]
-python_files = ["test_*.py"]
-python_classes = ["Test*"]
-python_functions = ["test_*", "cmd_*"]
-addopts = "-q --tb=short"
-filterwarnings = ["ignore::DeprecationWarning"]
+testpaths = [
+    "tests",
+]
+addopts = [
+    "-q",
+    "--tb=short",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+python_files = [
+    "test_*.py",
+]
 
 [tool.ruff]
-target-version = "py310"
+src = ["ara", "tests"]
 line-length = 100
+target-version = "py310"
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I"]
-ignore = ["E501"]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "PL",  # pylint
+    "RUF", # ruff-specific
+]
+ignore = [
+    "E501",   # line-too-long (handled by formatter)
+    "N802",   # allow lowercase function names
+    "N803",   # allow lowercase argument names
+    "PLR2004", # magic-value-comparison
+]

@@ -189,7 +189,14 @@ def cmd_watch(args: argparse.Namespace, client: GitHubClient) -> None:
         while True:
             snapshots: list[tuple[str, dict, dict | None]] = []
             for repo in repos:
-                info = client.get_repo_info(repo)
+                try:
+                    info = client.get_repo_info(repo)
+                except (ConnectionError, RuntimeError, ValueError) as e:
+                    print(f"  {RED}Error fetching {repo}: {e}{RESET}")
+                    # Keep the previous info to continue monitoring
+                    info = previous_infos.get(repo) or {}
+                    if not info:
+                        continue  # No baseline yet, skip display
                 prev = previous_infos.get(repo)
                 current_stars = info.get("stars", 0)
 
