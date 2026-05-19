@@ -9,12 +9,7 @@ Provides formatting functions for:
 
 from typing import List, Tuple
 
-# ANSI color codes
-GREEN = "\033[92m"
-YELLOW = "\033[93m"
-CYAN = "\033[96m"
-BOLD = "\033[1m"
-RESET = "\033[0m"
+from ara.colors import BOLD, CYAN, GREEN, RESET, YELLOW
 
 MAX_BAR_WIDTH = 20
 

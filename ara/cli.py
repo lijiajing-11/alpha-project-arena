@@ -57,28 +57,28 @@
     57|    return format_battle(data)
     58|
     59|
-    60|def cmd_stars(args: argparse.Namespace, client: GitHubClient) -> None:
-    61|    """Handle `ara stars <repo> [<repo> ...]` command."""
-    62|    for repo in args.repos:
-    63|        stars = client.get_stars(repo)
-    64|        if stars is not None:
-    65|            print(f"  {GREEN}★{RESET} {repo}: {BOLD}{stars:,}{RESET} stars")
-    66|        else:
-    67|            print(f"  {RED}✗{RESET} {repo}: could not fetch")
-    68|
-    69|    if len(args.repos) > 1:
-    70|        # Show a mini-leaderboard
-    71|        print(f"\n  {BOLD}Mini Leaderboard{RESET}")
-    72|        print(f"  {'─' * 40}")
-    73|        results = []
-    74|        for repo in args.repos:
-    75|            stars = client.get_stars(repo)
-    76|            if stars is not None:
-    77|                results.append((repo, stars))
-    78|        results.sort(key=lambda x: x[1], reverse=True)
-    79|        for i, (repo, stars) in enumerate(results, 1):
-    80|            medal = {1: "🥇", 2: "🥈", 3: "🥉"}.get(i, f"  {i}.")
-    81|            print(f"  {medal} {repo:<25} {stars:>6,} ★")
+def cmd_stars(args: argparse.Namespace, client: GitHubClient) -> None:
+    """Handle `ara stars <repo> [<repo> ...]` command.
+
+    Fetches each repo exactly once, prints individual results,
+    and if multiple repos were given, shows a mini leaderboard.
+    """
+    results = []
+    for repo in args.repos:
+        stars = client.get_stars(repo)
+        if stars is not None:
+            print(f"  {GREEN}★{RESET} {repo}: {BOLD}{stars:,}{RESET} stars")
+            results.append((repo, stars))
+        else:
+            print(f"  {RED}✗{RESET} {repo}: could not fetch")
+
+    if len(results) > 1:
+        print(f"\n  {BOLD}Mini Leaderboard{RESET}")
+        print(f"  {'─' * 40}")
+        results.sort(key=lambda x: x[1], reverse=True)
+        for i, (repo, stars) in enumerate(results, 1):
+            medal = {1: "🥇", 2: "🥈", 3: "🥉"}.get(i, f"  {i}.")
+            print(f"  {medal} {repo:<25} {stars:>6,} ★")
     82|
     83|
     84|def cmd_watch(args: argparse.Namespace, client: GitHubClient) -> None:
