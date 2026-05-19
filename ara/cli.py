@@ -28,6 +28,7 @@ from ara.trends import cmd_trends as trends_cmd
 from ara.generate_stars import cmd_generate_stars
 from ara.dashboard import cmd_dashboard
 from ara.summary import cmd_summary
+from ara.rank import cmd_rank, cmd_rank_json
 
 
 def run_watch(repo: str, client: GitHubClient, previous: int | None = None) -> int:
@@ -177,17 +178,26 @@ def cmd_watch(args: argparse.Namespace, client: GitHubClient) -> None:
 def cmd_watch_json(args: argparse.Namespace, client: GitHubClient) -> None:
     """Handle `ara watch --json <repo> ...` — one JSON line per tick."""
     repos = args.repos
-    print(json_result({"command": "watch", "repos": repos, "status": "started"}))
+    notify = getattr(args, "notify", False)
+    previous_stars: dict[str, int] = {}
+    total_changes = 0
+    print(json_result({"command": "watch", "repos": repos, "notify": notify, "status": "started"}))
     try:
         while True:
             snapshots = []
             for repo in repos:
                 stars = client.get_stars(repo)
-                snapshots.append({"repo": repo, "stars": stars})
-            print(json_result({"command": "watch", "tick": snapshots}))
+                changed = False
+                if notify and repo in previous_stars:
+                    if stars > previous_stars[repo]:
+                        changed = True
+                        total_changes += 1
+                snapshots.append({"repo": repo, "stars": stars, "changed": changed})
+                previous_stars[repo] = stars
+            print(json_result({"command": "watch", "tick": snapshots, "total_changes": total_changes}))
             time.sleep(30)
     except KeyboardInterrupt:
-        print(json_result({"command": "watch", "status": "ended"}))
+        print(json_result({"command": "watch", "status": "ended", "total_changes": total_changes}))
 
 
 def cmd_battle(args: argparse.Namespace, client: GitHubClient) -> None:
@@ -409,12 +419,12 @@ def build_parser() -> argparse.ArgumentParser:
     dash_parser.add_argument("--json", action="store_true", help="Output as JSON")
     dash_parser.set_defaults(func=cmd_dashboard)
 
-    # ara summary <repo> [<repo> ...]
+    # ara summary <repo>
     summary_parser = subparsers.add_parser(
         "summary",
         help="One-line repo summary (copy-paste friendly)",
     )
-    summary_parser.add_argument("repos", nargs="+", help="Repository (owner/repo)")
+    summary_parser.add_argument("repo", help="Repository (owner/repo)")
     summary_parser.add_argument(
         "--json", action="store_true", help="Output as JSON"
     )
@@ -441,6 +451,7 @@ def main(argv: list | None = None) -> int:
         "compare": cmd_compare_json,
         "trends": trends_cmd,
         "dashboard": cmd_dashboard,
+        "summary": cmd_summary_json,
     }
     if getattr(args, "json", False) and args.command in json_handlers:
         args.func = json_handlers[args.command]

@@ -2,14 +2,12 @@
 
 Usage:
   ara summary facebook/react
-  ara summary facebook/react vercel/next.js
   ara summary facebook/react --json
 """
 
 import json
 
 from ara.core import GitHubClient
-from ara.colors import BOLD, RESET
 
 
 def _format_number(n: int) -> str:
@@ -33,51 +31,75 @@ def _resolve_license(info: dict) -> str:
     return "None"
 
 
-def _build_summary_line(info: dict) -> str:
-    """Build a one-line summary string from repo info.
+def format_summary_line(repo: str, info: dict) -> str:
+    """Format a single-line summary string from repo info.
 
-    Format: ⭐ 226,000 · 🍴 47,000 · ⚠ 1,200 · 📦 JavaScript · 📄 MIT
+    Format: ★ facebook/react · 226,000 stars · 47,000 forks · 1,200 issues · JavaScript · MIT
+
+    Args:
+        repo: Repository name (owner/repo).
+        info: Dict from client.get_repo_info().
+
+    Returns:
+        Formatted one-line summary string.
     """
     stars = _format_number(info.get("stars", 0))
     forks = _format_number(info.get("forks", 0))
     issues = _format_number(info.get("open_issues", 0))
     lang = info.get("language") or "N/A"
     license_ = _resolve_license(info)
-    desc = (info.get("description") or "")[:40]
+    desc = (info.get("description") or "")[:60]
+    desc_part = f"  —  {desc}" if desc else ""
 
-    line = f"⭐ {stars} · 🍴 {forks} · ⚠ {issues} · 📦 {lang} · 📄 {license_}"
-    if desc:
-        line += f"  —  {desc}"
-    return line
+    return (
+        f"★ {repo} · {stars} stars · {forks} forks · "
+        f"{issues} issues · {lang} · {license_}{desc_part}"
+    )
 
 
 def cmd_summary(args, client: GitHubClient) -> None:
-    """Handle `ara summary <repo> [<repo> ...]`.
+    """Handle `ara summary <repo>` — one-line text summary.
 
-    Text mode: outputs lines prefixed with '# ' for easy copy-paste.
-    JSON mode: outputs structured JSON with all fields.
+    Args:
+        args: argparse.Namespace with .repo attribute.
+        client: GitHubClient instance.
     """
-    if getattr(args, "json", False):
-        results = []
-        for repo in args.repos:
-            info = client.get_repo_info(repo)
-            results.append({
-                "repo": repo,
-                "stars": info.get("stars", 0),
-                "forks": info.get("forks", 0),
-                "open_issues": info.get("open_issues", 0),
-                "language": info.get("language"),
-                "license": _resolve_license(info),
-                "description": info.get("description"),
-            })
-        print(json.dumps(
-            {"command": "summary", "repos": results},
-            indent=2, ensure_ascii=False,
-        ))
-    else:
-        for i, repo in enumerate(args.repos):
-            info = client.get_repo_info(repo)
-            line = _build_summary_line(info)
-            if len(args.repos) > 1:
-                line += f"  —  {BOLD}{repo}{RESET}"
-            print(f"# {line}")
+    repo = args.repo
+    try:
+        info = client.get_repo_info(repo)
+        line = format_summary_line(repo, info)
+        print(line)
+    except (ValueError, RuntimeError) as e:
+        print(f"★ {repo} · N/A stars · N/A forks · N/A issues · N/A · N/A  —  Error: {e}")
+
+
+def cmd_summary_json(args, client: GitHubClient) -> None:
+    """Handle `ara summary <repo> --json` — structured JSON output.
+
+    Args:
+        args: argparse.Namespace with .repo attribute.
+        client: GitHubClient instance.
+    """
+    repo = args.repo
+    try:
+        info = client.get_repo_info(repo)
+        result = {
+            "stars": info.get("stars", 0),
+            "forks": info.get("forks", 0),
+            "open_issues": info.get("open_issues", 0),
+            "language": info.get("language"),
+            "license": _resolve_license(info),
+            "description": info.get("description"),
+        }
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+    except (ValueError, RuntimeError) as e:
+        result = {
+            "stars": None,
+            "forks": None,
+            "open_issues": None,
+            "language": None,
+            "license": None,
+            "description": None,
+            "error": str(e),
+        }
+        print(json.dumps(result, indent=2, ensure_ascii=False))
