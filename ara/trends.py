@@ -181,16 +181,26 @@ def render_trend_chart(buckets: List[TrendBucket], repo: str) -> str:
     ]
 
     for b in buckets:
-        delta_str = _format_delta(b.delta)
+        delta_str = _format_delta(b.delta, padded=True)
         count_str = f"{b.count:,}"
         lines.append(
             f"{b.label.ljust(label_w)}  {count_str.rjust(count_w - 1)}  {delta_str}"
         )
 
     lines.append("━" * (label_w + count_w + 14))
+
+    # Best and worst hour info
+    best_delta = best_bucket.delta if buckets else 0
+    worst_delta = worst_bucket.delta if buckets else 0
+    best_label = best_bucket.label if buckets else "N/A"
+    worst_label = worst_bucket.label if buckets else "N/A"
+    best_count = best_bucket.count if buckets else 0
+    worst_count = worst_bucket.count if buckets else 0
+
     lines.append(
         f"Total new stars: {total_stars:,}"
-        f"   Best hour: {best_bucket.label} ({best_bucket.count})"
+        f"   Best hour: {best_label} ({best_count}, {_format_delta(best_delta).strip()})"
+        f"   Worst hour: {worst_label} ({worst_count}, {_format_delta(worst_delta).strip()})"
     )
 
     return "\n".join(lines)
@@ -205,14 +215,33 @@ def _compute_window_label(buckets: list[TrendBucket]) -> str:
     return f"{first} – {last}"
 
 
-def _format_delta(delta: int) -> str:
-    """Format delta with ▲/▼ indicator and color."""
+def _format_delta(delta: int, padded: bool = False) -> str:
+    """Format delta with ▲/▼ indicator and color.
+
+    Args:
+        delta: The delta value.
+        padded: If True, right-pad to 5 chars for table alignment.
+
+    Returns:
+        Colored delta string like "▲ +5", "▼ -3", or "  0".
+    """
     if delta > 0:
-        return f"{GREEN}▲ +{delta}{RESET}"
+        s = f"{GREEN}▲ +{delta}{RESET}"
     elif delta < 0:
-        return f"{RED}▼ {delta}{RESET}"
+        s = f"{RED}▼ {delta}{RESET}"
     else:
-        return " ▼ -0"
+        s = "  0"
+    if padded:
+        plain = _strip_ansi(s)
+        pad = " " * (5 - len(plain))
+        return f"{pad}{s}"
+    return s
+
+
+def _strip_ansi(text: str) -> str:
+    """Strip ANSI escape sequences from a string."""
+    import re as _re
+    return _re.sub(r"\033\[[0-9;]*m", "", text)
 
 
 def cmd_trends(args, client) -> str:

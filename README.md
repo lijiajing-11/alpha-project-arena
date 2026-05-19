@@ -13,6 +13,18 @@
   <sup><i>Built by <b>Α-Tech Inc.</b> — where we turn data into arenas. 🏟️</i></sup>
 </p>
 
+<p align="center">
+  <a href="https://github.com/lijiajing-11/alpha-project-arena/stargazers">
+    <img src="https://img.shields.io/github/stars/lijiajing-11/alpha-project-arena?style=social" alt="GitHub Stars"/>
+  </a>
+  <a href="https://github.com/lijiajing-11/alpha-project-arena/forks">
+    <img src="https://img.shields.io/github/forks/lijiajing-11/alpha-project-arena?style=social" alt="GitHub Forks"/>
+  </a>
+  <a href="https://x.com/ATechInc">
+    <img src="https://img.shields.io/twitter/follow/ATechInc?style=social" alt="Follow on X"/>
+  </a>
+</p>
+
 ---
 
 ## 📑 Navigation
@@ -416,19 +428,63 @@ ara compare --json facebook/react vuejs/core | jq '.winner'
 
 ## 🖼️ Screenshots
 
-![ARA Battle Demo](https://img.shields.io/badge/screenshot-coming_soon-8A2BE2?style=flat-square)
-
-> 🎥 **Want to contribute a screenshot?** Record one with `asciinema rec docs/ara-demo.cast` and convert to GIF with `agg`. Drop the `.gif` in `docs/` and update this section!
+> **Live demo** — see ARA in action:
 
 ```text
-  ╔══════════════════════════════════════════╗
-  ║          ★ ARENA BATTLE ★               ║
-  ║                                          ║
-  ║  ★ facebook/react         ▓▓▓▓▓▓▓▓      ║
-  ║  ★ vuejs/core             ▓▓░░░░░░      ║
-  ║                                          ║
-  ║  ✦ react dominates!                     ║
-  ╚══════════════════════════════════════════╝
+$ ara battle facebook/react vuejs/core sveltejs/svelte
+
+  ╔══════════════════════════════════════════════════════════╗
+  ║                    ★ ARENA BATTLE ★                     ║
+  ║                                                          ║
+  ║  facebook/react          ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 230k ║
+  ║  vuejs/core              ▓▓▓▓▓░░░░░░░░░░░░░░░░░░░░  47k ║
+  ║  sveltejs/svelte         ▓▓░░░░░░░░░░░░░░░░░░░░░░░  19k ║
+  ║                                                          ║
+  ║      ✦ facebook/react dominates the arena! ✦            ║
+  ╚══════════════════════════════════════════════════════════╝
+```
+
+```text
+$ ara watch owner/repo
+
+╔════════════════════════════════════════════╗
+║        📡 ARA Star Tracker — WATCH         ║
+╚════════════════════════════════════════════╝
+┌────────────────────┬────────────────────────┐
+│ Repository         │ owner/repo              │
+├────────────────────┼────────────────────────┤
+│ ⭐ Stars           │ 12,345  (+5)            │
+│ ⑂ Forks            │ 234     (+1)            │
+│ ⚠ Issues           │ 12     (-2)             │
+│ 🔤 Language        │ Python                  │
+│ 📜 License         │ MIT                     │
+│ 🕐 Updated         │ 2026-05-19 14:30:22     │
+└────────────────────┴────────────────────────┘
+```
+
+> 🎥 **Want to contribute a proper GIF?** Record with `asciinema rec docs/ara-demo.cast` and convert with `agg docs/ara-demo.cast docs/ara-demo.gif` — then open a PR!
+
+---
+
+### 🏆 Battle of the Titans — Live Leaderboard
+
+Want to know how your favorite repos stack up right now? Try this:
+
+```bash
+# Top JavaScript frameworks
+ara battle facebook/react vuejs/core sveltejs/svelte angular/angular preactjs/preact
+
+# Top AI / ML repos
+ara battle tensorflow/tensorflow pytorch/pytorch huggingface/transformers
+
+# Your daily stack
+ara compare tailwindlabs/tailwindcss ansidev/ansible
+```
+
+```bash
+# Feed the results into a dashboard
+ara battle --json pytorch/pytorch tensorflow/tensorflow | jq '.winner'
+# → "tensorflow/tensorflow"
 ```
 
 ---
@@ -520,11 +576,26 @@ ARA automatically **retries** on rate limits (429), server errors (5xx), and tra
 
 All contributions welcome — code, docs, ideas, or bug reports!
 
+### Quick Start for Contributors
+
+```bash
+# Fork the repo first, then:
+git clone https://github.com/your-username/alpha-project-arena.git
+cd alpha-project-arena
+python -m venv .venv && source .venv/bin/activate
+pip install -e '.[dev]'
+pytest tests/ -v      # 90+ tests should all pass
+ruff check .          # zero warnings
+```
+
+### PR Guidelines
+
 1. 🍴 **Fork** the repo
 2. 🌿 `git checkout -b feat/your-idea`
 3. 🛠️ Make your changes (Python 3.10+, ruff style)
 4. ✅ `pytest tests/ -v` — keep the suite green
 5. 📬 Open a **Pull Request** against `main`
+6. 🏷️ Add a clear description & screenshot if visual
 
 ### Ideas to run with
 

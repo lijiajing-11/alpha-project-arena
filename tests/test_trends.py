@@ -336,12 +336,12 @@ def test_format_delta_negative():
 
 
 def test_format_delta_zero():
-    """Zero delta should show ▼ -0."""
+    """Zero delta should show 0 without arrow."""
     from ara.trends import _format_delta
 
     result = _format_delta(0)
-    assert "▼" in result
-    assert "-0" in result
+    assert "▼" not in result
+    assert "0" in result
 
 
 def test_json_output_empty():
