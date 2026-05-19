@@ -11,7 +11,7 @@ Provides formatting functions for:
 
 from datetime import datetime
 
-from ara.colors import BOLD, CLEAR, CYAN, GOLD, GRAY, GREEN, RED, RESET, YELLOW
+from ara.colors import BOLD, CYAN, GRAY, GREEN, RED, RESET, YELLOW
 
 
 def format_delta(current: int, previous: int) -> str:
@@ -115,7 +115,6 @@ def format_multi_watch(data: list) -> str:
     """
     now = datetime.now().strftime("%H:%M:%S")
     lines = [
-        f"{CLEAR}",
         f"{BOLD}{CYAN}╔══ ARA Multi-Watch @ {now} ══╗{RESET}",
     ]
 
@@ -128,6 +127,35 @@ def format_multi_watch(data: list) -> str:
 
     lines.append(f"{BOLD}╚══════════════════════════════╝{RESET}")
     return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# Watch cursor-control helpers — local refresh instead of full CLEAR
+# ---------------------------------------------------------------------------
+
+_FIRST_WATCH_OUTPUT: dict[str, bool] = {}
+
+
+def _cursor_up(n: int = 1) -> str:
+    """Return ANSI escape to move cursor up N lines."""
+    return f"\033[{n}A"
+
+
+def _watch_refresh_prefix(lines: int, ctx_key: str = "default") -> str:
+    """Return the appropriate prefix for watch refresh: first call → empty, then → cursor-up.
+
+    Args:
+        lines: Number of lines to move cursor up (i.e. number of output lines from previous tick).
+        ctx_key: Context key to track first-call state (e.g. 'single' or 'multi').
+
+    Returns:
+        Empty string on first call, cursor-up + first-line-clear on subsequent calls.
+    """
+    first = _FIRST_WATCH_OUTPUT.get(ctx_key, True)
+    if first:
+        _FIRST_WATCH_OUTPUT[ctx_key] = False
+        return ""
+    return _cursor_up(lines) + "\033[J"
 
 
 # ---------------------------------------------------------------------------
@@ -170,7 +198,7 @@ def format_watch_dashboard(
         timestamp: Current time string.
 
     Returns:
-        A formatted string for terminal with CLEAR prefix so it refreshes.
+        A formatted string for terminal with local-refresh prefix instead of full CLEAR.
     """
     stars = info.get("stars", 0)
     forks = info.get("forks", 0)
@@ -195,7 +223,6 @@ def format_watch_dashboard(
     now = timestamp or datetime.now().strftime("%H:%M:%S")
 
     lines = [
-        f"{CLEAR}",
         f"{BOLD}{CYAN}╔════════════════════════════════════════════╗{RESET}",
         f"{BOLD}{CYAN}║        📡 ARA Star Tracker — WATCH         ║{RESET}",
         f"{BOLD}{CYAN}╚════════════════════════════════════════════╝{RESET}",
@@ -214,7 +241,10 @@ def format_watch_dashboard(
         "",
         f"Last updated: {now}  |  Press Ctrl+C to stop",
     ]
-    return "\n".join(lines)
+    content = "\n".join(lines)
+    line_count = len(lines)  # number of lines the content occupies
+    prefix = _watch_refresh_prefix(line_count, "single")
+    return prefix + content
 
 
 def format_multi_watch_dashboard(
@@ -228,7 +258,7 @@ def format_multi_watch_dashboard(
         timestamp: Current time string.
 
     Returns:
-        A formatted string for terminal with CLEAR prefix.
+        A formatted string for terminal with local-refresh prefix instead of full CLEAR.
     """
     now = timestamp or datetime.now().strftime("%H:%M:%S")
     n = len(snapshots)
@@ -272,7 +302,6 @@ def format_multi_watch_dashboard(
     _bot = "└" + "─" * (len(header_str) - 2) + "┘"
 
     lines = [
-        f"{CLEAR}",
         f"{BOLD}{CYAN}╔══════════════════════════════════════════════════════════════════╗{RESET}",
         f"{BOLD}{CYAN}║        📡 ARA Multi-Watch                                       ║{RESET}",
         f"{BOLD}{CYAN}╚══════════════════════════════════════════════════════════════════╝{RESET}",
@@ -310,7 +339,10 @@ def format_multi_watch_dashboard(
     lines.append("")
     lines.append(f"Watching {n} repo{'s' if n > 1 else ''}  ·  {now}  ·  Ctrl+C to stop")
 
-    return "\n".join(lines)
+    content = "\n".join(lines)
+    line_count = len(lines)
+    prefix = _watch_refresh_prefix(line_count, "multi")
+    return prefix + content
 
 
 # ---------------------------------------------------------------------------
@@ -498,23 +530,3 @@ def format_multi_compare_table(infos: list[dict]) -> str:
         name = info.get("full_name", "unknown")
         stars = info.get("stars", 0)
         forks = info.get("forks", 0)
-        lang = info.get("language") or "N/A"
-        topics = info.get("topics", [])
-        topics_str = ", ".join(str(t) for t in topics[:3]) if topics else ""
-
-        medal = {0: f"{GOLD}🥇 {BOLD}", 1: "🥈 ", 2: "🥉 "}.get(i, f"  {i+1}. ")
-        rank_str = medal + RESET if i <= 1 else medal
-
-        line = (f"  {rank_str}{name:<25} {stars:>8,} ★  "
-                f"{forks:>5,} ⑂  {lang:<12}")
-        if topics_str:
-            line += f"  {GRAY}{topics_str}{RESET}"
-        lines.append(line)
-
-    # Show winner
-    winner = sorted_infos[0]
-    lines.append("")
-    lines.append(f"  🏆 {BOLD}Winner:{RESET} {BOLD}{winner.get('full_name')}{RESET} ({winner.get('stars'):,} ★)")
-    lines.append("")
-
-    return "\n".join(lines)

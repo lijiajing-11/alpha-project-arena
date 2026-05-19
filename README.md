@@ -50,6 +50,9 @@
   <a href="https://github.com/lijiajing-11/alpha-project-arena">
     <img src="https://img.shields.io/badge/PRs-welcome-22c55e" alt="PRs Welcome"/>
   </a>
+  <a href="https://github.com/lijiajing-11/alpha-project-arena/actions/workflows/ci.yml">
+    <img src="https://img.shields.io/github/actions/workflow/status/lijiajing-11/alpha-project-arena/ci.yml?branch=main&label=CI&logo=github" alt="CI"/>
+  </a>
 </p>
 
 ## 🎬 Gallery
@@ -608,7 +611,7 @@ ARA is designed as a **single-file-per-responsibility** Python package — no fr
 
 | Module | Responsibility |
 |--------|---------------|
-| `ara/cli.py` | Argument parsing + command dispatch (11 commands) |
+| `ara/cli.py` | Argument parsing + command dispatch (13 commands) |
 | `ara/core.py` | GitHub API client, cache, data models |
 | `ara/summary.py` | One-line repo overview |
 | `ara/dashboard.py` | Full repo overview panel |
@@ -618,6 +621,7 @@ ARA is designed as a **single-file-per-responsibility** Python package — no fr
 | `ara/battle.py` | Arena battle ASCII bars |
 | `ara/trends.py` | Star trend analysis + ASCII charts |
 | `ara/history.py` | Star growth ASCII timeline chart |
+| `ara/compare.py` | Head-to-head repo comparison table |
 | `ara/generate_stars.py` | Stargazer JSON export |
 | `ara/colors.py` | ANSI color constants |
 | `ara/console.py` | Console entry point (`console_scripts`) |
@@ -636,7 +640,7 @@ alpha-project-arena/
 │   ├── generate_stars.py # Stargazer JSON tool
 │   ├── colors.py         # Shared ANSI colour constants
 │   └── console.py        # Console entry point
-├── tests/                # Test suite (pytest, 140+ tests)
+├── tests/                # Test suite (pytest, 242+ tests)
 ├── scripts/
 │   └── demo.py           # Demo output generator
 ├── docs/                 # Documentation & screenshots (coming soon)
@@ -657,7 +661,7 @@ cd alpha-project-arena
 python -m venv venv && source venv/bin/activate
 pip install -e .
 
-# Run the full test suite (140+ tests passing)
+# Run the full test suite (242+ tests passing)
 pytest tests/ -v
 
 # Lint with ruff
@@ -699,7 +703,7 @@ git clone https://github.com/your-username/alpha-project-arena.git
 cd alpha-project-arena
 python -m venv venv && source venv/bin/activate
 pip install -e '.[dev]'
-pytest tests/ -v      # 140+ tests should all pass
+pytest tests/ -v      # 242+ tests should all pass
 ruff check .          # zero warnings
 ```
 

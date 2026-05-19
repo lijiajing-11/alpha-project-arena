@@ -7,22 +7,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [0.3.0] - 2026-05-19
 
 ### Added
-- `ara history <repo>` — Star growth ASCII timeline chart (simulated from created_at + current stars)
-- `ara summary <repo>` — One-line repo overview (stars, forks, issues, language, license, description)
-- `ara rank [--top N] [--json] [<repo> ...]` — Ranked leaderboard of repos by star count
 - `ara dashboard <repo...>` — Full repo overview dashboard panel
+- `ara summary <repo>` — One-line repo overview (stars, forks, issues, language, license, description)
+- `ara rank [--top N] [--json] [<repo> ...]` — Live Top N repo leaderboard 🔥
 - `ara insight <repo>` — Deep repository intelligence (star velocity, topics, age, relative time)
+- `ara compare` 3+ repos — N-way multi-repo comparison with 🥇🥈🥉 ranking
+- `ara history <repo>` — Star growth ASCII timeline chart (simulated from created_at + current stars)
 - `ara watch --notify` — Desktop notification (terminal bell) on star changes
 
 ### Changed
 - Version bump to 0.3.0
-- README Gallery section — showcase rank, summary, watch-notify, dashboard outputs
-- Test suite expanded to 183 tests (0 failed)
-- CLI now has 12 commands accessible via `ara --help`
+- README v11 — Architecture table, Gallery section, full command reference, Who Should Use sections
+- Test suite expanded to **242 tests** (0 failed) — 43 new tests from Phase 2
+- CLI now has **13 commands** accessible via `ara --help`
 
 ### Fixed
 - Syntax error in cli.py (duplicate closing brace) — fixed
 - Import error for cmd_summary_json — now properly exported
+- `ara watch` terminal flicker — replaced full-screen clear with cursor-position refresh
 
 ## [0.2.0] - 2026-05-19
 
