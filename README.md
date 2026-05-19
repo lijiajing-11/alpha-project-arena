@@ -27,7 +27,7 @@
 
 <p align="center">
   <a href="https://pypi.org/project/ara/">
-    <img src="https://img.shields.io/pypi/v/ara?color=8A2BE2&label=PyPI%20v0.3.0" alt="PyPI"/>
+    <img src="https://img.shields.io/pypi/v/ara?color=8A2BE2&label=PyPI%20v0.3.1" alt="PyPI"/>
   </a>
   <a href="https://pypi.org/project/ara/">
     <img src="https://img.shields.io/pypi/dm/ara?color=3b82f6&label=downloads" alt="Downloads"/>
@@ -238,8 +238,8 @@ Every command supports `--json` for CI pipelines, dashboards, and `jq` piping.
 > 🆕 **v0.3.0:** `ara rank` — live Top 10 repo leaderboard. Try `ara rank --top 20`!
 >
 > 🆕 **Hot off the press:** `ara insight` — star velocity, topics, age, and more. Try `ara insight facebook/react`!
-
-> 📦 **v0.3.1** — 14 modules, 251 passing tests, stdlib-only + optional `plyer`
+>
+> 📦 **v0.3.1** — 17 modules, 251+ passing tests, stdlib-only + optional `plyer`
 
 ---
 
@@ -475,6 +475,8 @@ Every ARA command accepts `--json` for machine-readable output — perfect for C
 | Command | JSON flag | What you get |
 |---------|-----------|--------------|
 | `ara stars --json owner/repo` | ✅ | Array of `{repo, stars}` objects |
+| `ara summary --json owner/repo` | ✅ | One-line summary with `{name, stars, language, description}` |
+| `ara rank --json` | ✅ | Leaderboard as sorted array with rank, stars, forks |
 | `ara watch --json owner/repo` | ✅ | One JSON object per 30s tick |
 | `ara battle --json owner/a owner/b` | ✅ | Battle results with `winner` field |
 | `ara compare --json owner/a owner/b` | ✅ | Full comparison with `winner`, `lead_by`, `fork_leader` |
@@ -498,6 +500,8 @@ ARA is designed as a **single-file-per-responsibility** Python package — no fr
 
 | Module | Responsibility |
 |--------|---------------|
+| `ara/__init__.py` | Package init, `__version__` |
+| `ara/__main__.py` | Entry point for `python -m ara` |
 | `ara/cli.py` | Argument parsing + command dispatch (12 commands) |
 | `ara/core.py` | GitHub API client, cache, data models |
 | `ara/summary.py` | One-line repo overview |
@@ -513,6 +517,7 @@ ARA is designed as a **single-file-per-responsibility** Python package — no fr
 | `ara/chart.py` | Shared ASCII chart engine (bars, sparklines) |
 | `ara/colors.py` | ANSI color constants |
 | `ara/console.py` | Console entry point (`console_scripts`) |
+| **Total** | **17 modules** — pure Python, zero framework |
 
 ```
 alpha-project-arena/
@@ -657,9 +662,17 @@ MIT © [lijiajing-11](https://github.com/lijiajing-11) — see [LICENSE](LICENSE
 
 ---
 
-## ⭐ Star History
+## ⭐ Star Us — Fuel the Arena
 
-[![Star History Chart](https://api.star-history.com/svg?repos=lijiajing-11/alpha-project-arena&type=Date)](https://star-history.com/#lijiajing-11/alpha-project-arena&Date)
+ARA is still young. Every star is a vote that says *"this CLI deserves to exist."*
+
+```bash
+# One click, zero cost:
+open https://github.com/lijiajing-11/alpha-project-arena
+# Then smash that ⭐ button
+```
+
+> Star History chart will appear here once we hit 10+ stars! 🚀
 
 ---
 
