@@ -232,9 +232,14 @@ Every command supports `--json` for CI pipelines, dashboards, and `jq` piping.
 | 🛠️ `ara generate-stars <repo>` | Fetch stargazers to JSON (demo tool) | `ara generate-stars python/cpython` |
 | ⚖️ `ara compare <r1> <r2>` | Head-to-head comparison table | `ara compare a/A b/B` |
 
-> 💡 **New in v0.3.0:** `ara rank` — live Top 10 repo leaderboard. Try `ara rank --top 20`!
+> 💡 **New in v0.3.1:** `ara watch --notify` — desktop notifications when star count changes.
+> Terminal bell + plyer desktop notification with graceful fallback on WSL.
+>
+> 🆕 **v0.3.0:** `ara rank` — live Top 10 repo leaderboard. Try `ara rank --top 20`!
 >
 > 🆕 **Hot off the press:** `ara insight` — star velocity, topics, age, and more. Try `ara insight facebook/react`!
+
+> 📦 **v0.3.1** — 14 modules, 251 passing tests, stdlib-only + optional `plyer`
 
 ---
 
@@ -517,9 +522,15 @@ alpha-project-arena/
 │   ├── cli.py            # CLI argument parser & all commands
 │   ├── core.py           # Data models, cache, GitHub API client
 │   ├── display.py        # Watch display formatting
+│   ├── summary.py        # One-line repo overview
+│   ├── dashboard.py      # Full repo overview panel
+│   ├── rank.py           # Top N repo leaderboard
+│   ├── insight.py        # Deep repo intelligence
 │   ├── battle.py         # Battle display & ASCII bars
+│   ├── compare.py        # Head-to-head comparison table
 │   ├── trends.py         # Star trend analysis
 │   ├── history.py        # Star growth timeline chart
+│   ├── chart.py          # Shared ASCII chart engine
 │   ├── generate_stars.py # Stargazer JSON tool
 │   ├── colors.py         # Shared ANSI colour constants
 │   └── console.py        # Console entry point
@@ -542,18 +553,20 @@ alpha-project-arena/
 git clone https://github.com/lijiajing-11/alpha-project-arena.git
 cd alpha-project-arena
 python -m venv venv && source venv/bin/activate
-pip install -e .
+pip install -e '.[dev]'
 
 # Run the full test suite (251+ tests passing)
 pytest tests/ -v
 
 # Lint with ruff
-ruff check .
+ruff check ara/ tests/
 
 # Generate demo output
 python scripts/demo.py
 ```
 
+> ✅ **Pre-commit checklist:** `pytest tests/ -q && ruff check ara/ tests/` — both should pass clean.
+>
 > See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed contribution guidelines, PR process, and the feature wishlist.
 
 ---
