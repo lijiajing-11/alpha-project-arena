@@ -166,6 +166,30 @@ $ ara watch tensorflow/tensorflow
   📅 Created 2013-05-29  ·  Last updated 2 hours ago
 ```
 
+**NEW — Multi-repo `ara insight repo1 repo2 repo3 ...`** — compare up to N repos side-by-side with community **Influence Score**:
+
+```text
+$ ara insight facebook/react vuejs/core sveltejs/svelte
+
+  facebook/react                           │  vuejs/core                              │  sveltejs/svelte
+  A declarative UI library                 │  🖖 Vue.js is a progressive...            │  Cybernetically enhanced web apps
+                                           │                                           │
+  ★ 226,000 stars · +62.8/day  🚀 Hyp...   │  ★ 47,000 stars · +19.5/day  🔥 Rapid    │  ★ 18,000 stars · +7.2/day  📊 Steady
+  ⎊ 47,000 forks · ☠ 1,200 open issues     │  ⎊ 7,000 forks · ☠ 800 open issues        │  ⎊ 1,200 forks · ☠ 400 open issues
+  ⎆ JavaScript · © MIT · 📅 13yo Veteran   │  ⎆ TypeScript · © MIT · 📅 6.4yo Prime   │  ⎆ TypeScript · © MIT · 📅 8.1yo Veteran
+  🏷  React · Ui · Javascript · Decl...     │  🏷  Vue · Typescript · Frontend          │  🏷  Svelte · Javascript · Compiler
+
+  ════════════════════════════════════════════  COMPARISON  ═════════════════════════════════════════════
+
+  ★ Top: facebook/react (226,000 ★)
+  📈 Influence Ranking:
+    🥇 facebook/react                        129.40  (High)
+    🥈 vuejs/core                             27.80  (Moderate)
+    🥉 sveltejs/svelte                        10.55  (Moderate)
+  ⚡ Average velocity: 29.8 stars/day
+  📅 Youngest: vuejs/core (6.4yo)
+```
+
 ### 📈 `ara history` — Star Growth Timeline
 
 ```text
@@ -218,12 +242,14 @@ $ ara history --compare facebook/react vuejs/core sveltejs/svelte
 | 🏆 `ara rank [--top N]` | Live Top N repo leaderboard 🔥 | `ara rank --top 10` |
 | 📈 `ara trends <repo>` | Star trend chart over time | `ara trends owner/repo` |
 | 📋 `ara info <repo...>` | Full repo metadata dump | `ara info owner/project` |
-| 🧠 `ara insight <repo>` | Deep insight — star velocity, topics, age | `ara insight owner/project` |
+|| 🧠 `ara insight <repo...>` | Deep insight — star velocity, topics, age + N-repo compare with Influence Score | `ara insight owner/proj1 owner/proj2 owner/proj3` |
 | 🛠️ `ara generate-stars <repo>` | Fetch stargazers to JSON (demo tool) | `ara generate-stars python/cpython` |
 | ⚖️ `ara compare <r1> <r2>` | Head-to-head comparison table | `ara compare a/A b/B` |
 
 > 💡 **New in v0.3.2:** `ara watch --notify` — desktop notifications when star count changes.
 > Terminal bell + plyer desktop notification with graceful fallback on WSL.
+>
+> 🚀 **New in v0.4.0:** `ara insight repo1 repo2 repo3 ...` — **multi-repo comparison** with community **Influence Score** (Stars×0.5 + Forks×0.3 + Issues×0.2 / 1000). Up to N repos, side-by-side, ranked by influence.
 >
 > 🆕 **v0.3.0:** `ara rank` — live Top 10 repo leaderboard. Try `ara rank --top 20`!
 >
