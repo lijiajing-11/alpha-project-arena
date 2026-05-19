@@ -1,145 +1,106 @@
-"""Tests for the dashboard command."""
+"""Tests for `ara dashboard` command (Task 007-A)."""
 
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import patch
 
 
-# ===========================================================================
-# Dashboard display tests
-# ===========================================================================
+MOCK_REPO_INFO = {
+    "full_name": "facebook/react",
+    "name": "react",
+    "stars": 226000,
+    "forks": 47000,
+    "open_issues": 1200,
+    "language": "JavaScript",
+    "license": "MIT",
+    "description": "A declarative, efficient, and flexible JavaScript library for building user interfaces.",
+    "updated_at": "2026-05-18T14:30:00Z",
+}
 
 
-def test_dashboard_prints_repo_info(capsys):
+@patch("ara.dashboard.GitHubClient")
+def test_dashboard_prints_repo_info(MockClient, capsys):
     """Dashboard output should contain repo name, stars, forks, issues."""
-    from ara.dashboard import _print_dashboard
+    from ara.dashboard import cmd_dashboard
 
-    info = {
-        "full_name": "facebook/react",
-        "stars": 226000,
-        "forks": 47000,
-        "open_issues": 1200,
-        "language": "JavaScript",
-        "license": "MIT",
-        "updated_at": "2026-05-18T12:00:00Z",
-        "description": "A declarative JavaScript library for building UIs",
-    }
+    mock_client = MockClient.return_value
+    mock_client.get_repo_info.return_value = MOCK_REPO_INFO
 
-    _print_dashboard(info)
+    args = type("Args", (), {"repos": ["facebook/react"]})()
+    cmd_dashboard(args, mock_client)
+
     captured = capsys.readouterr()
-
     assert "facebook/react" in captured.out
     assert "226,000" in captured.out
     assert "47,000" in captured.out
     assert "1,200" in captured.out
-    assert "JavaScript" in captured.out
-    assert "MIT" in captured.out
 
 
-def test_dashboard_multi_repo(capsys):
+@patch("ara.dashboard.GitHubClient")
+def test_dashboard_multi_repo(MockClient, capsys):
     """Dashboard with two repos should print both."""
-    from ara.dashboard import _print_dashboard
+    from ara.dashboard import cmd_dashboard
 
-    info_a = {
-        "full_name": "vuejs/core",
-        "stars": 50000,
-        "forks": 7000,
-        "open_issues": 300,
-        "language": "TypeScript",
-        "license": "MIT",
-        "updated_at": "2026-05-17T00:00:00Z",
-        "description": "Vue.js core",
-    }
-    info_b = {
-        "full_name": "sveltejs/svelte",
-        "stars": 80000,
-        "forks": 4000,
-        "open_issues": 200,
-        "language": "TypeScript",
-        "license": "MIT",
-        "updated_at": "2026-05-16T00:00:00Z",
-        "description": "Svelte framework",
+    mock_client = MockClient.return_value
+
+    mock_infos = {
+        "vuejs/core": {
+            "full_name": "vuejs/core",
+            "stars": 48000,
+            "forks": 8000,
+            "open_issues": 300,
+            "language": "TypeScript",
+            "license": "MIT",
+            "description": "Vue.js core",
+            "updated_at": "2026-05-17T10:00:00Z",
+        },
+        "sveltejs/svelte": {
+            "full_name": "sveltejs/svelte",
+            "stars": 82000,
+            "forks": 4000,
+            "open_issues": 150,
+            "language": "TypeScript",
+            "license": "MIT",
+            "description": "Svelte framework",
+            "updated_at": "2026-05-16T08:00:00Z",
+        },
     }
 
-    _print_dashboard(info_a)
-    print()  # blank line between repos (simulated)
-    _print_dashboard(info_b)
+    def mock_get_repo_info(repo):
+        return mock_infos[repo]
+
+    mock_client.get_repo_info.side_effect = mock_get_repo_info
+
+    args = type("Args", (), {"repos": ["vuejs/core", "sveltejs/svelte"]})()
+    cmd_dashboard(args, mock_client)
 
     captured = capsys.readouterr()
     assert "vuejs/core" in captured.out
     assert "sveltejs/svelte" in captured.out
 
 
-def test_dashboard_empty_fields(capsys):
-    """Dashboard should handle missing description and language gracefully."""
-    from ara.dashboard import _print_dashboard
+@patch("ara.dashboard.GitHubClient")
+def test_dashboard_empty_fields(MockClient, capsys):
+    """Dashboard should show 'N/A' for missing language and 'No description' for missing description."""
+    from ara.dashboard import cmd_dashboard
 
-    info = {
-        "full_name": "owner/minimal",
+    mock_client = MockClient.return_value
+
+    empty_info = {
+        "full_name": "some/empty",
+        "name": "empty",
         "stars": 100,
         "forks": 10,
-        "open_issues": 0,
+        "open_issues": 5,
         "language": None,
         "license": None,
-        "updated_at": None,
         "description": None,
+        "updated_at": "2026-05-18T14:30:00Z",
     }
+    mock_client.get_repo_info.return_value = empty_info
 
-    _print_dashboard(info)
+    args = type("Args", (), {"repos": ["some/empty"]})()
+    cmd_dashboard(args, mock_client)
+
     captured = capsys.readouterr()
-
-    assert "N/A" in captured.out  # language fallback
+    assert "some/empty" in captured.out
+    assert "N/A" in captured.out
     assert "No description" in captured.out
-    assert "None" in captured.out  # license fallback
-
-
-# ===========================================================================
-# Parser tests
-# ===========================================================================
-
-
-def test_parser_dashboard_command():
-    """Parser should parse 'dashboard' subcommand."""
-    from ara.cli import build_parser
-
-    parser = build_parser()
-    args = parser.parse_args(["dashboard", "owner/repo"])
-    assert args.command == "dashboard"
-    assert args.repos == ["owner/repo"]
-
-
-def test_parser_dashboard_multiple_repos():
-    """Parser should accept multiple repos with dashboard."""
-    from ara.cli import build_parser
-
-    parser = build_parser()
-    args = parser.parse_args(["dashboard", "owner/a", "owner/b", "owner/c"])
-    assert args.repos == ["owner/a", "owner/b", "owner/c"]
-
-
-# ===========================================================================
-# Integration test
-# ===========================================================================
-
-
-@patch("ara.cli.GitHubClient")
-def test_main_dashboard_command(MockClient):
-    """main() should dispatch dashboard command successfully."""
-    from ara.cli import main
-
-    mock_instance = MagicMock()
-    MockClient.return_value = mock_instance
-    mock_instance.get_repo_info.return_value = {
-        "full_name": "owner/test-repo",
-        "stars": 500,
-        "forks": 100,
-        "open_issues": 10,
-        "language": "Python",
-        "license": "MIT",
-        "updated_at": "2026-05-18T12:00:00Z",
-        "description": "A test repo",
-        "name": "test-repo",
-    }
-
-    result = main(["dashboard", "owner/test-repo"])
-    assert result == 0

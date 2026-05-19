@@ -1,4 +1,11 @@
-"""dashboard command — full repo overview at a glance."""
+"""dashboard command — full repo overview at a glance.
+
+Usage:
+    ara dashboard <repo> [<repo> ...]
+
+Shows a compact terminal dashboard with stars, forks, issues, language,
+license, last updated time, and description for each repo.
+"""
 
 from ara.core import GitHubClient
 from ara.colors import BOLD, RESET, GREEN
@@ -9,15 +16,6 @@ def _format_number(n: int) -> str:
     return f"{n:,}"
 
 
-def _resolve_license(lic) -> str:
-    """Resolve license field — may be str, dict, or None."""
-    if lic is None:
-        return "None"
-    if isinstance(lic, dict):
-        return lic.get("name", lic.get("key", str(lic)))
-    return str(lic)
-
-
 def _print_dashboard(info: dict) -> None:
     """Print a compact dashboard for a single repo info dict."""
     name = info.get("full_name", info.get("name", "Unknown"))
@@ -25,7 +23,7 @@ def _print_dashboard(info: dict) -> None:
     forks = info.get("forks", 0)
     issues = info.get("open_issues", 0)
     lang = info.get("language") or "N/A"
-    license_ = _resolve_license(info.get("license"))
+    license_ = info.get("license") or "None"
     updated = (info.get("updated_at") or "Unknown")[:10]
     desc = info.get("description") or "No description"
 
