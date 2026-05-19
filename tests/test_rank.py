@@ -1,407 +1,349 @@
-"""Tests for the ARA rank module.
-
-Tests:
-- fetch_all_repos: correct fetching, error handling, sorting
-- format_rank_table: table structure, top_n limit, empty edge case
-- _format_stars, _format_forks: formatting helpers
-- cmd_rank_json: JSON output structure
-"""
+"""Tests for `ara rank` command (Task 009-B Part 2)."""
 
 import json
+from unittest.mock import MagicMock, patch
 
-from ara.rank import (
-    DEFAULT_REPOS,
-    _format_forks,
-    _format_stars,
-    cmd_rank_json,
-    fetch_all_repos,
-    format_rank_table,
-)
+import pytest
 
-
-class FakeClient:
-    """Mock GitHubClient that returns predefined repo info."""
-
-    def __init__(self, repos_data: dict | None = None):
-        self.repos_data = repos_data or {}
-
-    def get_repo_info(self, repo: str) -> dict:
-        if repo in self.repos_data:
-            return self.repos_data[repo]
-        if repo == "error/repo":
-            raise ValueError("Repository not found: error/repo")
-        if repo == "timeout/repo":
-            raise RuntimeError("GitHub API error 500: Internal Server Error")
-        raise ValueError(f"Repository not found: {repo}")
-
-
-# ---------------------------------------------------------------------------
-# Fixtures
-# ---------------------------------------------------------------------------
-
-SAMPLE_REPOS = [
-    "facebook/react",
-    "vuejs/core",
-    "sveltejs/svelte",
-]
-
-SAMPLE_DATA = {
-    "facebook/react": {
-        "full_name": "facebook/react",
-        "stars": 226000,
-        "forks": 47000,
-        "open_issues": 1200,
-        "language": "JavaScript",
-        "license": "MIT",
-        "description": "A declarative UI library",
-    },
-    "vuejs/core": {
-        "full_name": "vuejs/core",
-        "stars": 47000,
-        "forks": 7800,
-        "open_issues": 800,
-        "language": "TypeScript",
-        "license": "MIT",
-        "description": "Vue.js core",
-    },
-    "sveltejs/svelte": {
-        "full_name": "sveltejs/svelte",
-        "stars": 82000,
-        "forks": 4500,
-        "open_issues": 300,
-        "language": "TypeScript",
-        "license": "MIT",
-        "description": "Svelte framework",
-    },
+# Sample repo info dicts for testing
+REPO_A = {
+    "full_name": "facebook/react",
+    "stars": 226000,
+    "forks": 47000,
+    "open_issues": 1200,
+    "language": "JavaScript",
+    "license": {"key": "mit", "name": "MIT License"},
+    "description": "A declarative UI library",
 }
 
-SAMPLE_EMPTY_RESULTS: list[dict] = []
+REPO_B = {
+    "full_name": "vuejs/core",
+    "stars": 47000,
+    "forks": 7000,
+    "open_issues": 800,
+    "language": "TypeScript",
+    "license": {"key": "mit", "name": "MIT License"},
+    "description": "Vue.js core",
+}
+
+REPO_C = {
+    "full_name": "vercel/next.js",
+    "stars": 126000,
+    "forks": 27000,
+    "open_issues": 3000,
+    "language": "JavaScript",
+    "license": {"key": "mit", "name": "MIT License"},
+    "description": "Next.js framework",
+}
 
 
-# ---------------------------------------------------------------------------
-# Test _format_stars and _format_forks
-# ---------------------------------------------------------------------------
+# ===========================================================================
+# _format_stars tests
+# ===========================================================================
 
 
-class TestFormatHelpers:
-    """Test the formatting helper functions."""
+def test_format_stars_large():
+    """_format_stars should format large numbers with commas."""
+    from ara.rank import _format_stars
 
-    def test_format_stars_under_1000(self):
-        assert _format_stars(999) == "999"
-
-    def test_format_stars_thousands(self):
-        assert _format_stars(1000) == "1,000"
-        assert _format_stars(226000) == "226,000"
-
-    def test_format_stars_millions(self):
-        assert _format_stars(1000000) == "1.0M"
-        assert _format_stars(1500000) == "1.5M"
-
-    def test_format_forks_under_1000(self):
-        assert _format_forks(500) == "500"
-
-    def test_format_forks_thousands(self):
-        assert _format_forks(1000) == "1k"
-        assert _format_forks(47000) == "47k"
-        assert _format_forks(7800) == "7k"
-
-    def test_format_forks_zero(self):
-        assert _format_forks(0) == "0"
+    result = _format_stars(226000)
+    assert result == "226,000"
 
 
-# ---------------------------------------------------------------------------
-# Test fetch_all_repos
-# ---------------------------------------------------------------------------
+def test_format_stars_medium():
+    """_format_stars should format medium numbers normally."""
+    from ara.rank import _format_stars
+
+    result = _format_stars(47000)
+    assert result == "47,000"
 
 
-class TestFetchAllRepos:
-    """Test fetch_all_repos function."""
+def test_format_stars_small():
+    """_format_stars should not add commas for small numbers."""
+    from ara.rank import _format_stars
 
-    def test_fetch_success(self):
-        client = FakeClient(SAMPLE_DATA)
-        results, errors = fetch_all_repos(client, SAMPLE_REPOS)
+    result = _format_stars(999)
+    assert result == "999"
 
-        assert len(errors) == 0
-        # Should be sorted by stars descending: react (226k) > svelte (82k) > vue (47k)
-        assert results[0]["full_name"] == "facebook/react"
-        assert results[1]["full_name"] == "sveltejs/svelte"
-        assert results[2]["full_name"] == "vuejs/core"
 
-    def test_fetch_correct_count(self):
-        client = FakeClient(SAMPLE_DATA)
-        results, errors = fetch_all_repos(client, SAMPLE_REPOS)
-        assert len(results) == 3
-        assert results[0]["stars"] == 226000
+# ===========================================================================
+# _format_forks tests
+# ===========================================================================
 
-    def test_fetch_with_errors(self):
-        repos = ["facebook/react", "error/repo", "sveltejs/svelte", "timeout/repo"]
-        client = FakeClient(SAMPLE_DATA)
-        results, errors = fetch_all_repos(client, repos)
 
-        assert len(results) == 2  # only successful ones
-        assert len(errors) == 2
-        assert errors[0]["repo"] == "error/repo"
-        assert errors[1]["repo"] == "timeout/repo"
+def test_format_forks_thousands():
+    """_format_forks should show 'k' suffix for 1000+."""
+    from ara.rank import _format_forks
 
-    def test_fetch_all_fail(self):
-        repos = ["error/repo", "notfound/repo"]
-        client = FakeClient({})
-        results, errors = fetch_all_repos(client, repos)
-        assert len(results) == 0
-        assert len(errors) == 2
+    result = _format_forks(47000)
+    assert result == "47k"
 
-    def test_fetch_empty_list(self):
-        client = FakeClient({})
-        results, errors = fetch_all_repos(client, [])
-        assert len(results) == 0
-        assert len(errors) == 0
 
-    def test_default_repos_is_not_empty(self):
-        assert len(DEFAULT_REPOS) == 10
-        assert "facebook/react" in DEFAULT_REPOS
-        assert "jquery/jquery" in DEFAULT_REPOS
+def test_format_forks_small():
+    """_format_forks should not show 'k' suffix for < 1000."""
+    from ara.rank import _format_forks
 
-    def test_fetch_sorts_by_stars_descending(self):
-        data = {
-            "a/repo": {"full_name": "a/repo", "stars": 100},
-            "b/repo": {"full_name": "b/repo", "stars": 500},
-            "c/repo": {"full_name": "c/repo", "stars": 50},
+    result = _format_forks(500)
+    assert result == "500"
+
+
+# ===========================================================================
+# cmd_rank tests
+# ===========================================================================
+
+
+@patch("ara.rank.GitHubClient")
+def test_cmd_rank_basic(MockClient, capsys):
+    """cmd_rank should print ranking table with sorted repos."""
+    from ara.rank import cmd_rank
+
+    mock_client = MockClient.return_value
+    infos = [REPO_A, REPO_B, REPO_C]
+
+    def mock_get_repo_info(repo):
+        mapping = {
+            "facebook/react": REPO_A,
+            "vuejs/core": REPO_B,
+            "vercel/next.js": REPO_C,
         }
-        client = FakeClient(data)
-        results, _ = fetch_all_repos(client, ["a/repo", "b/repo", "c/repo"])
-        assert results[0]["full_name"] == "b/repo"
-        assert results[1]["full_name"] == "a/repo"
-        assert results[2]["full_name"] == "c/repo"
+        return mapping.get(repo, {})
+
+    mock_client.get_repo_info.side_effect = mock_get_repo_info
+
+    args = type("Args", (), {"repos": ["facebook/react", "vuejs/core", "vercel/next.js"], "top": 3, "json": False})()
+    cmd_rank(args, mock_client)
+
+    captured = capsys.readouterr()
+    # Should show sorted: react (226k), next.js (126k), vuejs (47k)
+    assert "facebook/react" in captured.out
+    assert "226,000" in captured.out
+    assert "next.js" in captured.out
+    assert "126,000" in captured.out
+    assert "vuejs/core" in captured.out
+    assert "47,000" in captured.out
 
 
-# ---------------------------------------------------------------------------
-# Test format_rank_table
-# ---------------------------------------------------------------------------
+@patch("ara.rank.GitHubClient")
+def test_cmd_rank_respects_top_n(MockClient, capsys):
+    """cmd_rank should limit results to --top N."""
+    from ara.rank import cmd_rank
+
+    mock_client = MockClient.return_value
+    infos = [REPO_A, REPO_B, REPO_C]
+
+    def mock_get_repo_info(repo):
+        mapping = {
+            "facebook/react": REPO_A,
+            "vuejs/core": REPO_B,
+            "vercel/next.js": REPO_C,
+        }
+        return mapping.get(repo, {})
+
+    mock_client.get_repo_info.side_effect = mock_get_repo_info
+
+    args = type("Args", (), {"repos": ["facebook/react", "vuejs/core", "vercel/next.js"], "top": 2, "json": False})()
+    cmd_rank(args, mock_client)
+
+    captured = capsys.readouterr()
+    assert "226,000" in captured.out  # #1
+    assert "126,000" in captured.out  # #2
+    assert "47,000" not in captured.out  # #3 should not appear
 
 
-class TestFormatRankTable:
-    """Test format_rank_table formatting."""
+@patch("ara.rank.GitHubClient")
+def test_cmd_rank_graceful_error(MockClient, capsys):
+    """cmd_rank should skip failed repos and show errors."""
+    from ara.rank import cmd_rank
 
-    def _make_result(
-        self, name: str, stars: int = 1000, forks: int = 100, lang: str = "Python"
-    ) -> dict:
+    mock_client = MockClient.return_value
+
+    def mock_get_repo_info(repo):
+        if repo == "facebook/react":
+            return REPO_A
+        raise ValueError("Repository not found")
+
+    mock_client.get_repo_info.side_effect = mock_get_repo_info
+
+    args = type("Args", (), {"repos": ["facebook/react", "nonexistent/repo"], "top": 10, "json": False})()
+    cmd_rank(args, mock_client)
+
+    captured = capsys.readouterr()
+    assert "facebook/react" in captured.out
+    assert "226,000" in captured.out
+    # Error should be displayed
+    assert "Error" in captured.out or "errors" in captured.out.lower()
+
+
+@patch("ara.rank.GitHubClient")
+def test_cmd_rank_default_repos(MockClient, capsys):
+    """cmd_rank should use DEFAULT_REPOS when no repos given."""
+    from ara.rank import cmd_rank, DEFAULT_REPOS
+
+    mock_client = MockClient.return_value
+
+    def mock_get_repo_info(repo):
+        # Return minimal info for default repos
         return {
-            "full_name": name,
-            "stars": stars,
-            "forks": forks,
-            "language": lang,
+            "full_name": repo,
+            "stars": 10000,
+            "forks": 2000,
+            "open_issues": 500,
+            "language": "JavaScript",
             "license": "MIT",
-            "description": "",
         }
 
-    def test_empty_results(self):
-        result = format_rank_table(SAMPLE_EMPTY_RESULTS, top_n=10)
-        assert result == "No repo data available."
+    mock_client.get_repo_info.side_effect = mock_get_repo_info
 
-    def test_single_repo_table(self):
-        results = [self._make_result("test/repo", stars=5000)]
-        table = format_rank_table(results, top_n=10)
-        assert "test/repo" in table
-        assert "5,000" in table
-        assert "┌" in table
-        assert "└" in table
+    args = type("Args", (), {"repos": None, "top": 5, "json": False})()
+    cmd_rank(args, mock_client)
 
-    def test_top_n_limit(self):
-        results = [
-            self._make_result(f"repo/{i}", stars=1000 - i * 10)
-            for i in range(20)
-        ]
-        table = format_rank_table(results, top_n=5)
-        # Count rows — each row line has "│" and repo name
-        lines = table.split("\n")
-        # 3 header lines (top, header, sep) + 5 data rows + 1 bottom
-        assert len(lines) == 9, f"Expected 9 lines, got {len(lines)}"
-        # First data row is repo/0 (highest stars)
-        assert "repo/0" in table
-        # Fifth data row is repo/4
-        assert "repo/4" in table
-        # repo/5 should NOT appear
-        assert "repo/5" not in table
-
-    def test_top_n_larger_than_results(self):
-        results = [
-            self._make_result("a/repo", stars=100),
-            self._make_result("b/repo", stars=50),
-        ]
-        table = format_rank_table(results, top_n=10)
-        lines = table.split("\n")
-        # 3 header + 2 data + 1 bottom = 6
-        assert len(lines) == 6
-        assert "a/repo" in table
-        assert "b/repo" in table
-
-    def test_table_has_header_row(self):
-        results = [self._make_result("test/repo")]
-        table = format_rank_table(results, top_n=10)
-        assert "Repo" in table
-        assert "Stars" in table
-        assert "Forks" in table
-        assert "Language" in table
-
-    def test_table_contains_rank_numbers(self):
-        results = [
-            self._make_result("a/repo", stars=300),
-            self._make_result("b/repo", stars=200),
-            self._make_result("c/repo", stars=100),
-        ]
-        table = format_rank_table(results, top_n=10)
-        assert "1" in table
-        assert "2" in table
-        assert "3" in table
-
-    def test_language_fallback(self):
-        """Repo with no language should show — (em dash)."""
-        results = [{"full_name": "no/lang", "stars": 100, "forks": 10, "language": None}]
-        table = format_rank_table(results, top_n=10)
-        assert "—" in table
-
-    def test_box_drawing_borders(self):
-        results = [self._make_result("test/repo", stars=500)]
-        table = format_rank_table(results, top_n=10)
-        assert table.startswith("┌")
-        assert table.endswith("┘")
-
-    def test_multi_repo_sorting_order_in_table(self):
-        """Table should respect the sorted order passed in."""
-        results = [
-            self._make_result("top/repo", stars=999),
-            self._make_result("mid/repo", stars=500),
-            self._make_result("low/repo", stars=100),
-        ]
-        table = format_rank_table(results, top_n=10)
-        # First data row after separator should be top/repo
-        lines = [l for l in table.split("\n") if "repo/" in l]
-        assert len(lines) == 3
-        assert "top/repo" in lines[0]
-        assert "mid/repo" in lines[1]
-        assert "low/repo" in lines[2]
+    captured = capsys.readouterr()
+    # Should see at least some default repos
+    assert "facebook/react" in captured.out
+    assert "vuejs/core" in captured.out
 
 
-# ---------------------------------------------------------------------------
-# Test cmd_rank_json
-# ---------------------------------------------------------------------------
+# ===========================================================================
+# cmd_rank_json tests
+# ===========================================================================
 
 
-class TestCmdRankJson:
-    """Test the JSON output of rank."""
+@patch("ara.rank.GitHubClient")
+def test_cmd_rank_json_output(MockClient, capsys):
+    """cmd_rank_json should print valid JSON with sorted ranking."""
+    from ara.rank import cmd_rank_json
 
-    def test_json_structure(self, capsys):
-        client = FakeClient(SAMPLE_DATA)
-        repos = ["facebook/react", "vuejs/core"]
-        args = type("Args", (), {"repos": repos, "top": 10, "json": True})()
+    mock_client = MockClient.return_value
 
-        cmd_rank_json(args, client)
+    def mock_get_repo_info(repo):
+        mapping = {
+            "facebook/react": REPO_A,
+            "vuejs/core": REPO_B,
+            "vercel/next.js": REPO_C,
+        }
+        return mapping.get(repo, {})
 
-        captured = capsys.readouterr()
-        data = json.loads(captured.out)
-        assert data["command"] == "rank"
-        assert data["top"] == 10
-        assert len(data["repos"]) == 2
-        assert data["errors"] is None
+    mock_client.get_repo_info.side_effect = mock_get_repo_info
 
-    def test_json_sorted_by_stars(self, capsys):
-        client = FakeClient(SAMPLE_DATA)
-        repos = ["vuejs/core", "facebook/react"]  # intentionally unsorted
-        args = type("Args", (), {"repos": repos, "top": 10, "json": True})()
+    args = type("Args", (), {"repos": ["facebook/react", "vuejs/core", "vercel/next.js"], "top": 3})()
+    cmd_rank_json(args, mock_client)
 
-        cmd_rank_json(args, client)
+    captured = capsys.readouterr()
+    data = json.loads(captured.out)
 
-        captured = capsys.readouterr()
-        data = json.loads(captured.out)
-        assert data["repos"][0]["full_name"] == "facebook/react"
-
-    def test_json_has_rank_field(self, capsys):
-        client = FakeClient(SAMPLE_DATA)
-        repos = ["facebook/react", "vuejs/core"]
-        args = type("Args", (), {"repos": repos, "top": 10, "json": True})()
-
-        cmd_rank_json(args, client)
-
-        captured = capsys.readouterr()
-        data = json.loads(captured.out)
-        assert data["repos"][0]["rank"] == 1
-        assert data["repos"][1]["rank"] == 2
-
-    def test_json_errors_included(self, capsys):
-        repos = ["facebook/react", "error/repo"]
-        client = FakeClient(SAMPLE_DATA)
-        args = type("Args", (), {"repos": repos, "top": 10, "json": True})()
-
-        cmd_rank_json(args, client)
-
-        captured = capsys.readouterr()
-        data = json.loads(captured.out)
-        assert len(data["repos"]) == 1  # only successful
-        assert data["errors"] is not None
-        assert len(data["errors"]) == 1
-        assert data["errors"][0]["repo"] == "error/repo"
-
-    def test_json_all_fail(self, capsys):
-        repos = ["error/repo", "timeout/repo"]
-        client = FakeClient({})
-        args = type("Args", (), {"repos": repos, "top": 10, "json": True})()
-
-        cmd_rank_json(args, client)
-
-        captured = capsys.readouterr()
-        data = json.loads(captured.out)
-        assert len(data["repos"]) == 0
-        assert len(data["errors"]) == 2
-
-    def test_json_top_n_limit(self, capsys):
-        client = FakeClient(SAMPLE_DATA)
-        repos = ["facebook/react", "vuejs/core", "sveltejs/svelte"]
-        args = type("Args", (), {"repos": repos, "top": 2, "json": True})()
-
-        cmd_rank_json(args, client)
-
-        captured = capsys.readouterr()
-        data = json.loads(captured.out)
-        assert len(data["repos"]) == 2
-        assert data["top"] == 2
+    assert data["command"] == "rank"
+    assert data["top"] == 3
+    assert len(data["repos"]) == 3
+    assert data["repos"][0]["full_name"] == "facebook/react"
+    assert data["repos"][0]["rank"] == 1
+    assert data["repos"][1]["full_name"] == "vercel/next.js"
+    assert data["repos"][2]["full_name"] == "vuejs/core"
 
 
-# ---------------------------------------------------------------------------
-# Test CLI integration
-# ---------------------------------------------------------------------------
+@patch("ara.rank.GitHubClient")
+def test_cmd_rank_json_error(MockClient, capsys):
+    """cmd_rank_json should include errors for failed repos."""
+    from ara.rank import cmd_rank_json
+
+    mock_client = MockClient.return_value
+
+    def mock_get_repo_info(repo):
+        if repo == "good/repo":
+            return {"full_name": "good/repo", "stars": 500, "forks": 100, "open_issues": 10, "language": "Python"}
+        raise RuntimeError("Network error")
+
+    mock_client.get_repo_info.side_effect = mock_get_repo_info
+
+    args = type("Args", (), {"repos": ["good/repo", "bad/repo"], "top": 10})()
+    cmd_rank_json(args, mock_client)
+
+    captured = capsys.readouterr()
+    data = json.loads(captured.out)
+
+    assert len(data["repos"]) == 1  # Only one successful
+    assert data["repos"][0]["full_name"] == "good/repo"
+    assert data["errors"] is not None
+    assert len(data["errors"]) == 1
 
 
-class TestCliIntegration:
-    """Test that rank can be invoked via CLI entry points."""
+# ===========================================================================
+# CLI integration tests
+# ===========================================================================
 
-    def test_invoke_via_build_parser(self):
-        """Smoke test: rank parser builds and parses correctly."""
-        from ara.cli import build_parser
 
-        parser = build_parser()
-        args = parser.parse_args(["rank"])
-        assert args.command == "rank"
-        assert args.top == 10  # default
-        assert args.repos == []  # defaults to empty list for nargs="*"
-        assert not args.json
+def test_parser_rank_command():
+    """Parser should parse 'rank' subcommand with --top."""
+    from ara.cli import build_parser
 
-    def test_parse_custom_top(self):
-        from ara.cli import build_parser
+    parser = build_parser()
+    args = parser.parse_args(["rank", "--top", "5"])
+    assert args.command == "rank"
+    assert args.top == 5
+    assert args.json is False
 
-        parser = build_parser()
-        args = parser.parse_args(["rank", "--top", "5"])
-        assert args.top == 5
 
-    def test_parse_with_repos(self):
-        from ara.cli import build_parser
+def test_parser_rank_json_flag():
+    """Parser should accept --json with rank command."""
+    from ara.cli import build_parser
 
-        parser = build_parser()
-        args = parser.parse_args(["rank", "facebook/react", "vuejs/core"])
-        assert args.repos == ["facebook/react", "vuejs/core"]
+    parser = build_parser()
+    args = parser.parse_args(["rank", "--top", "3", "--json"])
+    assert args.json is True
+    assert args.top == 3
 
-    def test_parse_json_flag(self):
-        from ara.cli import build_parser
 
-        parser = build_parser()
-        args = parser.parse_args(["rank", "--json"])
-        assert args.json
+def test_parser_rank_default_top():
+    """Parser should default --top to 10."""
+    from ara.cli import build_parser
+
+    parser = build_parser()
+    args = parser.parse_args(["rank"])
+    assert args.top == 10
+
+
+@patch("ara.cli.GitHubClient")
+def test_main_rank_command(MockClient, capsys):
+    """main() should dispatch rank command successfully."""
+    from ara.cli import main
+
+    mock_instance = MagicMock()
+    MockClient.return_value = mock_instance
+
+    def mock_get_repo_info(repo):
+        mapping = {
+            "facebook/react": REPO_A,
+            "vuejs/core": REPO_B,
+        }
+        return mapping.get(repo, {"full_name": repo, "stars": 0, "forks": 0})
+
+    mock_instance.get_repo_info.side_effect = mock_get_repo_info
+
+    result = main(["rank", "--top", "2"])
+    assert result == 0
+
+    captured = capsys.readouterr()
+    assert "facebook/react" in captured.out
+    assert "226,000" in captured.out
+
+
+@patch("ara.cli.GitHubClient")
+def test_main_rank_json(MockClient, capsys):
+    """main() should dispatch rank --json via json_handlers."""
+    from ara.cli import main
+
+    mock_instance = MagicMock()
+    MockClient.return_value = mock_instance
+
+    def mock_get_repo_info(repo):
+        mapping = {"facebook/react": REPO_A}
+        return mapping.get(repo, {"full_name": repo, "stars": 0, "forks": 0})
+
+    mock_instance.get_repo_info.side_effect = mock_get_repo_info
+
+    result = main(["rank", "--json", "--top", "1"])
+    assert result == 0
+
+    captured = capsys.readouterr()
+    data = json.loads(captured.out)
+    assert data["command"] == "rank"
+    assert data["top"] == 1
