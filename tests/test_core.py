@@ -505,3 +505,142 @@ def test_make_request_no_auth_without_token(mock_urlopen):
 
     req = mock_urlopen.call_args[0][0]
     assert req.get_header("Authorization") is None
+
+
+# ===========================================================================
+# get_repo_info / get_multiple_repos_info tests
+# ===========================================================================
+
+
+@patch("ara.core.urllib.request.urlopen")
+def test_get_repo_info_returns_full_dict(mock_urlopen):
+    """get_repo_info should return a dict with all expected keys."""
+    from ara.core import GitHubClient, star_cache
+
+    star_cache.clear()
+
+    mock_resp = MagicMock()
+    mock_resp.read.return_value = json.dumps({
+        "name": "react",
+        "full_name": "facebook/react",
+        "description": "A JavaScript library",
+        "stargazers_count": 226000,
+        "forks_count": 47000,
+        "open_issues_count": 1200,
+        "language": "JavaScript",
+        "topics": ["ui", "declarative"],
+        "license": {"spdx_id": "MIT", "key": "mit", "name": "MIT License"},
+        "created_at": "2013-05-24T16:15:54Z",
+        "updated_at": "2026-05-18T14:30:00Z",
+        "pushed_at": "2026-05-18T10:00:00Z",
+    }).encode("utf-8")
+    mock_resp.__enter__.return_value = mock_resp
+    mock_urlopen.return_value = mock_resp
+
+    client = GitHubClient()
+    info = client.get_repo_info("facebook/react")
+
+    assert info["name"] == "react"
+    assert info["full_name"] == "facebook/react"
+    assert info["stars"] == 226000
+    assert info["forks"] == 47000
+    assert info["open_issues"] == 1200
+    assert info["language"] == "JavaScript"
+    assert info["license"] == "MIT"
+    assert info["topics"] == ["ui", "declarative"]
+    assert info["created_at"] == "2013-05-24T16:15:54Z"
+    assert info["html_url"] == "https://github.com/facebook/react"
+    assert mock_urlopen.call_count == 1
+
+
+@patch("ara.core.urllib.request.urlopen")
+@patch.dict("ara.core.star_cache", {}, clear=True)
+def test_get_repo_info_missing_fields(mock_urlopen):
+    """get_repo_info should handle missing optional fields gracefully."""
+    from ara.core import GitHubClient, star_cache
+
+    star_cache.clear()
+
+    mock_resp = MagicMock()
+    mock_resp.read.return_value = json.dumps({
+        "name": "minimal",
+        "full_name": "user/minimal",
+    }).encode("utf-8")
+    mock_resp.__enter__.return_value = mock_resp
+    mock_urlopen.return_value = mock_resp
+
+    client = GitHubClient()
+    info = client.get_repo_info("user/minimal")
+
+    assert info["name"] == "minimal"
+    assert info["stars"] == 0
+    assert info["forks"] == 0
+    assert info["open_issues"] == 0
+    assert info["language"] is None
+    assert info["license"] is None
+    assert info["description"] == ""
+    assert info["topics"] == []
+
+
+@patch("ara.core.urllib.request.urlopen")
+def test_get_multiple_repos_info(mock_urlopen):
+    """get_multiple_repos_info should return results in input order."""
+    from ara.core import GitHubClient, star_cache
+
+    star_cache.clear()
+
+    mock_resp = MagicMock()
+    mock_resp.__enter__.return_value = mock_resp
+
+    def side_effect(req, **kwargs):
+        repo_part = req.full_url.split("/")[-1]
+        data = {
+            "full_name": f"owner/{repo_part}",
+            "stargazers_count": 100 if repo_part == "alpha" else 200,
+            "forks_count": 10,
+            "open_issues_count": 5,
+        }
+        r = MagicMock()
+        r.read.return_value = json.dumps(data).encode("utf-8")
+        r.__enter__.return_value = r
+        return r
+
+    mock_urlopen.side_effect = side_effect
+
+    client = GitHubClient()
+    results = client.get_multiple_repos_info(["owner/alpha", "owner/beta"])
+
+    assert len(results) == 2
+    assert results[0]["full_name"] == "owner/alpha"
+    assert results[0]["stars"] == 100
+    assert results[1]["full_name"] == "owner/beta"
+    assert results[1]["stars"] == 200
+    assert mock_urlopen.call_count == 2
+
+
+@patch("ara.core.urllib.request.urlopen")
+def test_get_multiple_repos_info_partial_failure(mock_urlopen):
+    """get_multiple_repos_info should continue on per-repo errors."""
+    from ara.core import GitHubClient, star_cache
+    import urllib.error
+
+    star_cache.clear()
+
+    mock_good = MagicMock()
+    mock_good.read.return_value = json.dumps({
+        "full_name": "owner/alpha", "stargazers_count": 100,
+    }).encode("utf-8")
+    mock_good.__enter__.return_value = mock_good
+
+    mock_urlopen.side_effect = [
+        mock_good,
+        urllib.error.HTTPError("url", 404, "Not Found", {}, None),
+    ]
+
+    client = GitHubClient()
+    results = client.get_multiple_repos_info(["owner/alpha", "owner/missing"])
+
+    assert len(results) == 2
+    assert "error" not in results[0]
+    assert results[0]["full_name"] == "owner/alpha"
+    assert "error" in results[1]

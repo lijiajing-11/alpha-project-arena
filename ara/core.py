@@ -161,14 +161,6 @@ class GitHubClient:
             f"GitHub API error {last_exc.code}: {last_exc.reason}"
         )
 
-    def _make_request_raw(self, url: str) -> any:
-        """Make a GET request and return raw parsed JSON (dict or list).
-
-        Used for endpoints that return arrays (e.g. stargazers).
-        """
-        data, _ = self._request(url)
-        return data
-
     def _fetch_page_with_headers(self, url: str) -> tuple[any, dict]:
         """Fetch a URL and return (parsed_json, headers_dict) with retry support.
 
