@@ -14,18 +14,19 @@
   <a href="https://pypi.org/project/ara/"><img src="https://img.shields.io/pypi/v/ara?color=8A2BE2" alt="PyPI"/></a>
   <a href="https://pypi.org/project/ara/"><img src="https://img.shields.io/pypi/dm/ara?color=3b82f6" alt="Downloads"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-22c55e" alt="MIT"/></a>
-  <a href="#"><img src="https://img.shields.io/github/stars/lijiajing-11/alpha-project-arena?label=stars&color=facc15" alt="Stars"/></a>
+  <a href="https://github.com/lijiajing-11/alpha-project-arena"><img src="https://img.shields.io/github/stars/lijiajing-11/alpha-project-arena?label=stars&color=facc15" alt="Stars"/></a>
   <a href="https://github.com/lijiajing-11/alpha-project-arena/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/lijiajing-11/alpha-project-arena/ci.yml?label=CI&color=22c55e" alt="CI"/></a>
-  <a href="#"><img src="https://img.shields.io/badge/status-alpha-f97316" alt="Status"/></a>
-  <a href="#"><img src="https://img.shields.io/github/languages/top/lijiajing-11/alpha-project-arena?color=blueviolet" alt="Language"/></a>
-  <a href="#"><img src="https://img.shields.io/badge/OS-linux_%7C_macOS_%7C_windows-555" alt="OS"/></a>
+  <a href="https://github.com/lijiajing-11/alpha-project-arena"><img src="https://img.shields.io/badge/status-alpha-f97316" alt="Status"/></a>
+  <a href="https://github.com/lijiajing-11/alpha-project-arena"><img src="https://img.shields.io/github/languages/top/lijiajing-11/alpha-project-arena?color=blueviolet" alt="Language"/></a>
+  <a href="https://github.com/lijiajing-11/alpha-project-arena"><img src="https://img.shields.io/badge/OS-linux_%7C_macOS_%7C_windows-555" alt="OS"/></a>
   <br/>
-  <a href="#"><img src="https://img.shields.io/github/issues/lijiajing-11/alpha-project-arena?label=issues" alt="Issues"/></a>
-  <a href="#"><img src="https://img.shields.io/github/last-commit/lijiajing-11/alpha-project-arena?label=updated" alt="Last Commit"/></a>
-  <a href="#"><img src="https://img.shields.io/badge/code%20style-ruff-9749eb" alt="Code Style"/></a>
-  <a href="#"><img src="https://img.shields.io/badge/tests-90%2B-22c55e" alt="Tests"/></a>
-  <a href="#"><img src="https://img.shields.io/badge/PRs-welcome-22c55e" alt="PRs Welcome"/></a>
-  <a href="#"><img src="https://img.shields.io/badge/🐦-follow_%40ATechInc-1DA1F2" alt="Twitter"/></a>
+  <a href="https://github.com/lijiajing-11/alpha-project-arena/issues"><img src="https://img.shields.io/github/issues/lijiajing-11/alpha-project-arena?label=issues" alt="Issues"/></a>
+  <a href="https://github.com/lijiajing-11/alpha-project-arena"><img src="https://img.shields.io/github/last-commit/lijiajing-11/alpha-project-arena?label=updated" alt="Last Commit"/></a>
+  <a href="https://github.com/lijiajing-11/alpha-project-arena"><img src="https://img.shields.io/badge/code%20style-ruff-9749eb" alt="Code Style"/></a>
+  <a href="https://github.com/lijiajing-11/alpha-project-arena"><img src="https://img.shields.io/badge/tests-90%2B-22c55e" alt="Tests"/></a>
+  <a href="https://github.com/lijiajing-11/alpha-project-arena"><img src="https://img.shields.io/badge/PRs-welcome-22c55e" alt="PRs Welcome"/></a>
+  <a href="https://x.com/ATechInc"><img src="https://img.shields.io/badge/🐦-follow_%40ATechInc-1DA1F2" alt="Twitter/X"/></a>
+  <a href="https://github.com/lijiajing-11/alpha-project-arena/graphs/contributors"><img src="https://img.shields.io/github/contributors/lijiajing-11/alpha-project-arena?color=22c55e" alt="Contributors"/></a>
 </p>
 
 ---
@@ -55,6 +56,8 @@ options:
 ## 🎯 What is ARA?
 
 **ARA** is a pure-Python CLI for monitoring GitHub stars in real time. No `requests`, no `httpx`, no `aiohttp` — just `urllib` from the standard library. It installs in 5 seconds and works immediately.
+
+**Built by [Α-Tech Inc.](https://github.com/lijiajing-11/alpha-project-arena)** — where we turn data into arenas. 🏟️
 
 | Scenario | Why ARA? | One-liner |
 |----------|----------|-----------|
@@ -252,9 +255,11 @@ ara compare --json facebook/react vuejs/core
 
 ## 🖼️ Screenshots
 
-<!-- TODO: Replace with real terminal capture -->
+![ARA Battle Demo](https://img.shields.io/badge/screenshot-coming_soon-8A2BE2?style=flat-square)
 
-```
+> 🎥 **Want to contribute a screenshot?** Record one with `asciinema rec docs/ara-demo.cast` and convert to GIF with `agg`. Drop the `.gif` in `docs/` and update this section!
+
+```text
   ╔══════════════════════════════════════════╗
   ║          ★ ARENA BATTLE ★               ║
   ║                                          ║
@@ -265,7 +270,20 @@ ara compare --json facebook/react vuejs/core
   ╚══════════════════════════════════════════╝
 ```
 
-> 🎥 **Want to contribute a screenshot?** Record one with `asciinema rec docs/ara-demo.cast` and convert to GIF with `agg`. Drop the `.gif` in `docs/` and update this section!
+---
+
+## 🏗️ Architecture
+
+ARA is designed as a **single-file-per-responsibility** Python package — no framework, no wiring, no over-engineering.
+
+| Module | Responsibility |
+|--------|---------------|
+| `ara/cli.py` | Argument parsing + command dispatch |
+| `ara/core.py` | GitHub API client, cache, data models |
+| `ara/display.py` | Live watch terminal UI |
+| `ara/battle.py` | Arena battle ASCII bars |
+| `ara/colors.py` | ANSI color constants |
+| `ara/console.py` | Console entry point (`console_scripts`) |
 
 ---
 
@@ -347,7 +365,7 @@ All contributions welcome — code, docs, ideas, or bug reports!
 4. ✅ `pytest tests/ -v` — keep the suite green
 5. 📬 Open a **Pull Request** against `main`
 
-**Ideas to run with:**
+### Ideas to run with
 
 | Idea | Difficulty |
 |------|------------|
@@ -382,7 +400,11 @@ MIT © [lijiajing-11](https://github.com/lijiajing-11)
   ·
   <a href="https://github.com/lijiajing-11/alpha-project-arena/issues">Issues</a>
   ·
-  <a href="https://twitter.com/ATechInc">Twitter/X</a>
+  <a href="https://x.com/ATechInc">Twitter/X</a>
   <br/><br/>
   <sub>⭐ Star us on GitHub — every star feeds the arena! ⭐</sub>
+  <br/>
+  <sub>
+    <a href="mailto:dev@alpha-project.dev">dev@alpha-project.dev</a>
+  </sub>
 </p>
