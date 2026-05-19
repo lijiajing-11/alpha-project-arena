@@ -24,6 +24,7 @@ from ara.display import (
     RESET,
 )
 from ara.battle import format_battle
+from ara.trends import cmd_trends as trends_cmd
 
 
 def run_watch(repo: str, client: GitHubClient, previous: int | None = None) -> int:
@@ -336,6 +337,25 @@ def build_parser() -> argparse.ArgumentParser:
     )
     compare_parser.add_argument("--json", action="store_true", help="Output as JSON")
     compare_parser.set_defaults(func=cmd_compare)
+
+    # ara trends <repo>
+    trends_parser = subparsers.add_parser(
+        "trends",
+        help="Show star trend chart for a repo",
+    )
+    trends_parser.add_argument("repo", help="Repository (owner/repo)")
+    trends_parser.add_argument(
+        "--hours", type=int, default=72,
+        help="Lookback window in hours (default: 72)",
+    )
+    trends_parser.add_argument(
+        "--interval", type=int, default=60,
+        help="Bucket interval in minutes (default: 60)",
+    )
+    trends_parser.add_argument(
+        "--json", action="store_true", help="Output as JSON",
+    )
+    trends_parser.set_defaults(func=trends_cmd)
 
     return parser
 
