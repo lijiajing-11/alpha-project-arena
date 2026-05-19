@@ -275,3 +275,97 @@ def test_trends_subcommand_registered():
     assert args.repo == "owner/repo"
     assert args.hours == 72
     assert args.interval == 60
+
+
+# ===========================================================================
+# Edge cases
+# ===========================================================================
+
+
+def test_compute_trend_buckets_single_bucket():
+    """Single bucket when lookback equals interval."""
+    from ara.trends import compute_trend_buckets
+
+    buckets = compute_trend_buckets([], hours=1, interval_minutes=60)
+    assert len(buckets) == 1
+
+
+def test_compute_trend_buckets_custom_interval():
+    """30-minute buckets should produce 2x buckets than 60-minute."""
+    from ara.trends import compute_trend_buckets
+
+    b_60 = compute_trend_buckets([], hours=2, interval_minutes=60)
+    b_30 = compute_trend_buckets([], hours=2, interval_minutes=30)
+    assert len(b_30) == len(b_60) * 2
+
+
+def test_parse_iso8601_zulu():
+    """Z-suffixed timestamps should parse correctly."""
+    from ara.trends import _parse_iso8601
+
+    ts = _parse_iso8601("2026-05-18T09:00:00Z")
+    assert isinstance(ts, float)
+    assert ts > 0
+
+
+def test_parse_iso8601_offset():
+    """Offset-suffixed timestamps should parse correctly."""
+    from ara.trends import _parse_iso8601
+
+    ts = _parse_iso8601("2026-05-18T09:00:00+00:00")
+    assert isinstance(ts, float)
+    assert ts > 0
+
+
+def test_format_delta_positive():
+    """Positive delta should show ▲."""
+    from ara.trends import _format_delta
+
+    result = _format_delta(5)
+    assert "▲" in result
+    assert "+5" in result
+
+
+def test_format_delta_negative():
+    """Negative delta should show ▼."""
+    from ara.trends import _format_delta
+
+    result = _format_delta(-3)
+    assert "▼" in result
+    assert "-3" in result
+
+
+def test_format_delta_zero():
+    """Zero delta should show ▼ -0."""
+    from ara.trends import _format_delta
+
+    result = _format_delta(0)
+    assert "▼" in result
+    assert "-0" in result
+
+
+def test_json_output_empty():
+    """JSON output for empty buckets should be valid."""
+    from ara.trends import _json_output
+
+    result = _json_output([], "owner/repo")
+    data = json.loads(result)
+    assert data["repo"] == "owner/repo"
+    assert data["total"] == 0
+    assert data["best_hour"] is None
+    assert data["worst_hour"] is None
+
+
+def test_get_star_history_skips_missing_starred_at():
+    """Entries without starred_at should be skipped."""
+    from ara.trends import get_star_history
+
+    mock_client = MagicMock()
+    page = [
+        {"login": "user1"},  # no starred_at
+        {"starred_at": "2026-05-18T10:00:00Z", "login": "user2"},
+    ]
+    mock_client._fetch_page_with_headers.return_value = (page, {})
+
+    events = get_star_history(mock_client, "owner/repo", pages=1)
+    assert len(events) == 1
