@@ -49,3 +49,11 @@ ignore = [
     "PLW2901", # allow loop variable reassignment
     "RUF001",  # allow ambiguous unicode chars (en-dash in output)
 ]
+
+[tool.coverage.run]
+source = ["ara"]
+omit = ["*/tests/*", "*/__main__.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
