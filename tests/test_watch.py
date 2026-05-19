@@ -297,3 +297,82 @@ def test_format_multi_watch_dashboard_single_repo_footer():
     result = format_multi_watch_dashboard(snapshots)
     assert "1 repo" in result
 
+
+# ===========================================================================
+# --notify tests (Task 008-C)
+# ===========================================================================
+
+
+@patch("ara.cli.GitHubClient")
+def test_watch_notify_flag_parsed(MockClient):
+    """--notify flag should be parsed and available as args.notify."""
+    from ara.cli import build_parser
+
+    parser = build_parser()
+    args = parser.parse_args(["watch", "owner/repo", "--notify"])
+    assert args.notify is True
+    assert args.repos == ["owner/repo"]
+
+
+@patch("ara.cli.GitHubClient")
+def test_watch_notify_shows_message(MockClient, capsys):
+    """Notify mode should print notification banner."""
+    from ara.cli import cmd_watch
+    from unittest.mock import patch as _patch
+
+    mock_client = MockClient.return_value
+    mock_client.get_repo_info.return_value = _make_info(stars=1000)
+
+    args = type("Args", (), {"repos": ["owner/repo"], "notify": True, "json": False})()
+
+    with _patch("ara.cli.time.sleep", side_effect=KeyboardInterrupt):
+        cmd_watch(args, mock_client)
+
+    captured = capsys.readouterr()
+    assert "Notification mode" in captured.out
+    assert "beep" in captured.out
+
+
+@patch("ara.cli.GitHubClient")
+def test_watch_notify_no_notify_no_message(MockClient, capsys):
+    """Without --notify, no notification banner should appear."""
+    from ara.cli import cmd_watch
+    from unittest.mock import patch as _patch
+
+    mock_client = MockClient.return_value
+    mock_client.get_repo_info.return_value = _make_info(stars=1000)
+
+    args = type("Args", (), {"repos": ["owner/repo"], "notify": False, "json": False})()
+
+    with _patch("ara.cli.time.sleep", side_effect=KeyboardInterrupt):
+        cmd_watch(args, mock_client)
+
+    captured = capsys.readouterr()
+    assert "Notification mode" not in captured.out
+    assert "beep" not in captured.out
+
+
+@patch("ara.cli.GitHubClient")
+def test_watch_notify_star_increase(MockClient, capsys):
+    """When stars increase in notify mode, bell should ring."""
+    from ara.cli import cmd_watch
+    from unittest.mock import patch as _patch
+
+    mock_client = MockClient.return_value
+    # First call returns 1000, second call returns 1005 (increase of 5)
+    mock_client.get_repo_info.side_effect = [
+        _make_info(stars=1000),
+        _make_info(stars=1005),
+    ]
+
+    args = type("Args", (), {"repos": ["owner/repo"], "notify": True, "json": False})()
+
+    with _patch("ara.cli.time.sleep", side_effect=[None, KeyboardInterrupt]):
+        cmd_watch(args, mock_client)
+
+    captured = capsys.readouterr()
+    # Bell character should be in output
+    assert "\a" in captured.out
+    # Summary should show stars gained
+    assert "new star" in captured.out
+

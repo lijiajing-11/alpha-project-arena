@@ -27,6 +27,7 @@ from ara.battle import format_battle
 from ara.trends import cmd_trends as trends_cmd
 from ara.generate_stars import cmd_generate_stars
 from ara.dashboard import cmd_dashboard
+from ara.summary import cmd_summary
 
 
 def run_watch(repo: str, client: GitHubClient, previous: int | None = None) -> int:
@@ -120,12 +121,19 @@ def cmd_watch(args: argparse.Namespace, client: GitHubClient) -> None:
     Displays a box-drawing dashboard that refreshes every 30 seconds.
     Single repo → full dashboard; multiple repos → compact table.
     Shows stars, forks, open issues, language, license with delta coloring.
+    When --notify is set, beeps and shows ✨ NEW! on star changes.
     """
     repos = args.repos
     previous_infos: dict[str, dict] = {}
+    notify = getattr(args, "notify", False)
+    changed_repos: set[str] = set()
+    total_new_stars = 0
 
     print(f"{BOLD}{CYAN}ARA Star Tracker v{__version__}{RESET}")
-    print(f"Watching {len(repos)} repo(s). Press Ctrl+C to stop.\n")
+    print(f"Watching {len(repos)} repo(s). Press Ctrl+C to stop.")
+    if notify:
+        print(f"{BOLD}🔔 Notification mode: you'll hear a beep when stars change.{RESET}")
+    print()
 
     try:
         while True:
@@ -133,6 +141,17 @@ def cmd_watch(args: argparse.Namespace, client: GitHubClient) -> None:
             for repo in repos:
                 info = client.get_repo_info(repo)
                 prev = previous_infos.get(repo)
+                current_stars = info.get("stars", 0)
+
+                if notify and prev is not None:
+                    prev_stars = prev.get("stars", 0)
+                    if current_stars > prev_stars:
+                        delta = current_stars - prev_stars
+                        total_new_stars += delta
+                        changed_repos.add(repo)
+                        # Terminal bell (ASCII \a = beep)
+                        print("\a", end="", flush=True)
+
                 snapshots.append((repo, info, prev))
                 previous_infos[repo] = info
 
@@ -151,6 +170,8 @@ def cmd_watch(args: argparse.Namespace, client: GitHubClient) -> None:
             info = previous_infos.get(repo, {})
             count = info.get("stars", 0)
             print(f"  {repo}: ★ {count:,}")
+        if notify and total_new_stars > 0:
+            print(f"\n  {GREEN}✨ {total_new_stars} new star(s) gained while watching!{RESET}")
 
 
 def cmd_watch_json(args: argparse.Namespace, client: GitHubClient) -> None:
@@ -314,6 +335,10 @@ def build_parser() -> argparse.ArgumentParser:
     watch_parser = subparsers.add_parser("watch", help="Watch repos in real-time")
     watch_parser.add_argument("repos", nargs="+", help="Repos to watch (owner/name)")
     watch_parser.add_argument("--json", action="store_true", help="Output as JSON")
+    watch_parser.add_argument(
+        "--notify", action="store_true",
+        help="Beep on star changes (terminal bell + visual marker)"
+    )
     watch_parser.set_defaults(func=cmd_watch)
 
     # ara battle <repo1> <repo2> [<repo3> ...]
@@ -383,6 +408,17 @@ def build_parser() -> argparse.ArgumentParser:
     dash_parser.add_argument("repos", nargs="+", help="Repository (owner/repo)")
     dash_parser.add_argument("--json", action="store_true", help="Output as JSON")
     dash_parser.set_defaults(func=cmd_dashboard)
+
+    # ara summary <repo> [<repo> ...]
+    summary_parser = subparsers.add_parser(
+        "summary",
+        help="One-line repo summary (copy-paste friendly)",
+    )
+    summary_parser.add_argument("repos", nargs="+", help="Repository (owner/repo)")
+    summary_parser.add_argument(
+        "--json", action="store_true", help="Output as JSON"
+    )
+    summary_parser.set_defaults(func=cmd_summary)
 
     return parser
 

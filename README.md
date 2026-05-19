@@ -54,6 +54,73 @@
 
 ---
 
+## 🖼️ See It in Action ⚡
+
+> **From a quick glance to deep analysis — get any repo's story in one command.**
+
+### 1. `ara dashboard` — Full Repo Overview
+
+```text
+$ ara dashboard facebook/react
+
+  facebook/react
+  ─────────────────────────────────────────────────
+    ★ Stars:      226,000
+    🍴 Forks:      47,000
+    ⚠  Issues:      1,200
+    ──────────────────────────────
+    📦 Language:   JavaScript
+    📄 License:    MIT
+    🕐  Updated:    2026-05-18
+    📝 A declarative, efficient, and flexible JavaScript library...
+```
+
+### 2. `ara battle` — Repo Smackdown
+
+```text
+$ ara battle facebook/react vercel/next.js
+
+╔════════════════════════════════════════════════╗
+║           ★ REPO BATTLE ARENA ★               ║
+╠════════════════════════════════════════════════╣
+║                                                ║
+║  facebook/react  ══════════▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 226,000 ★ ║
+║  vercel/next.js  ══════════▓▓▓▓▓▓▓▓▓▓▓▓       139,500 ★ ║
+║                                                ║
+║  🏆 Winner: facebook/react by 86,500 stars!    ║
+║                                                ║
+╚════════════════════════════════════════════════╝
+```
+
+### 3. `ara watch` — Real-time Monitoring
+
+```text
+$ ara watch facebook/react
+
+ARA Star Tracker v0.2.0
+Watching 1 repo(s). Press Ctrl+C to stop.
+
+╔═════════════════════════════════════╗
+║          ★  ARA  WATCH  ★          ║
+╠═════════════════════════════════════╣
+║                                     ║
+║  facebook/react                     ║
+║  ★ Stars:      226,000  (+12 ▲🔥)  ║
+║  🍴 Forks:      47,000  (+1  ▲)    ║
+║  ⚠  Issues:      1,200  (-2  ▼)    ║
+║  📦 Language:   JavaScript          ║
+║  📄 License:    MIT                 ║
+║  🕐  Updated:   30s ago             ║
+║                                     ║
+╚═════════════════════════════════════╝
+
+  ⏱  Press Ctrl+C to stop — a summary will print.
+```
+
+> 💡 **Every command supports `--json`** — pipe into dashboards, CI, or `jq`.
+
+---
+
 ## 🚀 Install in 5 seconds
 
 ```bash
@@ -88,10 +155,12 @@ Every command supports `--json` for piping into dashboards, CI pipelines, or `jq
 
 ## 📖 Commands
 
-All 7 commands, sorted from quick-check to head-to-head analysis. Every command supports `--json`.
+All 9 commands, sorted from quick-check to head-to-head analysis. Every command supports `--json`.
 
 | Command | Description | Quick example |
 |---------|-------------|---------------|
+| 🆕 `ara summary <repo...>` | One-line repo summary (README-ready) | `ara summary owner/project` |
+| 📊 `ara dashboard <repo...>` | Full repo overview panel | `ara dashboard owner/project` |
 | 🔍 `ara stars <repo...>` | Quick star count(s) | `ara stars owner/project` |
 | 👀 `ara watch <repo...>` | Real-time live watch (30s refresh) | `ara watch owner/project` |
 | 🏟️ `ara battle <repo...>` | Arena bar-chart battle | `ara battle libA libB libC` |
