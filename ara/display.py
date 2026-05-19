@@ -530,3 +530,37 @@ def format_multi_compare_table(infos: list[dict]) -> str:
         name = info.get("full_name", "unknown")
         stars = info.get("stars", 0)
         forks = info.get("forks", 0)
+        issues = info.get("open_issues", 0)
+        lang = info.get("language") or "N/A"
+        topics = info.get("topics", [])
+        topics_str = ", ".join(str(t) for t in topics) if topics else "—"
+        lic = info.get("license") or "—"
+
+        medal = {0: "🥇", 1: "🥈", 2: "🥉"}.get(i, f"{i+1}.")
+        lines.append(
+            f"  {medal} {BOLD}{name:<30}{RESET} "
+            f"★ {stars:>6,}  "
+            f"⑂ {forks:>5,}  "
+            f"⚠ {issues:>4}  "
+            f"🔤 {lang:<10}  "
+            f"📜 {lic:<20}  "
+            f"🏷 {topics_str}"
+        )
+
+    lines.append(f"  {GRAY}{'─' * 61}{RESET}")
+    lines.append("")
+
+    # Winner declaration
+    winner = sorted_infos[0]
+    w_name = winner.get("full_name", "unknown")
+    w_stars = winner.get("stars", 0)
+    if len(sorted_infos) > 1:
+        runner_up = sorted_infos[1]
+        ru_stars = runner_up.get("stars", 0)
+        lead = w_stars - ru_stars
+        lines.append(f"  {BOLD}{GREEN}🏆 Winner: {w_name} (leads by {lead:,} stars over {runner_up.get('full_name', 'unknown')}){RESET}")
+    else:
+        lines.append(f"  {BOLD}{GREEN}🏆 {w_name} — {w_stars:,} stars{RESET}")
+    lines.append("")
+
+    return "\n".join(lines)
