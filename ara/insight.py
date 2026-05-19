@@ -160,18 +160,19 @@ def _render_insight_text(data: dict) -> None:
     lang_str = data["language"]
     lic_str = data["license"]
 
-    # Age label with color
+    # Age label with color — strip emoji prefix from label, add 📅
     age_label = data["repo_age"]["label"]
     age_years = data["repo_age"]["years"]
-    age_color = GOLD if "Veteran" in age_label else (CYAN if "Prime" in age_label else GRAY)
-    age_display = f"{int(age_years)}yo {age_label}"
+    # Strip emoji from label: "🏆 Veteran" -> "Veteran", "👶 Newborn" -> "Newborn"
+    age_text = age_label.split(" ", 1)[-1] if " " in age_label else age_label
+    age_color = GOLD if "Veteran" in age_text else (CYAN if "Prime" in age_text else GRAY)
+    age_display = f"{int(age_years)}yo {age_text}"
 
-    print(f"  {GRAY}\u2386{RESET} {lang_str}  \u00b7  {GRAY}\u00a9{RESET} {lic_str}  \u00b7  {age_color}{age_display}{RESET}")
+    print(f"  {GRAY}\u2386{RESET} {lang_str}  \u00b7  {GRAY}\u00a9{RESET} {lic_str}  \u00b7  {age_color}\U0001f4c5 {age_display}{RESET}")
 
-    # Enhanced topics display — comma-separated, no # prefix
+    # Enhanced topics display — comma-separated, no # prefix, capitalize
     topics_list = data["topics"]
     if topics_list:
-        # Capitalize first letter of each topic for display
         display_topics = [t.capitalize() if t[0].islower() else t for t in topics_list]
         topics_display = " \u00b7 ".join(display_topics)
     else:

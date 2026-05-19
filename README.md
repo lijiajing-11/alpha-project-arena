@@ -488,12 +488,13 @@ ARA is designed as a **single-file-per-responsibility** Python package — no fr
 | `ara/summary.py` | One-line repo overview |
 | `ara/dashboard.py` | Full repo overview panel |
 | `ara/rank.py` | Top N repo leaderboard |
-| `ara/insight.py` | Deep repo intelligence (star velocity, topics) |
-| `ara/display.py` | Live watch terminal UI |
+| `ara/insight.py` | Deep repo intelligence (star velocity, topics, age labels) |
+| `ara/display.py` | Live watch terminal UI + multi-repo comparison table |
 | `ara/battle.py` | Arena battle ASCII bars |
 | `ara/trends.py` | Star trend analysis + ASCII charts |
-| `ara/history.py` | Star growth ASCII timeline chart |
-| `ara/compare.py` | Head-to-head repo comparison table |
+| `ara/history.py` | Star growth ASCII timeline chart (thin wrapper over chart.py) |
+| `ara/chart.py` | ASCII chart rendering engine (extracted from history.py) |
+| `ara/compare.py` | Head-to-head & multi-repo comparison table |
 | `ara/generate_stars.py` | Stargazer JSON export |
 | `ara/colors.py` | ANSI color constants |
 | `ara/console.py` | Console entry point (`console_scripts`) |

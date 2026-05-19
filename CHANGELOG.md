@@ -17,8 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 - Version bump to 0.3.0
-- README v11 — Architecture table, Gallery section, full command reference, Who Should Use sections
-- Test suite expanded to **242 tests** (0 failed) — 43 new tests from Phase 2
+- README v13 — Updated architecture table (added `chart.py`), BLOAT status synced, test count badge updated
+- Test suite expanded to **248 tests** (0 failed) — chart engine extracted from history.py
 - CLI now has **13 commands** accessible via `ara --help`
 
 ### Fixed
