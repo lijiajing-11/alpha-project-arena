@@ -78,6 +78,7 @@ options:
 | 5 | 📦 **JSON output** | Every command supports `--json`. Pipe to jq, feed dashboards, log to files |
 | 6 | ⏳ **Smart retry + caching** | Exponential backoff on rate limits, 60s TTL cache |
 | 7 | 🔧 **Extensible** | Add a new command by adding one function to `cli.py` |
+| 8 | 📈 **Trend analysis** | `ara trends` shows stargazer history as an ASCII chart. Custom time windows and JSON export |
 
 ---
 
@@ -104,6 +105,9 @@ ara watch tensorflow/tensorflow
 
 # ③ Battle your favorite frameworks
 ara battle facebook/react vuejs/core sveltejs/svelte
+
+# ④ See star trend history over 72 hours
+ara trends tensorflow/tensorflow
 ```
 
 > 💡 **Tip:** Run `ara --help` anytime to see all available commands and flags.
@@ -120,13 +124,14 @@ python -m ara stars python/cpython
 
 ## 📖 Commands
 
-Five commands, sorted from quick-check to head-to-head analysis. Every command supports `--json`.
+Six commands, sorted from quick-check to head-to-head analysis. Every command supports `--json`.
 
 | Command | Description | Quick example |
 |---------|-------------|---------------|
 | 🔍 `ara stars <repo...>` | Quick star count(s) | `ara stars owner/project` |
 | 👀 `ara watch <repo...>` | Real-time live watch (30s refresh) | `ara watch owner/project` |
 | 🏟️ `ara battle <repo...>` | Arena bar-chart battle | `ara battle libA libB libC` |
+| 📈 `ara trends <repo>` | Star trend chart over time | `ara trends owner/repo` |
 | 📋 `ara info <repo...>` | Full repo metadata dump | `ara info owner/project` |
 | ⚖️ `ara compare <r1> <r2>` | Head-to-head comparison table | `ara compare a/A b/B` |
 
@@ -321,6 +326,59 @@ ara compare --json facebook/react vuejs/core
 
 ---
 
+### 📈 `ara trends` — Star Trend Analysis
+
+Watch how a repo's stars accumulate over time with ASCII trend charts. No external data — uses the GitHub Stargazers API directly.
+
+```text
+$ ara trends owner/repo
+
+📈 Trends for owner/repo (last 72h)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Time              Stars    ▲/▼
+──────────────────────────────────────
+2026-05-18 09:00    12    ▲ +3
+2026-05-18 12:00    10    ▲ +1
+2026-05-18 15:00     9     ▼ -0
+2026-05-18 18:00    14    ▲ +5
+2026-05-18 21:00    11     ▼ -1
+2026-05-19 00:00     8     ▼ -2
+2026-05-19 03:00     6     ▼ -2
+2026-05-19 06:00    15    ▲ +6
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Total new stars: 85   Best hour: 06:00 (+6)
+```
+
+**Options:**
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--hours` | `72` | Lookback window in hours |
+| `--interval` | `60` | Bucket size in minutes |
+| `--json` | — | Machine-readable JSON output |
+
+```bash
+# 24-hour window, 30-minute buckets
+ara trends owner/repo --hours 24 --interval 30
+
+# JSON for your dashboard
+ara trends --json owner/repo
+```
+
+```json
+{
+  "repo": "owner/repo",
+  "hours": 72,
+  "buckets": [
+    {"label": "2026-05-18 09:00", "count": 12, "delta": 3}
+  ],
+  "total": 85,
+  "best_hour": "06:00"
+}
+```
+
+---
+
 ### 📦 JSON Output
 
 Every ARA command accepts `--json` for machine-readable output — perfect for CI pipelines, dashboards, and scripts:
@@ -331,6 +389,7 @@ Every ARA command accepts `--json` for machine-readable output — perfect for C
 | `ara watch --json owner/repo` | ✅ | One JSON object per 30s tick |
 | `ara battle --json owner/a owner/b` | ✅ | Battle results with `winner` field |
 | `ara compare --json owner/a owner/b` | ✅ | Full comparison with `winner`, `lead_by`, `fork_leader` |
+| `ara trends --json owner/repo` | ✅ | Trend data with `buckets`, `total`, `best_hour` |
 | `ara info --json owner/repo` | ✅ | Full repo metadata as JSON |
 
 ```bash
