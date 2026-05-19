@@ -27,7 +27,7 @@
 
 <p align="center">
   <a href="https://pypi.org/project/ara/">
-    <img src="https://img.shields.io/pypi/v/ara?color=8A2BE2&label=PyPI%20v0.2.0" alt="PyPI"/>
+    <img src="https://img.shields.io/pypi/v/ara?color=8A2BE2&label=PyPI%20v0.3.0" alt="PyPI"/>
   </a>
   <a href="https://pypi.org/project/ara/">
     <img src="https://img.shields.io/pypi/dm/ara?color=3b82f6&label=downloads" alt="Downloads"/>
@@ -97,7 +97,7 @@ $ ara battle facebook/react vercel/next.js
 ```text
 $ ara watch facebook/react
 
-ARA Star Tracker v0.2.0
+ARA Star Tracker v0.3.0
 Watching 1 repo(s). Press Ctrl+C to stop.
 
 ╔═════════════════════════════════════╗
@@ -118,6 +118,8 @@ Watching 1 repo(s). Press Ctrl+C to stop.
 ```
 
 > 💡 **Every command supports `--json`** — pipe into dashboards, CI, or `jq`.
+>
+> 🆕 **New in v0.3.0:** `ara rank` — live Top 10 repo leaderboard. Try `ara rank --top 20`!
 
 ---
 
@@ -141,13 +143,14 @@ python -m ara stars python/cpython
 
 ---
 
-## 🔥 3 commands to get you hooked
+## 🔥 4 commands to get you hooked
 
 | # | Command | What it does | Try it |
 |---|---------|--------------|--------|
 | 1 | `ara stars <repo>` | Quick star count + mini leaderboard | `ara stars python/cpython` |
 | 2 | `ara battle <r1> <r2> <r3>` | Side-by-side ASCII arena showdown | `ara battle react vue svelte` |
 | 3 | `ara watch <repo>` | Real-time dashboard (30s refresh) | `ara watch tensorflow/tensorflow` |
+| 4 | `ara rank [--top N]` | Live Top N repo leaderboard 🔥 | `ara rank --top 10` |
 
 Every command supports `--json` for piping into dashboards, CI pipelines, or `jq`.
 
@@ -155,7 +158,7 @@ Every command supports `--json` for piping into dashboards, CI pipelines, or `jq
 
 ## 📖 Commands
 
-All 9 commands, sorted from quick-check to head-to-head analysis. Every command supports `--json`.
+All 10 commands, sorted from quick-check to head-to-head analysis. Every command supports `--json`.
 
 | Command | Description | Quick example |
 |---------|-------------|---------------|
@@ -164,6 +167,7 @@ All 9 commands, sorted from quick-check to head-to-head analysis. Every command 
 | 🔍 `ara stars <repo...>` | Quick star count(s) | `ara stars owner/project` |
 | 👀 `ara watch <repo...>` | Real-time live watch (30s refresh) | `ara watch owner/project` |
 | 🏟️ `ara battle <repo...>` | Arena bar-chart battle | `ara battle libA libB libC` |
+| 🏆 `ara rank [--top N]` | Live Top N repo leaderboard 🔥 | `ara rank --top 10` |
 | 📈 `ara trends <repo>` | Star trend chart over time | `ara trends owner/repo` |
 | 📋 `ara info <repo...>` | Full repo metadata dump | `ara info owner/project` |
 | 🛠️ `ara generate-stars <repo>` | Fetch stargazers to JSON (demo tool) | `ara generate-stars python/cpython` |
@@ -574,6 +578,21 @@ ruff check .          # zero warnings
 ## 📝 License
 
 MIT © [lijiajing-11](https://github.com/lijiajing-11) — see [LICENSE](LICENSE) for details.
+
+---
+
+## 🎯 Why ARA?
+
+| You could... | Or just... |
+|--------------|------------|
+| 🕸️ Open GitHub every time → refresh, scroll, squint | `ara stars tensorflow/tensorflow` — 2 seconds |
+| 📝 Tabulate 5 repos in a spreadsheet | `ara battle react vue svelte angular` — instant arena |
+| 🔄 Manually check star trends | `ara watch pytorch/pytorch` — live dashboard auto-refreshes |
+| 🔍 Google "most starred repos" | `ara rank --top 20` — live leaderboard from the terminal |
+
+**ARA exists because you shouldn't need a browser to stalk repos.** 🔭
+
+> 📋 See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 
 ---
 

@@ -27,7 +27,7 @@ from ara.battle import format_battle
 from ara.trends import cmd_trends as trends_cmd
 from ara.generate_stars import cmd_generate_stars
 from ara.dashboard import cmd_dashboard
-from ara.summary import cmd_summary
+from ara.summary import cmd_summary, cmd_summary_json
 from ara.rank import cmd_rank, cmd_rank_json
 
 
@@ -430,6 +430,19 @@ def build_parser() -> argparse.ArgumentParser:
     )
     summary_parser.set_defaults(func=cmd_summary)
 
+    # ara rank [--top N] [--json] [<repo> ...]
+    rank_parser = subparsers.add_parser(
+        "rank",
+        help="Show ranked list of repos by star count",
+    )
+    rank_parser.add_argument("repos", nargs="*", help="Repos to rank (default: pre-defined hot repos)")
+    rank_parser.add_argument(
+        "--top", type=int, default=10,
+        help="Number of repos to show (default: 10)"
+    )
+    rank_parser.add_argument("--json", action="store_true", help="Output as JSON")
+    rank_parser.set_defaults(func=cmd_rank)
+
     return parser
 
 
@@ -452,6 +465,7 @@ def main(argv: list | None = None) -> int:
         "trends": trends_cmd,
         "dashboard": cmd_dashboard,
         "summary": cmd_summary_json,
+        "rank": cmd_rank_json,
     }
     if getattr(args, "json", False) and args.command in json_handlers:
         args.func = json_handlers[args.command]
