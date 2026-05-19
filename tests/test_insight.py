@@ -155,7 +155,11 @@ def test_cmd_insight_with_mock(monkeypatch):
     class FakeArgs:
         repo = "facebook/react"
 
-    cmd_insight(FakeArgs(), mock_get_repo_info)
+    class FakeClient:
+        def get_repo_info(self, repo):
+            return mock_get_repo_info(None, repo)
+
+    cmd_insight(FakeArgs(), FakeClient())
     # Should not raise
 
 
@@ -183,5 +187,9 @@ def test_cmd_insight_minimal_data(monkeypatch):
     class FakeArgs:
         repo = "empty/repo"
 
-    cmd_insight(FakeArgs(), mock_minimal)
+    class FakeClient:
+        def get_repo_info(self, repo):
+            return mock_minimal(None, repo)
+
+    cmd_insight(FakeArgs(), FakeClient())
     # Should not raise
