@@ -71,6 +71,47 @@ def _cmd_history_wrapper(args: argparse.Namespace, client: GitHubClient) -> None
 
 
 # ---------------------------------------------------------------------------
+# Desktop notification support (via plyer, gracefully degraded)
+# ---------------------------------------------------------------------------
+
+_notify_engine: object | None = None  # cached notification backend, or False
+
+
+def _send_notification(title: str, message: str) -> None:
+    """Send a desktop notification via plyer; falls back to stderr.
+
+    Uses the cross-platform ``plyer.notification`` module when available.
+    On WSL/headless environments where plyer fails, prints a coloured banner
+    to *stderr* so the user still sees the information.
+
+    Args:
+        title:   Notification title (e.g. 'ARA Star Tracker').
+        message: Body text (e.g. 'owner/repo gained +5 stars!').
+    """
+    global _notify_engine  # noqa: PLW0603
+
+    if _notify_engine is None:
+        try:
+            from plyer import notification as _plyer_notif  # type: ignore[import-untyped]
+            _notify_engine = _plyer_notif
+        except Exception:
+            _notify_engine = False  # sentinel: plyer unavailable
+
+    engine = _notify_engine
+    if engine is not False:
+        try:
+            engine.notify(title=title, message=message, timeout=5)
+            return
+        except Exception:
+            pass  # fall through to stderr fallback
+
+    print(
+        f"  {GREEN}\U0001f514 {BOLD}{title}{RESET}: {message}",
+        file=sys.stderr,
+    )
+
+
+# ---------------------------------------------------------------------------
 # JSON helpers
 # ---------------------------------------------------------------------------
 
@@ -129,7 +170,8 @@ def cmd_watch(args: argparse.Namespace, client: GitHubClient) -> None:
     Displays a box-drawing dashboard that refreshes every 30 seconds.
     Single repo → full dashboard; multiple repos → compact table.
     Shows stars, forks, open issues, language, license with delta coloring.
-    When --notify is set, beeps and shows ✨ NEW! on star changes.
+    When --notify is set, beeps and shows ✨ NEW! on star changes
+    and sends a desktop notification.
     """
     repos = args.repos
     previous_infos: dict[str, dict] = {}
@@ -140,7 +182,7 @@ def cmd_watch(args: argparse.Namespace, client: GitHubClient) -> None:
     print(f"{BOLD}{CYAN}ARA Star Tracker v{__version__}{RESET}")
     print(f"Watching {len(repos)} repo(s). Press Ctrl+C to stop.")
     if notify:
-        print(f"{BOLD}🔔 Notification mode: you'll hear a beep when stars change.{RESET}")
+        print(f"{BOLD}🔔 Notification mode: desktop notification + bell on star changes.{RESET}")
     print()
 
     try:
@@ -159,6 +201,12 @@ def cmd_watch(args: argparse.Namespace, client: GitHubClient) -> None:
                         changed_repos.add(repo)
                         # Terminal bell (ASCII \a = beep)
                         print("\a", end="", flush=True)
+                        # Desktop notification (plyer, gracefully degraded)
+                        _send_notification(
+                            "ARA Star Tracker",
+                            f"{repo} gained +{delta} star{'s' if delta > 1 else ''} "
+                            f"({prev_stars:,} → {current_stars:,})",
+                        )
 
                 snapshots.append((repo, info, prev))
                 previous_infos[repo] = info
@@ -352,7 +400,7 @@ def build_parser() -> argparse.ArgumentParser:
     watch_parser.add_argument("--json", action="store_true", help="Output as JSON")
     watch_parser.add_argument(
         "--notify", action="store_true",
-        help="Beep on star changes (terminal bell + visual marker)"
+        help="Desktop notification + terminal bell on star changes"
     )
     watch_parser.set_defaults(func=cmd_watch)
 

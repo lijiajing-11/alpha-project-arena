@@ -19,6 +19,9 @@ setup(
     author="A-Tech Inc.",
     author_email="dev@alpha-project.dev",
     license="MIT",
+    install_requires=[
+        "plyer>=2.1",
+    ],
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",

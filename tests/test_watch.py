@@ -213,7 +213,7 @@ def test_format_watch_dashboard_delta_green():
     prev = _make_info(stars=95)
     result = format_watch_dashboard("owner/repo", info, prev)
     # Green ANSI code around (+5)
-    assert "[92m" in result
+    assert "\u001b[92m" in result
     assert "(+5)" in result
 
 
@@ -225,7 +225,7 @@ def test_format_watch_dashboard_delta_red():
     prev = _make_info(stars=100)
     result = format_watch_dashboard("owner/repo", info, prev)
     # Red ANSI code around (-10)
-    assert "[91m" in result
+    assert "\u001b[91m" in result
     assert "(-10)" in result
 
 
@@ -376,3 +376,77 @@ def test_watch_notify_star_increase(MockClient, capsys):
     # Summary should show stars gained
     assert "new star" in captured.out
 
+
+@patch("ara.cli.GitHubClient")
+def test_watch_notify_no_change_no_bell(MockClient, capsys):
+    """When stars do NOT change, no bell should ring."""
+    from ara.cli import cmd_watch
+    from unittest.mock import patch as _patch
+
+    mock_client = MockClient.return_value
+    # Both calls return identical star count (no change)
+    mock_client.get_repo_info.side_effect = [
+        _make_info(stars=1000),
+        _make_info(stars=1000),
+    ]
+
+    args = type("Args", (), {"repos": ["owner/repo"], "notify": True, "json": False})()
+
+    with _patch("ara.cli.time.sleep", side_effect=[None, KeyboardInterrupt]):
+        cmd_watch(args, mock_client)
+
+    captured = capsys.readouterr()
+    # Bell character should NOT be in output
+    assert "\a" not in captured.out
+
+
+@patch("ara.cli.GitHubClient")
+def test_watch_notify_star_decrease_no_bell(MockClient, capsys):
+    """When stars decrease in notify mode, NO bell should ring (only increases trigger)."""
+    from ara.cli import cmd_watch
+    from unittest.mock import patch as _patch
+
+    mock_client = MockClient.return_value
+    # First call 1000, second call 995 (decrease of 5 — should NOT trigger)
+    mock_client.get_repo_info.side_effect = [
+        _make_info(stars=1000),
+        _make_info(stars=995),
+    ]
+
+    args = type("Args", (), {"repos": ["owner/repo"], "notify": True, "json": False})()
+
+    with _patch("ara.cli.time.sleep", side_effect=[None, KeyboardInterrupt]):
+        cmd_watch(args, mock_client)
+
+    captured = capsys.readouterr()
+    # Bell character should NOT be in output
+    assert "\a" not in captured.out
+
+
+@patch("ara.cli.GitHubClient")
+def test_watch_network_error_handled_gracefully(MockClient, capsys):
+    """Watch should handle ConnectionError gracefully — show error and continue.
+
+    Simulating an API failure: the mock raises ConnectionError on first call,
+    then succeeds on second call, then KeyboardInterrupt stops the loop.
+    """
+    from ara.cli import cmd_watch
+    from unittest.mock import patch as _patch
+
+    mock_client = MockClient.return_value
+    # First call: network error; second call: succeeds with stars
+    mock_client.get_repo_info.side_effect = [
+        ConnectionError("API temporarily unavailable"),
+        _make_info(stars=1000),
+    ]
+
+    args = type("Args", (), {"repos": ["owner/repo"], "notify": False, "json": False})()
+
+    with _patch("ara.cli.time.sleep", side_effect=[None, KeyboardInterrupt]):
+        cmd_watch(args, mock_client)
+
+    captured = capsys.readouterr()
+    # Should show some error/retry message
+    assert "Error" in captured.out or "error" in captured.out
+    # Should still show the repo info on the successful second tick
+    assert "owner/repo" in captured.out

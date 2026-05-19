@@ -10,7 +10,8 @@
 </p>
 
 <p align="center">
-  <sup><i>Built by <b>Α-Tech Inc.</b> — where we turn data into arenas. 🏟️</i></sup>
+  <sup><i>Built by <b>Α-Tech Inc.</b> — where we turn data into arenas. 🏟️</i></sup><br>
+  <sup><b>🔥 v0.3.0 release</b> — new: <code>ara rank</code> leaderboard, <code>ara insight</code> deep intelligence, <code>ara compare</code> head-to-head</sup>
 </p>
 
 <p align="center">
@@ -47,9 +48,6 @@
   <a href="https://github.com/lijiajing-11/alpha-project-arena">
     <img src="https://img.shields.io/github/last-commit/lijiajing-11/alpha-project-arena?label=updated" alt="Last Commit"/>
   </a>
-  <a href="https://github.com/lijiajing-11/alpha-project-arena">
-    <img src="https://img.shields.io/badge/PRs-welcome-22c55e" alt="PRs Welcome"/>
-  </a>
   <a href="https://github.com/lijiajing-11/alpha-project-arena/actions/workflows/ci.yml">
     <img src="https://img.shields.io/github/actions/workflow/status/lijiajing-11/alpha-project-arena/ci.yml?branch=main&label=CI&logo=github" alt="CI"/>
   </a>
@@ -58,6 +56,15 @@
   </a>
   <a href="https://img.shields.io/badge/code_style-ruff-22c55e">
     <img src="https://img.shields.io/badge/code_style-ruff-22c55e" alt="Ruff"/>
+  </a>
+  <a href="https://img.shields.io/badge/PRs-welcome-22c55e">
+    <img src="https://img.shields.io/badge/PRs-welcome-22c55e" alt="PRs Welcome"/>
+  </a>
+  <a href="https://img.shields.io/badge/made_with-❤️-ff69b4">
+    <img src="https://img.shields.io/badge/made_with-❤️-ff69b4" alt="Made with Love"/>
+  </a>
+  <a href="https://github.com/lijiajing-11/alpha-project-arena">
+    <img src="https://img.shields.io/github/repo-size/lijiajing-11/alpha-project-arena?color=8A2BE2" alt="Repo Size"/>
   </a>
 </p>
 
@@ -602,6 +609,20 @@ MIT © [lijiajing-11](https://github.com/lijiajing-11) — see [LICENSE](LICENSE
 **ARA exists because you shouldn't need a browser to stalk repos.** 🔭
 
 > 📋 See [CHANGELOG.md](CHANGELOG.md) for the full version history.
+
+---
+
+## 🎯 Roadmap — What's Cooking
+
+| Feature | Status | ETA |
+|---------|--------|-----|
+| 🐍 **Desktop notifications** on watch threshold | 🚧 In progress | v0.4.0 |
+| 📊 **CSV/Excel export** for `ara rank` and `ara compare` | 🚧 In progress | v0.4.0 |
+| 🏟️ **Multi-repo battle** (3+ repos, round-robin) | 📋 Planned | v0.5.0 |
+| 🤖 **CI plugin** — GitHub Action that runs on schedule | 📋 Planned | v0.5.0 |
+| 🔌 **Slack/Telegram webhook integration** | 💡 Idea | TBD |
+
+> 💬 Want to influence what ships next? Open a [feature request](https://github.com/lijiajing-11/alpha-project-arena/issues/new)!
 
 ---
 
