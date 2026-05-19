@@ -11,8 +11,9 @@ from datetime import datetime, timezone
 
 from .colors import BOLD, CYAN, RESET, YELLOW
 
-GRAY = "\033[90m"
 from .core import GitHubClient
+
+GRAY = "\033[90m"
 
 
 def compute_star_velocity(stars: int, created_at: str) -> tuple:
@@ -77,9 +78,14 @@ def relative_time(iso_date: str) -> str:
         return "Unknown"
 
 
-def cmd_insight(repo_str: str):
-    """Execute the insight command for a single repo."""
-    client = GitHubClient()
+def cmd_insight(repo_str: str, client: GitHubClient | None = None):
+    """Execute the insight command for a single repo.
+
+    Args:
+        repo_str: Repository name (owner/repo).
+        client: Optional GitHubClient instance. Creates one if not provided.
+    """
+    client = client or GitHubClient()
     repo = client.get_repo_info(repo_str)
 
     stars = repo.get("stars", 0)
