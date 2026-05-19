@@ -600,10 +600,13 @@ cd alpha-project-arena
 python -m venv venv && source venv/bin/activate
 pip install -e '.[dev]'
 pytest tests/ -v      # 251+ tests should all pass
-ruff check .          # zero warnings
+ruff check ara/ tests/ # zero warnings
 ```
 
 > 📖 Full guide in [CONTRIBUTING.md](CONTRIBUTING.md) — PR guidelines, code style, testing, and the feature wishlist.
+>
+> 💡 **New to open source?** Start with a `good first issue` — we label them for easy pickings.
+> Found a bug? Open an issue before sending a PR so we can discuss the approach.
 
 ---
 
@@ -632,7 +635,7 @@ MIT © [lijiajing-11](https://github.com/lijiajing-11) — see [LICENSE](LICENSE
 
 | You are… | And you… | ARA is for you ✅ |
 |-----------|----------|-------------------|
-| 🐱 **Open-source maintainer** | Watch your star count hourly | `ara watch your/repo` — live dashboard |
+| 🐱 **Open-source maintainer** | Watch your star count hourly | `ara watch your/repo --notify` — live dashboard + desktop alerts |
 | 📊 **Tech journalist / analyst** | Compare repos for a write-up | `ara battle react vue svelte` — instant chart |
 | 🎯 **Investor / scout** | Track which projects are heating up | `ara rank --top 50` — pulse of GitHub |
 | 🛠️ **CI pipeline** | Need star data in your dashboard | `ara stars --json owner/repo \| jq` |
