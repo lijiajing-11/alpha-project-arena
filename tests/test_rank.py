@@ -235,12 +235,11 @@ def test_cmd_rank_json_output(capsys):
     assert data["repos"][2]["full_name"] == "vuejs/core"
 
 
-@patch("ara.rank.GitHubClient")
-def test_cmd_rank_json_error(MockClient, capsys):
+def test_cmd_rank_json_error(capsys):
     """cmd_rank_json should include errors for failed repos."""
     from ara.rank import cmd_rank_json
 
-    mock_client = MockClient.return_value
+    mock_client = MagicMock()
 
     def mock_get_repo_info(repo):
         if repo == "good/repo":
