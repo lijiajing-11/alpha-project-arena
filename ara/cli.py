@@ -381,6 +381,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Show full repo overview dashboard",
     )
     dash_parser.add_argument("repos", nargs="+", help="Repository (owner/repo)")
+    dash_parser.add_argument("--json", action="store_true", help="Output as JSON")
     dash_parser.set_defaults(func=cmd_dashboard)
 
     return parser
@@ -403,6 +404,7 @@ def main(argv: list | None = None) -> int:
         "info": cmd_info_json,
         "compare": cmd_compare_json,
         "trends": trends_cmd,
+        "dashboard": cmd_dashboard,
     }
     if getattr(args, "json", False) and args.command in json_handlers:
         args.func = json_handlers[args.command]
