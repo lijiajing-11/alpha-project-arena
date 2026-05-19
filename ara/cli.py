@@ -26,6 +26,7 @@ from ara.display import (
 from ara.battle import format_battle
 from ara.trends import cmd_trends as trends_cmd
 from ara.generate_stars import cmd_generate_stars
+from ara.dashboard import cmd_dashboard
 
 
 def run_watch(repo: str, client: GitHubClient, previous: int | None = None) -> int:
@@ -373,6 +374,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="Output file path (default: stargazers_<repo>.json)",
     )
     gs_parser.set_defaults(func=cmd_generate_stars)
+
+    # ara dashboard <repo> [<repo> ...]
+    dash_parser = subparsers.add_parser(
+        "dashboard",
+        help="Show full repo overview dashboard",
+    )
+    dash_parser.add_argument("repos", nargs="+", help="Repository (owner/repo)")
+    dash_parser.set_defaults(func=cmd_dashboard)
 
     return parser
 
