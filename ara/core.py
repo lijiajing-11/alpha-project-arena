@@ -169,3 +169,31 @@ class GitHubClient:
         stars = data.get("stargazers_count", 0)
         set_cached_stars(repo, stars)
         return stars
+
+    def get_repo_info(self, repo: str) -> dict:
+        """Fetch full repository information from GitHub API.
+
+        Returns a dict with keys:
+            name, full_name, description, stars, forks, open_issues,
+            language, topics, license, created_at, updated_at, pushed_at,
+            html_url
+
+        Raises ValueError on 404, RuntimeError on API errors.
+        """
+        url = f"{GITHUB_API}/{repo}"
+        data = self._make_request(url)
+        return {
+            "name": data.get("name", ""),
+            "full_name": data.get("full_name", repo),
+            "description": data.get("description") or "",
+            "stars": data.get("stargazers_count", 0),
+            "forks": data.get("forks_count", 0),
+            "open_issues": data.get("open_issues_count", 0),
+            "language": data.get("language"),
+            "topics": data.get("topics", []),
+            "license": data.get("license", {}).get("spdx_id") if data.get("license") else None,
+            "created_at": data.get("created_at", ""),
+            "updated_at": data.get("updated_at", ""),
+            "pushed_at": data.get("pushed_at", ""),
+            "html_url": data.get("html_url", f"https://github.com/{repo}"),
+        }

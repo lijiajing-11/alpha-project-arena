@@ -33,7 +33,7 @@ def main():
         ("ara --help", "demo-help.txt"),
         ("python -m ara stars tiangolo/fastapi pallets/flask", "demo-stars.txt"),
         ("python -m ara battle tiangolo/fastapi pallets/flask psf/requests facebook/react", "demo-battle.txt"),
-        ("python -m ara info tiangolo/fastapi", "demo-info.txt"),
+        ("python -m ara stars tiangolo/fastapi", "demo-info.txt"),
     ]
     
     for cmd, filename in demos:

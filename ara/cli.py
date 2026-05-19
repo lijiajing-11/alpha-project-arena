@@ -14,6 +14,8 @@ from ara import __version__
 from ara.core import GitHubClient
 from ara.display import (
     format_multi_watch,
+    format_repo_info,
+    format_compare,
     compute_delta,
     BOLD,
     CYAN,
