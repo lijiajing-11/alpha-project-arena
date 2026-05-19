@@ -69,8 +69,9 @@ def _cmd_insight_wrapper(args: argparse.Namespace, client: GitHubClient) -> None
     """Handle `ara insight <repo> [<repo> ...]` — dispatch to single or compare mode."""
     repos = getattr(args, "repos", []) or []
     as_json = getattr(args, "json", False)
+    show_trend = getattr(args, "trend", False)
     if len(repos) == 1:
-        cmd_insight(repos[0], client=client, as_json=as_json)
+        cmd_insight(repos[0], client=client, as_json=as_json, show_trend=show_trend)
     else:
         cmd_insight_compare(repos, client=client, as_json=as_json)
 
@@ -529,6 +530,10 @@ def build_parser() -> argparse.ArgumentParser:
         "repos", nargs="+", help="Repository(es) (owner/repo), 2+ for compare mode"
     )
     insight_parser.add_argument("--json", action="store_true", help="Output as JSON")
+    insight_parser.add_argument(
+        "--trend", action="store_true",
+        help="Append star trend chart to insight output",
+    )
     insight_parser.set_defaults(func=_cmd_insight_wrapper)
 
     # ara history <repo> [<repo> ...]

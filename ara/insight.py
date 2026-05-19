@@ -12,6 +12,9 @@ from datetime import datetime, timezone
 from .colors import BOLD, CYAN, GOLD, GRAY, RESET, YELLOW
 from .core import GitHubClient
 
+# Reuse trend logic when --trend flag is active
+from .trends import compute_trend_buckets, get_star_history, render_trend_chart
+
 
 def compute_star_velocity(stars: int, created_at: str) -> tuple:
     """Return (stars_per_day, label) where label is emoji + text.
