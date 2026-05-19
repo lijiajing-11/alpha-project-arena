@@ -205,7 +205,10 @@ def cmd_insight(repo: str, client: GitHubClient, as_json: bool = False) -> None:
 
 
 def _render_insight_compare_text(datas: list[dict]) -> None:
-    """Render two insight data dicts side-by-side.
+    """Render two insight data dicts side-by-side with ANSI colors.
+
+    Each column is exactly COL_WIDTH display characters wide.
+    ANSI escape codes are stripped for width calculation but kept for output.
 
     Args:
         datas: list of dicts from _build_insight_data(), max 2 repos.
@@ -213,10 +216,27 @@ def _render_insight_compare_text(datas: list[dict]) -> None:
     if not datas:
         return
 
-    # Compute each column text
-    columns: list[list[str]] = []
+    COL_WIDTH = 44  # per-column display width (excluding the separator region)
+
+    def _pick_speed_color(label: str) -> str:
+        return GOLD if "Hypersonic" in label else (YELLOW if "Rapid" in label or "Steady" in label else GRAY)
+
+    def _pick_age_color(age_text: str) -> str:
+        return GOLD if "Veteran" in age_text else (CYAN if "Prime" in age_text else GRAY)
+
+    def _visible_width(s: str) -> int:
+        """Return display width of a string without ANSI codes."""
+        import re as _re
+        return len(_re.sub(r"\033\[[0-9;]*m", "", s))
+
+    # Build per-column (plain_text, ansi_text) pairs for each line
+    columns_plain: list[list[str]] = []
+    columns_ansi: list[list[str]] = []
+
     for data in datas:
-        lines = []
+        plain_lines: list[str] = []
+        ansi_lines: list[str] = []
+
         name = data["full_name"]
         desc = data.get("description", "")
         stars = data["stars"]
@@ -230,74 +250,91 @@ def _render_insight_compare_text(datas: list[dict]) -> None:
 
         spd = data["star_velocity"]["per_day"]
         vel_label = data["star_velocity"]["label"]
-
         age_label = data["repo_age"]["label"]
         age_text = age_label.split(" ", 1)[-1] if " " in age_label else age_label
         age_years = data["repo_age"]["years"]
 
-        # Line 1: repo name
-        lines.append(f"{name}")
+        speed_color = _pick_speed_color(vel_label)
+        age_color = _pick_age_color(age_text)
 
-        # Line 2: description (truncated to 40 chars)
-        desc_short = (desc[:37] + "...") if len(desc) > 40 else desc
-        lines.append(f"  {desc_short}" if desc_short else "")
+        # Line 1: repo name — cyan + bold
+        ansi_name = f"{BOLD}{CYAN}{name}{RESET}"
+        plain_lines.append(name)
+        ansi_lines.append(ansi_name)
+
+        # Line 2: description — gray, truncated
+        desc_short = (desc[:COL_WIDTH - 3] + "...") if len(desc) > COL_WIDTH else desc
+        if desc_short:
+            plain_lines.append(f"  {desc_short}")
+            ansi_lines.append(f"  {GRAY}{desc_short}{RESET}")
+        else:
+            plain_lines.append("")
+            ansi_lines.append("")
 
         # Line 3: blank
-        lines.append("")
+        plain_lines.append("")
+        ansi_lines.append("")
 
-        # Line 4: stars + velocity
-        lines.append(f"\u2605 {stars:,} stars  \u00b7 +{spd}/day  {vel_label}")
+        # Line 4: stars + velocity — with speed color on label
+        plain_vel = f"\u2605 {stars:,} stars  \u00b7 +{spd}/day  {vel_label}"
+        ansi_vel = f"\u2605 {BOLD}{stars:,}{RESET} stars  \u00b7 +{spd}/day  {speed_color}{vel_label}{RESET}"
+        plain_lines.append(plain_vel)
+        ansi_lines.append(ansi_vel)
 
-        # Line 5: forks + issues
-        lines.append(f"\u2382 {forks:,} forks  \u00b7 \u26a0 {open_issues:,} open issues")
+        # Line 5: forks + issues — with cyan on fork/issue numbers
+        plain_fork = f"\u2382 {forks:,} forks  \u00b7 \u26a0 {open_issues:,} open issues"
+        ansi_fork = f"\u2382 {CYAN}{forks:,}{RESET} forks  \u00b7 \u26a0 {open_issues:,} open issues"
+        plain_lines.append(plain_fork)
+        ansi_lines.append(ansi_fork)
 
-        # Line 6: language + license + age
+        # Line 6: language + license + age — with age color
         age_display = f"{int(age_years)}yo {age_text}"
-        lines.append(f"\u2386 {lang}  \u00a9 {lic}  \U0001f4c5 {age_display}")
+        plain_age = f"\u2386 {lang}  \u00a9 {lic}  \U0001f4c5 {age_display}"
+        ansi_age = f"\u2386 {lang}  \u00a9 {lic}  \U0001f4c5 {age_color}{age_display}{RESET}"
+        plain_lines.append(plain_age)
+        ansi_lines.append(ansi_age)
 
-        # Line 7: topics
+        # Line 7: topics — emoji only
         if topics:
             display_topics = [t.capitalize() if t[0].islower() else t for t in topics[:5]]
             topics_display = " \u00b7 ".join(display_topics)
         else:
             topics_display = "None"
-        lines.append(f"\U0001f3f7  {topics_display}")
+        plain_topics = f"\U0001f3f7  {topics_display}"
+        ansi_topics = f"\U0001f3f7  {GRAY}{topics_display}{RESET}"
+        plain_lines.append(plain_topics)
+        ansi_lines.append(ansi_topics)
 
-        # Line 8: created + updated
-        lines.append(f"\U0001f4c5 Created {created}  \u00b7 Last updated {updated}")
+        # Line 8: created + updated — gray
+        plain_time = f"\U0001f4c5 Created {created}  \u00b7 Last updated {updated}"
+        ansi_time = f"\U0001f4c5 Created {GRAY}{created}{RESET}  \u00b7 Last updated {GRAY}{updated}{RESET}"
+        plain_lines.append(plain_time)
+        ansi_lines.append(ansi_time)
 
-        columns.append(lines)
+        columns_plain.append(plain_lines)
+        columns_ansi.append(ansi_lines)
 
-    # Ensure both columns have same number of lines
-    max_lines = max(len(c) for c in columns)
-    for c in columns:
-        while len(c) < max_lines:
-            c.append("")
-
-    # Determine column width: find the widest name across both columns
-    name_width_left = max(len(columns[0][0]), 30)
-    name_width_right = max(len(columns[1][0]), 30) if len(columns) > 1 else name_width_left
-    col_width_left = max(name_width_left, 42)
-    col_width_right = max(name_width_right, 42)
+    # Normalise line counts
+    max_lines = max(max(len(c) for c in columns_plain), 1)
+    for i in range(len(columns_plain)):
+        while len(columns_plain[i]) < max_lines:
+            columns_plain[i].append("")
+            columns_ansi[i].append("")
 
     print()
     for i in range(max_lines):
-        left = columns[0][i] if i < len(columns[0]) else ""
-        right = columns[1][i] if len(columns) > 1 and i < len(columns[1]) else ""
+        left_plain = columns_plain[0][i]
+        right_plain = columns_plain[1][i] if len(columns_plain) > 1 else ""
+        left_ansi = columns_ansi[0][i]
+        right_ansi = columns_ansi[1][i] if len(columns_ansi) > 1 else ""
 
-        # Repo name line (line 0) gets left-aligned in its column
-        if i == 0:
-            left_padded = left.ljust(col_width_left)
-            right_padded = right.ljust(col_width_right)
-        elif i == 1:
-            # Description line — grey
-            left_padded = left.ljust(col_width_left)
-            right_padded = right.ljust(col_width_right)
-        else:
-            left_padded = left.ljust(col_width_left)
-            right_padded = right.ljust(col_width_right)
+        # Pad each side to COL_WIDTH using plain-text width to keep alignment
+        left_pad = COL_WIDTH - _visible_width(left_plain)
+        right_pad = COL_WIDTH - _visible_width(right_plain)
+        left_out = left_ansi + (" " * max(0, left_pad))
+        right_out = right_ansi + (" " * max(0, right_pad))
 
-        print(f"  {left_padded}  \u2502  {right_padded}")
+        print(f"  {left_out}  \u2502  {right_out}")
 
     # Comparison summary footer
     print()
@@ -312,30 +349,30 @@ def _render_insight_compare_text(datas: list[dict]) -> None:
     s1 = d1["stars"]
     star_leader = d0["full_name"] if s0 >= s1 else d1["full_name"]
     star_gap = abs(s0 - s1)
-    print(f"  \u2605 Star gap: {star_leader} leads by {star_gap:,} \u2605")
+    print(f"  \u2605 Star gap: {BOLD}{CYAN}{star_leader}{RESET} leads by {BOLD}{star_gap:,}{RESET} \u2605")
 
     # Velocity ratio
     v0 = d0["star_velocity"]["per_day"]
     v1 = d1["star_velocity"]["per_day"]
     v_leader = d0["full_name"] if v0 >= v1 else d1["full_name"]
     v_ratio = round(max(v0, v1) / max(0.1, min(v0, v1)), 1)
-    print(f"  \U0001f525 Velocity: {v_leader} is {v_ratio}\u00d7 faster ({v0:.1f} vs {v1:.1f}/day)")
+    print(f"  \U0001f525 Velocity: {BOLD}{CYAN}{v_leader}{RESET} is {BOLD}{v_ratio}\u00d7{RESET} faster ({v0:.1f} vs {v1:.1f}/day)")
 
     # Age gap
     a0 = d0["repo_age"]["years"]
     a1 = d1["repo_age"]["years"]
     age_gap = round(abs(a0 - a1), 1)
     younger = d0["full_name"] if a0 <= a1 else d1["full_name"]
-    print(f"  \U0001f4c5 Age gap: {younger} is {age_gap} years younger")
+    print(f"  \U0001f4c5 Age gap: {BOLD}{CYAN}{younger}{RESET} is {BOLD}{age_gap}{RESET} years younger")
 
     # Topic overlap
     t0 = set(t.lower() for t in d0.get("topics", []))
     t1 = set(t.lower() for t in d1.get("topics", []))
     overlap = t0 & t1
     if overlap:
-        print(f"  \U0001f3f7 Topic overlap: {len(overlap)} shared ({', '.join(sorted(overlap))})")
+        print(f"  \U0001f3f7 Topic overlap: {BOLD}{len(overlap)}{RESET} shared ({GRAY}{', '.join(sorted(overlap))}{RESET})")
     else:
-        print(f"  \U0001f3f7 Topic overlap: 0 shared topics")
+        print(f"  \U0001f3f7 Topic overlap: {GRAY}0 shared topics{RESET}")
 
     print()
 
