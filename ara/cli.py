@@ -296,8 +296,7 @@ def build_parser() -> argparse.ArgumentParser:
         "compare", help="Compare two repositories side-by-side"
     )
     compare_parser.add_argument(
-        "repos", nargs=2, metavar=("REPO1", "REPO2"),
-        help="Two repositories to compare (owner/name)"
+        "repos", nargs=2, help="Two repositories to compare (owner/name format)"
     )
     compare_parser.add_argument("--json", action="store_true", help="Output as JSON")
     compare_parser.set_defaults(func=cmd_compare)
