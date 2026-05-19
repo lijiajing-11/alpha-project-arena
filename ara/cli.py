@@ -25,6 +25,7 @@ from ara.display import (
 )
 from ara.battle import format_battle
 from ara.trends import cmd_trends as trends_cmd
+from ara.generate_stars import cmd_generate_stars
 
 
 def run_watch(repo: str, client: GitHubClient, previous: int | None = None) -> int:
@@ -356,6 +357,22 @@ def build_parser() -> argparse.ArgumentParser:
         "--json", action="store_true", help="Output as JSON",
     )
     trends_parser.set_defaults(func=trends_cmd)
+
+    # ara generate-stars <repo>
+    gs_parser = subparsers.add_parser(
+        "generate-stars",
+        help="Fetch stargazers and save to JSON file (demo tool)",
+    )
+    gs_parser.add_argument("repo", help="Repository (owner/repo)")
+    gs_parser.add_argument(
+        "--pages", type=int, default=3,
+        help="Max pages to fetch (default: 3, each page = 100 stargazers)",
+    )
+    gs_parser.add_argument(
+        "--output", type=str, default=None,
+        help="Output file path (default: stargazers_<repo>.json)",
+    )
+    gs_parser.set_defaults(func=cmd_generate_stars)
 
     return parser
 
