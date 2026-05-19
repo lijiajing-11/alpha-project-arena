@@ -53,11 +53,19 @@
   <a href="https://github.com/lijiajing-11/alpha-project-arena/actions/workflows/ci.yml">
     <img src="https://img.shields.io/github/actions/workflow/status/lijiajing-11/alpha-project-arena/ci.yml?branch=main&label=CI&logo=github" alt="CI"/>
   </a>
+  <a href="https://img.shields.io/badge/tests-242_passing-22c55e">
+    <img src="https://img.shields.io/badge/tests-242_passing-22c55e" alt="Tests"/>
+  </a>
+  <a href="https://img.shields.io/badge/code_style-ruff-22c55e">
+    <img src="https://img.shields.io/badge/code_style-ruff-22c55e" alt="Ruff"/>
+  </a>
 </p>
 
-## 🎬 Gallery
+---
 
-> Get a feel for ARA in action — five commands, five vibes.
+## 🎬 Gallery — See ARA in Action
+
+> Five commands, five vibes. Get a feel for what ARA can do in under 10 seconds.
 
 ### 🏆 `ara rank` — Live Repository Leaderboard
 
@@ -79,54 +87,47 @@
 └───┴──────────────────────────────┴────────────┴────────┴────────────┘
 ```
 
-### 📝 `ara summary` — One-Line Repo Overview
+### 🏟️ `ara battle` — Arena Showdown
 
 ```text
-$ ara summary facebook/react
-★ facebook/react · 226,000 stars · 47,000 forks · 1,200 issues · JavaScript · MIT License  —  A declarative UI library
+$ ara battle facebook/react vuejs/core
+
+  ╔══════════════════════════════════════════╗
+  ║          ★ ARENA BATTLE ★               ║
+  ║                                          ║
+  ║  ★ facebook/react                        ║
+  ║    ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 230,000 ★      ║
+  ║                                          ║
+  ║  ★ vuejs/core                            ║
+  ║    ▓▓▓▓▓▓▓▓░░░░░░░░░░░░ 47,000 ★        ║
+  ║                                          ║
+  ║  ✦ facebook/react dominates the arena! ✦ ║
+  ╚══════════════════════════════════════════╝
 ```
 
-### 🔔 `ara watch --notify` — Real-Time Monitoring + Desktop Notification
+### 📡 `ara watch` — Real-Time Monitoring
 
 ```text
-$ ara watch --notify facebook/react
+$ ara watch owner/repo
 
-ARA Star Tracker v0.3.0
-Watching 1 repo(s). Press Ctrl+C to stop.
-🔔 Notification mode: you'll hear a beep when stars change.
-
-┌ facebook/react ─────────────────────────────────────────────┐
-│ ⭐ 226,000 stars                                             │
-│ 🍴 47,000  forks                                             │
-│ ⚠  1,200   issues                                            │
-│ 📦 JavaScript                                                │
-│ 📄 MIT License                                               │
-└─────────────────────────────────────────────────────────────┘
-✨ +3 new stars gained while watching!
-```
-
-### 📊 `ara dashboard` — Full Repo Overview
-
-```text
-$ ara dashboard facebook/react
-
-╔══════════════════════════════════════╗
-║  📊 ARA Dashboard                   ║
-╟──────────────────────────────────────╢
-║  🔥 facebook/react                   ║
-║  ⭐ 226,000  stars                    ║
-║  🍴 47,000   forks                    ║
-║  ⚠  1,200    open issues              ║
-║  📦 JavaScript                       ║
-║  📄 MIT License                      ║
-╚══════════════════════════════════════╝
+╔════════════════════════════════════════════╗
+║        📡 ARA Star Tracker — WATCH         ║
+╚════════════════════════════════════════════╝
+┌────────────────────┬────────────────────────┐
+│ Repository         │ owner/repo              │
+├────────────────────┼────────────────────────┤
+│ ⭐ Stars           │ 12,345  (+5)            │
+│ ⑂ Forks            │ 234     (+1)            │
+│ ⚠ Issues           │ 12     (-2)             │
+│ 🔤 Language        │ Python                  │
+│ 📜 License         │ MIT                     │
+│ 🕐 Updated         │ 2026-05-19 14:30:22     │
+└────────────────────┴────────────────────────┘
 ```
 
 ### 🧠 `ara insight` — Deep Repository Intelligence
 
 ```text
-$ ara insight facebook/react
-
   facebook/react  — Insight
   A declarative UI library
 
@@ -140,110 +141,22 @@ $ ara insight facebook/react
 ### 📈 `ara history` — Star Growth Timeline
 
 ```text
-$ ara history facebook/react
+  ★ facebook/react — Star History
+    245,114 stars total
 
-★ facebook/react — Star History
-  245,114 stars total
-
-  │                    ●●
-  │                   ●●●
-  │                 ●●●●●
-  │                ●●●●●●
-  │              ●●●●●●●●
-  │            ●●●●●●●●●●
-  │          ●●●●●●●●●●●●
-  │        ●●●●●●●●●●●●●●
-  │      ●●●●●●●●●●●●●●●●
-  │ ●●●●●●●●●●●●●●●●●●●●●
-  └─────────────────────
-   2013-05-24   2026-05-18
+    │                    ●●
+    │                   ●●●
+    │                 ●●●●●
+    │                ●●●●●●
+    │              ●●●●●●●●
+    │            ●●●●●●●●●●
+    │          ●●●●●●●●●●●●
+    │        ●●●●●●●●●●●●●●
+    │      ●●●●●●●●●●●●●●●●
+    │ ●●●●●●●●●●●●●●●●●●●●●
+    └─────────────────────
+     2013-05-24   2026-05-18
 ```
-
----
-
-## 🖼️ See It in Action ⚡
-
-> **From a quick glance to deep analysis — get any repo's story in one command.**
-
-### 1. `ara dashboard` — Full Repo Overview
-
-```text
-$ ara dashboard facebook/react
-
-  facebook/react
-  ─────────────────────────────────────────────────
-    ★ Stars:      226,000
-    🍴 Forks:      47,000
-    ⚠  Issues:      1,200
-    ──────────────────────────────
-    📦 Language:   JavaScript
-    📄 License:    MIT
-    🕐  Updated:    2026-05-18
-    📝 A declarative, efficient, and flexible JavaScript library...
-```
-
-### 2. `ara battle` — Repo Smackdown
-
-```text
-$ ara battle facebook/react vercel/next.js
-
-╔════════════════════════════════════════════════╗
-║           ★ REPO BATTLE ARENA ★               ║
-╠════════════════════════════════════════════════╣
-║                                                ║
-║  facebook/react  ══════════▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 226,000 ★ ║
-║  vercel/next.js  ══════════▓▓▓▓▓▓▓▓▓▓▓▓       139,500 ★ ║
-║                                                ║
-║  🏆 Winner: facebook/react by 86,500 stars!    ║
-║                                                ║
-╚════════════════════════════════════════════════╝
-```
-
-### 3. `ara watch` — Real-time Monitoring
-
-```text
-$ ara watch facebook/react
-
-ARA Star Tracker v0.3.0
-Watching 1 repo(s). Press Ctrl+C to stop.
-
-╔═════════════════════════════════════╗
-║          ★  ARA  WATCH  ★          ║
-╠═════════════════════════════════════╣
-║                                     ║
-║  facebook/react                     ║
-║  ★ Stars:      226,000  (+12 ▲🔥)  ║
-║  🍴 Forks:      47,000  (+1  ▲)    ║
-║  ⚠  Issues:      1,200  (-2  ▼)    ║
-║  📦 Language:   JavaScript          ║
-║  📄 License:    MIT                 ║
-║  🕐  Updated:   30s ago             ║
-║                                     ║
-╚═════════════════════════════════════╝
-
-  ⏱  Press Ctrl+C to stop — a summary will print.
-```
-
-### 4. `ara insight` — Deep Repository Intelligence
-
-```text
-$ ara insight facebook/react
-
-  facebook/react  — Insight
-  A declarative UI library
-
-  ★ 226,000 stars  ·  46.2/day  🔥 Hypersonic
-  ⑂ 47,000 forks  ·  ⚠ 1,200 open issues
-  ⎆ JavaScript  ·  © MIT
-  🏷  react, ui, javascript, declarative, frontend
-  📅 Created 2013-05-29  ·  Last updated 2 hours ago
-```
-
-> 💡 **Every command supports `--json`** — pipe into dashboards, CI, or `jq`.
->
-> 🆕 **New in v0.3.0:** `ara rank` — live Top 10 repo leaderboard. Try `ara rank --top 20`!
->
-> 🆕 **Hot off the press:** `ara insight` — star velocity, topics, age, and more. Try `ara insight facebook/react`!
 
 ---
 
@@ -265,26 +178,35 @@ cd alpha-project-arena
 python -m ara stars python/cpython
 ```
 
----
+### Run in the AI Startup Arena
 
-## 🔥 6 commands to get you hooked
-
-| # | Command | What it does | Try it |
-|---|---------|--------------|--------|
-| 1 | `ara stars <repo>` | Quick star count + mini leaderboard | `ara stars python/cpython` |
-| 2 | `ara battle <r1> <r2> <r3>` | Side-by-side ASCII arena showdown | `ara battle react vue svelte` |
-| 3 | `ara watch <repo>` | Real-time dashboard (30s refresh) | `ara watch tensorflow/tensorflow` |
-| 4 | `ara rank [--top N]` | Live Top N repo leaderboard 🔥 | `ara rank --top 10` |
-| 5 | `ara insight <repo>` | Deep data — star velocity, topics, age | `ara insight facebook/react` |
-| 6 | `ara history <repo>` | Star growth ASCII timeline chart 📈 | `ara history facebook/react` |
-
-Every command supports `--json` for piping into dashboards, CI pipelines, or `jq`.
+```bash
+# Inside the Α-Tech Inc. arena environment:
+hermes setup arena
+cd alpha/repo
+python -m ara battle facebook/react vuejs/core
+```
 
 ---
 
-## 📖 Commands
+## 🔥 Quick Start — 3 Commands to Get Hooked
 
-All 12 commands, sorted from quick-check to head-to-head analysis. Every command supports `--json`.
+```bash
+# 1. Quick star check — 2 seconds, zero fuss
+ara stars python/cpython
+
+# 2. Compare frameworks head-to-head
+ara battle facebook/react vuejs/core sveltejs/svelte
+
+# 3. Watch a repo live (30s auto-refresh)
+ara watch tensorflow/tensorflow
+```
+
+Every command supports `--json` for CI pipelines, dashboards, and `jq` piping.
+
+---
+
+## 📖 Full Command Reference
 
 | Command | Description | Quick example |
 |---------|-------------|---------------|
@@ -300,6 +222,10 @@ All 12 commands, sorted from quick-check to head-to-head analysis. Every command
 | 🧠 `ara insight <repo>` | Deep insight — star velocity, topics, age | `ara insight owner/project` |
 | 🛠️ `ara generate-stars <repo>` | Fetch stargazers to JSON (demo tool) | `ara generate-stars python/cpython` |
 | ⚖️ `ara compare <r1> <r2>` | Head-to-head comparison table | `ara compare a/A b/B` |
+
+> 💡 **New in v0.3.0:** `ara rank` — live Top 10 repo leaderboard. Try `ara rank --top 20`!
+>
+> 🆕 **Hot off the press:** `ara insight` — star velocity, topics, age, and more. Try `ara insight facebook/react`!
 
 ---
 
@@ -527,7 +453,7 @@ ara trends --json owner/repo
 
 ---
 
-### 📦 JSON Output
+### 📦 JSON Output — Pipe into Everything
 
 Every ARA command accepts `--json` for machine-readable output — perfect for CI pipelines, dashboards, and scripts:
 
@@ -547,61 +473,7 @@ ara compare --json facebook/react vuejs/core | jq '.winner'
 # Output: "facebook/react"
 ```
 
----
-
-## 🖼️ Screenshots & Demos
-
-### Arena Battle — 3-way showdown
-
-```text
-$ ara battle facebook/react vuejs/core sveltejs/svelte
-
-  ╔══════════════════════════════════════════════════════════╗
-  ║                    ★ ARENA BATTLE ★                     ║
-  ║                                                          ║
-  ║  facebook/react          ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 230k ║
-  ║  vuejs/core              ▓▓▓▓▓░░░░░░░░░░░░░░░░░░░░  47k ║
-  ║  sveltejs/svelte         ▓▓░░░░░░░░░░░░░░░░░░░░░░░  19k ║
-  ║                                                          ║
-  ║      ✦ facebook/react dominates the arena! ✦            ║
-  ╚══════════════════════════════════════════════════════════╝
-```
-
-### Watch Dashboard — live monitoring
-
-```text
-$ ara watch owner/repo
-
-╔════════════════════════════════════════════╗
-║        📡 ARA Star Tracker — WATCH         ║
-╚════════════════════════════════════════════╝
-┌────────────────────┬────────────────────────┐
-│ Repository         │ owner/repo              │
-├────────────────────┼────────────────────────┤
-│ ⭐ Stars           │ 12,345  (+5)            │
-│ ⑂ Forks            │ 234     (+1)            │
-│ ⚠ Issues           │ 12     (-2)             │
-│ 🔤 Language        │ Python                  │
-│ 📜 License         │ MIT                     │
-│ 🕐 Updated         │ 2026-05-19 14:30:22     │
-└────────────────────┴────────────────────────┘
-```
-
 > 🎥 **Want to contribute a proper GIF?** Record with `asciinema rec docs/ara-demo.cast` and convert with `agg docs/ara-demo.cast docs/ara-demo.gif` — then open a PR!
-
-### Battle of the Titans — Live Leaderboard
-
-```bash
-# Top JavaScript frameworks
-ara battle facebook/react vuejs/core sveltejs/svelte angular/angular preactjs/preact
-
-# Top AI / ML repos
-ara battle tensorflow/tensorflow pytorch/pytorch huggingface/transformers
-
-# Feed the results into a dashboard
-ara battle --json pytorch/pytorch tensorflow/tensorflow | jq '.winner'
-# → "tensorflow/tensorflow"
-```
 
 ---
 

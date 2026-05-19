@@ -9,7 +9,7 @@ Provides `ara insight <repo>`:
 
 from datetime import datetime, timezone
 
-from .colors import BOLD, CYAN, GRAY, RESET, YELLOW
+from .colors import BOLD, CYAN, GOLD, GRAY, GREEN, RESET, YELLOW
 
 from .core import GitHubClient
 
@@ -22,7 +22,7 @@ def compute_star_velocity(stars: int, created_at: str) -> tuple:
     True
     """
     if not created_at:
-        return (0.0, "\U0001f4a4 Unknown")
+        return (0.0, "\U0001f525 Unknown")
 
     try:
         raw = created_at.replace("Z", "+00:00")
@@ -30,20 +30,48 @@ def compute_star_velocity(stars: int, created_at: str) -> tuple:
         days = max(1, (datetime.now(timezone.utc) - created).days)
         spd = stars / days
     except (ValueError, TypeError):
-        return (0.0, "\U0001f4a4 Unknown")
+        return (0.0, "\U0001f525 Unknown")
 
     if spd > 50:
-        label = "\U0001f525 Hypersonic"
+        label = "\U0001f680 Hypersonic"
     elif spd > 10:
-        label = "\U0001f4c8 Rapid"
-    elif spd > 3:
+        label = "\U0001f525 Rapid"
+    elif spd > 1:
         label = "\U0001f4ca Steady"
-    elif spd > 0.5:
-        label = "\U0001f4a4 Slow"
     else:
-        label = "\U0001faa6 Stale"
+        label = "\U0001f422 Stale"
 
     return (round(spd, 1), label)
+
+
+def compute_repo_age(created_at: str) -> tuple[float, str]:
+    """Return (years, label) based on how many years since repo creation.
+
+    >>> yrs, label = compute_repo_age(\"2013-05-29T21:12:00Z\")
+    >>> yrs >= 12
+    True
+    """
+    if not created_at:
+        return (0, "\U0001f914 Unknown")
+
+    try:
+        raw = created_at.replace("Z", "+00:00")
+        created = datetime.fromisoformat(raw)
+        now = datetime.now(timezone.utc)
+        years = max(0, (now - created).days / 365.0)
+    except (ValueError, TypeError):
+        return (0, "\U0001f914 Unknown")
+
+    if years < 1:
+        label = "\U0001f476 Newborn"
+    elif years < 3:
+        label = "\U0001f476 Teen"
+    elif years < 7:
+        label = "\U0001f451 Prime"
+    else:
+        label = "\U0001f3c6 Veteran"
+
+    return (round(years, 1), label)
 
 
 def relative_time(iso_date: str) -> str:
@@ -92,6 +120,7 @@ def _build_insight_data(repo_str: str, client: GitHubClient) -> dict:
     full_name = repo.get("full_name", repo_str)
 
     spd, speed_label = compute_star_velocity(stars, created_at)
+    age_years, age_label = compute_repo_age(created_at)
     updated_rel = relative_time(updated_at)
 
     return {
@@ -104,6 +133,7 @@ def _build_insight_data(repo_str: str, client: GitHubClient) -> dict:
         "license": license_name or "None",
         "topics": topics[:5],
         "star_velocity": {"per_day": spd, "label": speed_label},
+        "repo_age": {"years": age_years, "label": age_label},
         "created_at": created_at,
         "updated_at": updated_at,
         "updated_relative": updated_rel,
@@ -111,7 +141,7 @@ def _build_insight_data(repo_str: str, client: GitHubClient) -> dict:
 
 
 def _render_insight_text(data: dict) -> None:
-    """Render insight data as colored text output."""
+    """Render insight data as colored text output with speed tags, age tags, and enhanced topics."""
     print()
     print(f"  {BOLD}{CYAN}{data['full_name']}{RESET}  {GRAY}\u2014 Insight{RESET}")
     if data["description"]:
@@ -120,13 +150,32 @@ def _render_insight_text(data: dict) -> None:
 
     spd = data["star_velocity"]["per_day"]
     label = data["star_velocity"]["label"]
-    print(f"  {YELLOW}\u2605{RESET} {BOLD}{data['stars']:,}{RESET} stars  \u00b7  {spd}/day  {label}")
+
+    # Speed label with color: 🚀 = gold, 🔥/📊 = yellow, 🐢 = gray
+    speed_color = GOLD if "Hypersonic" in label else (YELLOW if "Rapid" in label or "Steady" in label else GRAY)
+    print(f"  {YELLOW}\u2605{RESET} {BOLD}{data['stars']:,}{RESET} stars  \u00b7  +{spd}/day  {speed_color}{label}{RESET}")
+
     print(f"  {CYAN}\u2382{RESET} {data['forks']:,} forks  \u00b7  \u26a0 {data['open_issues']:,} open issues")
+
     lang_str = data["language"]
     lic_str = data["license"]
-    print(f"  {GRAY}\u2386{RESET} {lang_str}  \u00b7  {GRAY}\u00a9{RESET} {lic_str}")
 
-    topics_display = ", ".join(data["topics"]) if data["topics"] else "None"
+    # Age label with color
+    age_label = data["repo_age"]["label"]
+    age_years = data["repo_age"]["years"]
+    age_color = GOLD if "Veteran" in age_label else (CYAN if "Prime" in age_label else GRAY)
+    age_display = f"{int(age_years)}yo {age_label}"
+
+    print(f"  {GRAY}\u2386{RESET} {lang_str}  \u00b7  {GRAY}\u00a9{RESET} {lic_str}  \u00b7  {age_color}{age_display}{RESET}")
+
+    # Enhanced topics display — comma-separated, no # prefix
+    topics_list = data["topics"]
+    if topics_list:
+        # Capitalize first letter of each topic for display
+        display_topics = [t.capitalize() if t[0].islower() else t for t in topics_list]
+        topics_display = " \u00b7 ".join(display_topics)
+    else:
+        topics_display = "None"
     print(f"  \U0001f3f7  {topics_display}")
 
     created_short = data["created_at"][:10] if data["created_at"] else "N/A"

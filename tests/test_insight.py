@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 
-from ara.insight import cmd_insight, compute_star_velocity, relative_time
+from ara.insight import cmd_insight, compute_star_velocity, relative_time, compute_repo_age
 
 
 # ===========================================================================
@@ -28,14 +28,14 @@ def test_steady():
     """3-10 stars/day -> 📊 Steady"""
     spd, label = compute_star_velocity(3000, "2025-01-01T00:00:00Z")
     assert "Steady" in label
-    assert 3 <= spd <= 10
+    assert 1 <= spd <= 10
 
 
-def test_slow():
-    """0.5-3 stars/day -> 💤 Slow"""
-    spd, label = compute_star_velocity(2000, "2022-01-01T00:00:00Z")
-    assert "Slow" in label
-    assert 0.5 <= spd <= 3
+def test_slow_is_stale():
+    """<0.5 stars/day merged into 🐢 Stale (previously 💤 Slow)"""
+    spd, label = compute_star_velocity(10, "2020-01-01T00:00:00Z")
+    assert "Stale" in label
+    assert spd < 1
 
 
 def test_stale():
@@ -193,3 +193,44 @@ def test_cmd_insight_minimal_data(monkeypatch):
 
     cmd_insight(FakeArgs(), FakeClient())
     # Should not raise
+
+
+# ===========================================================================
+# compute_repo_age
+# ===========================================================================
+
+
+def test_age_veteran():
+    """7+ years -> Veteran"""
+    _, label = compute_repo_age("2015-01-01T00:00:00Z")
+    assert "Veteran" in label
+
+
+def test_age_prime():
+    """3-7 years -> Prime"""
+    _, label = compute_repo_age("2021-01-01T00:00:00Z")
+    assert "Prime" in label
+
+
+def test_age_teen():
+    """1-3 years -> Teen"""
+    _, label = compute_repo_age("2024-01-01T00:00:00Z")
+    assert "Teen" in label
+
+
+def test_age_newborn():
+    """<1 year -> Newborn"""
+    _, label = compute_repo_age("2026-04-01T00:00:00Z")
+    assert "Newborn" in label
+
+
+def test_age_empty():
+    """No creation date -> fallback"""
+    _, label = compute_repo_age("")
+    assert "Unknown" in label
+
+
+def test_age_bad_date():
+    """Invalid date -> fallback"""
+    _, label = compute_repo_age("garbage-date")
+    assert "Unknown" in label
