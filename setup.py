@@ -15,7 +15,7 @@ setup(
     description="ARA - Arena Star Tracker: Monitor and compare GitHub Stars",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/li1050109098/alpha-project",
+    url="https://github.com/lijiajing-11/alpha-project-arena",
     author="A-Tech Inc.",
     author_email="dev@alpha-project.dev",
     license="MIT",
@@ -38,7 +38,7 @@ setup(
         ],
     },
     project_urls={
-        "Source": "https://github.com/li1050109098/alpha-project",
-        "Bug Reports": "https://github.com/li1050109098/alpha-project/issues",
+        "Source": "https://github.com/lijiajing-11/alpha-project-arena",
+        "Bug Reports": "https://github.com/lijiajing-11/alpha-project-arena/issues",
     },
 )
