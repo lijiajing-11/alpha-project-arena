@@ -11,7 +11,7 @@ Provides formatting functions for:
 
 from datetime import datetime
 
-from ara.colors import BOLD, CLEAR, CYAN, GREEN, RED, RESET, YELLOW
+from ara.colors import BOLD, CLEAR, CYAN, GOLD, GRAY, GREEN, RED, RESET, YELLOW
 
 
 def format_delta(current: int, previous: int) -> str:
@@ -475,4 +475,46 @@ def format_compare_table(repo1: dict, repo2: dict) -> str:
         lines.append(f"  {YELLOW}★ It's a tie at {s1:,} stars each!{RESET}")
 
     lines.append("")
+    return "\n".join(lines)
+
+
+def format_multi_compare_table(infos: list[dict]) -> str:
+    """Format 3+ repos into a compact multi-repo comparison table.
+
+    Args:
+        infos: List of repo info dicts from GitHubClient.get_repo_info().
+
+    Returns:
+        A formatted string with rankings, medals, and a winner declaration.
+    """
+    lines = []
+    lines.append(f"  {BOLD}{CYAN}Multi-Repo Comparison{RESET}")
+    lines.append(f"  {GRAY}─" * 50 + RESET)
+
+    # Sort by stars descending
+    sorted_infos = sorted(infos, key=lambda x: x.get("stars", 0), reverse=True)
+
+    for i, info in enumerate(sorted_infos):
+        name = info.get("full_name", "unknown")
+        stars = info.get("stars", 0)
+        forks = info.get("forks", 0)
+        lang = info.get("language") or "N/A"
+        topics = info.get("topics", [])
+        topics_str = ", ".join(str(t) for t in topics[:3]) if topics else ""
+
+        medal = {0: f"{GOLD}🥇 {BOLD}", 1: "🥈 ", 2: "🥉 "}.get(i, f"  {i+1}. ")
+        rank_str = medal + RESET if i <= 1 else medal
+
+        line = (f"  {rank_str}{name:<25} {stars:>8,} ★  "
+                f"{forks:>5,} ⑂  {lang:<12}")
+        if topics_str:
+            line += f"  {GRAY}{topics_str}{RESET}"
+        lines.append(line)
+
+    # Show winner
+    winner = sorted_infos[0]
+    lines.append("")
+    lines.append(f"  🏆 {BOLD}Winner:{RESET} {BOLD}{winner.get('full_name')}{RESET} ({winner.get('stars'):,} ★)")
+    lines.append("")
+
     return "\n".join(lines)

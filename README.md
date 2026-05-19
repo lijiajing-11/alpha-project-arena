@@ -134,6 +134,28 @@ $ ara insight facebook/react
   📅 Created 2013-05-29  ·  Last updated 2 hours ago
 ```
 
+### 📈 `ara history` — Star Growth Timeline
+
+```text
+$ ara history facebook/react
+
+★ facebook/react — Star History
+  245,114 stars total
+
+  │                    ●●
+  │                   ●●●
+  │                 ●●●●●
+  │                ●●●●●●
+  │              ●●●●●●●●
+  │            ●●●●●●●●●●
+  │          ●●●●●●●●●●●●
+  │        ●●●●●●●●●●●●●●
+  │      ●●●●●●●●●●●●●●●●
+  │ ●●●●●●●●●●●●●●●●●●●●●
+  └─────────────────────
+   2013-05-24   2026-05-18
+```
+
 ---
 
 ## 🖼️ See It in Action ⚡
@@ -242,7 +264,7 @@ python -m ara stars python/cpython
 
 ---
 
-## 🔥 5 commands to get you hooked
+## 🔥 6 commands to get you hooked
 
 | # | Command | What it does | Try it |
 |---|---------|--------------|--------|
@@ -251,6 +273,7 @@ python -m ara stars python/cpython
 | 3 | `ara watch <repo>` | Real-time dashboard (30s refresh) | `ara watch tensorflow/tensorflow` |
 | 4 | `ara rank [--top N]` | Live Top N repo leaderboard 🔥 | `ara rank --top 10` |
 | 5 | `ara insight <repo>` | Deep data — star velocity, topics, age | `ara insight facebook/react` |
+| 6 | `ara history <repo>` | Star growth ASCII timeline chart 📈 | `ara history facebook/react` |
 
 Every command supports `--json` for piping into dashboards, CI pipelines, or `jq`.
 
@@ -258,7 +281,7 @@ Every command supports `--json` for piping into dashboards, CI pipelines, or `jq
 
 ## 📖 Commands
 
-All 11 commands, sorted from quick-check to head-to-head analysis. Every command supports `--json`.
+All 12 commands, sorted from quick-check to head-to-head analysis. Every command supports `--json`.
 
 | Command | Description | Quick example |
 |---------|-------------|---------------|
@@ -266,6 +289,7 @@ All 11 commands, sorted from quick-check to head-to-head analysis. Every command
 | 📊 `ara dashboard <repo...>` | Full repo overview panel | `ara dashboard owner/project` |
 | 🔍 `ara stars <repo...>` | Quick star count(s) | `ara stars owner/project` |
 | 👀 `ara watch <repo...>` | Real-time live watch (30s refresh) | `ara watch owner/project` |
+| 📈 `ara history <repo>` | Star growth ASCII timeline chart | `ara history owner/project` |
 | 🏟️ `ara battle <repo...>` | Arena bar-chart battle | `ara battle libA libB libC` |
 | 🏆 `ara rank [--top N]` | Live Top N repo leaderboard 🔥 | `ara rank --top 10` |
 | 📈 `ara trends <repo>` | Star trend chart over time | `ara trends owner/repo` |
@@ -512,6 +536,7 @@ Every ARA command accepts `--json` for machine-readable output — perfect for C
 | `ara compare --json owner/a owner/b` | ✅ | Full comparison with `winner`, `lead_by`, `fork_leader` |
 | `ara trends --json owner/repo` | ✅ | Trend data with `buckets`, `total`, `best_hour` |
 | `ara info --json owner/repo` | ✅ | Full repo metadata as JSON |
+| `ara history --json owner/repo` | ✅ | Timeline array with `current_stars`, `created_at` |
 
 ```bash
 # Example: pipe to jq for quick analysis
@@ -592,6 +617,7 @@ ARA is designed as a **single-file-per-responsibility** Python package — no fr
 | `ara/display.py` | Live watch terminal UI |
 | `ara/battle.py` | Arena battle ASCII bars |
 | `ara/trends.py` | Star trend analysis + ASCII charts |
+| `ara/history.py` | Star growth ASCII timeline chart |
 | `ara/generate_stars.py` | Stargazer JSON export |
 | `ara/colors.py` | ANSI color constants |
 | `ara/console.py` | Console entry point (`console_scripts`) |
@@ -606,6 +632,7 @@ alpha-project-arena/
 │   ├── display.py        # Watch display formatting
 │   ├── battle.py         # Battle display & ASCII bars
 │   ├── trends.py         # Star trend analysis
+│   ├── history.py        # Star growth timeline chart
 │   ├── generate_stars.py # Stargazer JSON tool
 │   ├── colors.py         # Shared ANSI colour constants
 │   └── console.py        # Console entry point

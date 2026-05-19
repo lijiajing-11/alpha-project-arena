@@ -273,16 +273,26 @@ def cmd_info_json(args: argparse.Namespace, client: GitHubClient) -> None:
 
 
 def cmd_compare(args: argparse.Namespace, client: GitHubClient) -> None:
-    """Handle `ara compare <repo1> <repo2>`."""
-    repo1, repo2 = args.repos[0], args.repos[1]
-    info1 = client.get_repo_info(repo1)
-    info2 = client.get_repo_info(repo2)
-    print(format_compare_table(info1, info2))
+    """Handle `ara compare <repo1> <repo2> [<repo3> ...]`."""
+    repos = args.repos
+    if len(repos) < 2:
+        raise ValueError("compare requires at least 2 repositories")
+    infos = [client.get_repo_info(r) for r in repos]
+
+    if len(infos) == 2:
+        # Keep existing 2-repo behavior
+        print(format_compare_table(infos[0], infos[1]))
+    else:
+        # Multi-repo comparison
+        from ara.display import format_multi_compare_table
+        print(format_multi_compare_table(infos))
 
 
 def cmd_compare_json(args: argparse.Namespace, client: GitHubClient) -> None:
-    """Handle `ara compare --json <repo1> <repo2>`."""
-    repos = args.repos[0:2]
+    """Handle `ara compare --json <repo1> <repo2> [<repo3> ...]`."""
+    repos = args.repos
+    if len(repos) < 2:
+        raise ValueError("compare requires at least 2 repositories")
     results = client.get_multiple_repos_info(repos)
 
     errors = [r for r in results if "error" in r]
@@ -294,29 +304,17 @@ def cmd_compare_json(args: argparse.Namespace, client: GitHubClient) -> None:
     fork_leader = None
     issue_leader = None
 
-    if len(clean) == 2:
-        s1, s2 = clean[0].get("stars", 0), clean[1].get("stars", 0)
-        f1, f2 = clean[0].get("forks", 0), clean[1].get("forks", 0)
-        i1, i2 = clean[0].get("open_issues", 0), clean[1].get("open_issues", 0)
+    if len(clean) >= 2:
+        sorted_clean = sorted(clean, key=lambda x: x.get("stars", 0), reverse=True)
+        winner = sorted_clean[0].get("full_name")
+        if len(sorted_clean) > 1:
+            lead_by = sorted_clean[0].get("stars", 0) - sorted_clean[1].get("stars", 0)
 
-        if s1 > s2:
-            winner = clean[0]["full_name"]
-            lead_by = s1 - s2
-        elif s2 > s1:
-            winner = clean[1]["full_name"]
-            lead_by = s2 - s1
+        fork_sorted = sorted(clean, key=lambda x: x.get("forks", 0), reverse=True)
+        fork_leader = fork_sorted[0].get("full_name")
 
-        if f1 > f2:
-            fork_leader = clean[0]["full_name"]
-        elif f2 > f1:
-            fork_leader = clean[1]["full_name"]
-
-        if i1 < i2:
-            issue_leader = clean[0]["full_name"]
-        elif i2 < i1:
-            issue_leader = clean[1]["full_name"]
-        else:
-            issue_leader = "Tie"
+        issue_sorted = sorted(clean, key=lambda x: x.get("open_issues", 0))
+        issue_leader = issue_sorted[0].get("full_name") if issue_sorted[0].get("open_issues", 0) < issue_sorted[-1].get("open_issues", 0) else "Tie"
 
     print(json_result({
         "command": "compare",
@@ -372,12 +370,12 @@ def build_parser() -> argparse.ArgumentParser:
     info_parser.add_argument("--json", action="store_true", help="Output as JSON")
     info_parser.set_defaults(func=cmd_info)
 
-    # ara compare <repo1> <repo2>
+    # ara compare <repo1> <repo2> [<repo3> ...]
     compare_parser = subparsers.add_parser(
-        "compare", help="Compare two repositories side-by-side"
+        "compare", help="Compare repositories side-by-side (2+)"
     )
     compare_parser.add_argument(
-        "repos", nargs=2, help="Two repositories to compare (owner/name format)"
+        "repos", nargs="+", help="Repos to compare (owner/name format, 2+)"
     )
     compare_parser.add_argument("--json", action="store_true", help="Output as JSON")
     compare_parser.set_defaults(func=cmd_compare)

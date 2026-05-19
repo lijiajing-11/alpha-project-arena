@@ -116,7 +116,7 @@ def test_parser_info_json_flag():
 
 
 def test_parser_compare_command():
-    """Parser should parse 'compare' subcommand with exactly 2 repos."""
+    """Parser should parse 'compare' subcommand with 2+ repos."""
     from ara.cli import build_parser
 
     parser = build_parser()
@@ -125,23 +125,38 @@ def test_parser_compare_command():
     assert args.repos == ["owner/a", "owner/b"]
 
 
+def test_parser_compare_three_repos():
+    """Parser should parse 'compare' with 3 repos."""
+    from ara.cli import build_parser
+
+    parser = build_parser()
+    args = parser.parse_args(["compare", "owner/a", "owner/b", "owner/c"])
+    assert args.command == "compare"
+    assert args.repos == ["owner/a", "owner/b", "owner/c"]
+
+
 def test_parser_compare_invalid_args():
-    """Parser should reject 'compare' without exactly 2 repos."""
+    """Parser should reject 'compare' without at least 1 repo (nargs=+)."""
     from ara.cli import build_parser
 
     parser = build_parser()
     with pytest.raises(SystemExit):
-        parser.parse_args(["compare", "owner/a"])
+        parser.parse_args(["compare"])
 
 
 def test_parser_compare_json_flag():
-    """Parser should accept --json with compare command."""
+    """Parser should accept --json with compare command (2+ repos)."""
     from ara.cli import build_parser
 
     parser = build_parser()
     args = parser.parse_args(["compare", "--json", "owner/a", "owner/b"])
     assert args.json is True
     assert args.repos == ["owner/a", "owner/b"]
+
+    # Also works with 3 repos
+    args3 = parser.parse_args(["compare", "--json", "a/x", "b/y", "c/z"])
+    assert args3.json is True
+    assert args3.repos == ["a/x", "b/y", "c/z"]
 
 
 @patch("ara.cli.GitHubClient")
