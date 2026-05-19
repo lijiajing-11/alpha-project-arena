@@ -404,6 +404,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--version", action="version", version=f"%(prog)s {__version__}"
     )
+    parser.add_argument(
+        "--retries", type=int, default=3,
+        help="Max retries per API request (default: 3)",
+    )
+    parser.add_argument(
+        "--retry-delay", type=float, default=1.0,
+        help="Base retry delay in seconds, doubles each attempt (default: 1.0)",
+    )
 
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
@@ -568,7 +576,10 @@ def main(argv: list | None = None) -> int:
     if getattr(args, "json", False) and args.command in json_handlers:
         args.func = json_handlers[args.command]
 
-    client = GitHubClient()
+    client = GitHubClient(
+        max_retries=args.retries,
+        retry_delay=args.retry_delay,
+    )
 
     try:
         args.func(args, client)

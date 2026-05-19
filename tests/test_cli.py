@@ -574,3 +574,58 @@ def test_resolve_winner_empty():
     from ara.cli import _resolve_winner
 
     assert _resolve_winner([]) is None
+
+
+# ===========================================================================
+# Global --retries / --retry-delay tests
+# ===========================================================================
+
+
+def test_parser_global_retries_default():
+    """Parser should default --retries to 3."""
+    from ara.cli import build_parser
+
+    parser = build_parser()
+    args = parser.parse_args(["stars", "owner/repo"])
+    assert args.retries == 3
+    assert args.retry_delay == 1.0
+
+
+def test_parser_global_retries_custom():
+    """Parser should accept custom --retries and --retry-delay."""
+    from ara.cli import build_parser
+
+    parser = build_parser()
+    args = parser.parse_args(
+        ["--retries", "5", "--retry-delay", "2.5", "stars", "owner/repo"]
+    )
+    assert args.retries == 5
+    assert args.retry_delay == 2.5
+
+
+def test_parser_global_retries_before_subcommand():
+    """Global options should work before any subcommand."""
+    from ara.cli import build_parser
+
+    parser = build_parser()
+    args = parser.parse_args(
+        ["--retries", "1", "battle", "owner/a", "owner/b"]
+    )
+    assert args.retries == 1
+    assert args.command == "battle"
+
+
+def test_main_passes_retry_params():
+    """main() should pass --retries and --retry-delay to GitHubClient."""
+    from ara.cli import main
+
+    with patch("ara.cli.GitHubClient.__init__", return_value=None) as mock_init:
+        with patch("ara.cli.GitHubClient.get_stars", return_value=42):
+            result = main(
+                ["--retries", "7", "--retry-delay", "0.5", "stars", "--json", "owner/repo"]
+            )
+    # Verify GitHubClient received the custom retry params
+    call_kwargs = mock_init.call_args[1]
+    assert call_kwargs["max_retries"] == 7
+    assert call_kwargs["retry_delay"] == 0.5
+    assert result == 0

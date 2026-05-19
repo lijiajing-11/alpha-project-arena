@@ -141,7 +141,7 @@ def _render_compare_ascii(repos_data: list[dict]) -> str:
         ratio = current_stars / max_stars if max_stars > 0 else 0
         filled = int(ratio * bar_width)
         bar = "█" * filled + "░" * (bar_width - filled)
-        pct = f"({int(ratio * 100)}%)" if ratio > 0 else ""
+        pct = f"({round(ratio * 100)}%)" if ratio > 0 else ""
         lines.append(
             f"  {color}{rd['repo']:<28}{RESET} "
             f"{color}{bar}{RESET} "

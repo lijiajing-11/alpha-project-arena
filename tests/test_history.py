@@ -208,3 +208,50 @@ class TestCmdHistoryCompare:
             sys.stdout = old_stdout
         output = captured.getvalue()
         assert "facebook/react" in output
+
+    def test_compare_three_repos(self, monkeypatch):
+        """Three repos should render without crashing."""
+        client = self._mock_client(monkeypatch)
+        captured = io.StringIO()
+        old_stdout = sys.stdout
+        sys.stdout = captured
+        try:
+            cmd_history_compare(
+                ["facebook/react", "vuejs/core", "sveltejs/svelte"],
+                client=client,
+            )
+        finally:
+            sys.stdout = old_stdout
+        output = captured.getvalue()
+        assert "facebook/react" in output
+        assert "vuejs/core" in output
+        assert "sveltejs/svelte" in output
+        assert "Star History Comparison" in output
+
+    def test_compare_all_empty_error(self, monkeypatch):
+        """All repos empty should show error."""
+        client = self._mock_client(monkeypatch)
+        captured = io.StringIO()
+        old_stdout = sys.stdout
+        sys.stdout = captured
+        try:
+            cmd_history_compare(["empty/repo"], client=client)
+        finally:
+            sys.stdout = old_stdout
+        output = captured.getvalue()
+        assert "No history data available" in output
+
+    def test_compare_all_empty_json(self, monkeypatch):
+        """All repos empty JSON should contain error key."""
+        client = self._mock_client(monkeypatch)
+        captured = io.StringIO()
+        old_stdout = sys.stdout
+        sys.stdout = captured
+        try:
+            cmd_history_compare(["empty/repo"], client=client, as_json=True)
+        finally:
+            sys.stdout = old_stdout
+        parsed = _json.loads(captured.getvalue())
+        assert parsed["command"] == "history"
+        assert parsed["mode"] == "compare"
+        assert "error" in parsed
