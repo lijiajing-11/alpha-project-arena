@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `ara summary <repo>` — One-line repo overview (stars, forks, issues, language, license, description)
 - `ara rank [--top N] [--json] [<repo> ...]` — Ranked leaderboard of repos by star count
 - `ara dashboard <repo...>` — Full repo overview dashboard panel
+- `ara insight <repo>` — Deep repository intelligence (star velocity, topics, age, relative time)
 - `ara watch --notify` — Desktop notification (terminal bell) on star changes
 
 ### Changed

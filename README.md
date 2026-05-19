@@ -54,7 +54,7 @@
 
 ## 🎬 Gallery
 
-> Get a feel for ARA in action — four commands, four vibes.
+> Get a feel for ARA in action — five commands, five vibes.
 
 ### 🏆 `ara rank` — Live Repository Leaderboard
 
@@ -117,6 +117,21 @@ $ ara dashboard facebook/react
 ║  📦 JavaScript                       ║
 ║  📄 MIT License                      ║
 ╚══════════════════════════════════════╝
+```
+
+### 🧠 `ara insight` — Deep Repository Intelligence
+
+```text
+$ ara insight facebook/react
+
+  facebook/react  — Insight
+  A declarative UI library
+
+  ★ 226,000 stars  ·  46.2/day  🔥 Hypersonic
+  ⑂ 47,000 forks  ·  ⚠ 1,200 open issues
+  ⎆ JavaScript  ·  © MIT
+  🏷  react, ui, javascript, declarative, frontend
+  📅 Created 2013-05-29  ·  Last updated 2 hours ago
 ```
 
 ---
@@ -227,7 +242,7 @@ python -m ara stars python/cpython
 
 ---
 
-## 🔥 4 commands to get you hooked
+## 🔥 5 commands to get you hooked
 
 | # | Command | What it does | Try it |
 |---|---------|--------------|--------|
@@ -235,6 +250,7 @@ python -m ara stars python/cpython
 | 2 | `ara battle <r1> <r2> <r3>` | Side-by-side ASCII arena showdown | `ara battle react vue svelte` |
 | 3 | `ara watch <repo>` | Real-time dashboard (30s refresh) | `ara watch tensorflow/tensorflow` |
 | 4 | `ara rank [--top N]` | Live Top N repo leaderboard 🔥 | `ara rank --top 10` |
+| 5 | `ara insight <repo>` | Deep data — star velocity, topics, age | `ara insight facebook/react` |
 
 Every command supports `--json` for piping into dashboards, CI pipelines, or `jq`.
 
