@@ -13,10 +13,10 @@ import time
 from ara import __version__
 from ara.core import GitHubClient
 from ara.display import (
-    format_multi_watch,
+    format_multi_watch_dashboard,
     format_repo_info,
-    format_compare,
-    compute_delta,
+    format_compare_table,
+    format_watch_dashboard,
     BOLD,
     CYAN,
     GREEN,
@@ -112,31 +112,41 @@ def cmd_stars_json(args: argparse.Namespace, client: GitHubClient) -> None:
 
 
 def cmd_watch(args: argparse.Namespace, client: GitHubClient) -> None:
-    """Handle `ara watch <repo> [<repo> ...]` command."""
+    """Handle `ara watch <repo> [<repo> ...]` command.
+
+    Displays a box-drawing dashboard that refreshes every 30 seconds.
+    Single repo → full dashboard; multiple repos → compact table.
+    Shows stars, forks, open issues, language, license with delta coloring.
+    """
     repos = args.repos
-    previous = {}
+    previous_infos: dict[str, dict] = {}
 
     print(f"{BOLD}{CYAN}ARA Star Tracker v{__version__}{RESET}")
     print(f"Watching {len(repos)} repo(s). Press Ctrl+C to stop.\n")
 
     try:
         while True:
-            snapshots = []
+            snapshots: list[tuple[str, dict, dict | None]] = []
             for repo in repos:
-                stars = client.get_stars(repo)
-                prev = previous.get(repo)
-                delta = compute_delta(stars, prev) if prev is not None else 0
-                previous[repo] = stars
-                snapshots.append((repo, stars, delta))
+                info = client.get_repo_info(repo)
+                prev = previous_infos.get(repo)
+                snapshots.append((repo, info, prev))
+                previous_infos[repo] = info
 
-            output = format_multi_watch(snapshots)
+            if len(repos) == 1:
+                repo, info, prev = snapshots[0]
+                output = format_watch_dashboard(repo, info, prev)
+            else:
+                output = format_multi_watch_dashboard(snapshots)
+
             print(output, end="")
 
             time.sleep(30)
     except KeyboardInterrupt:
         print(f"\n{BOLD}Watch ended.{RESET}")
         for repo in repos:
-            count = previous.get(repo, 0)
+            info = previous_infos.get(repo, {})
+            count = info.get("stars", 0)
             print(f"  {repo}: ★ {count:,}")
 
 
@@ -226,28 +236,54 @@ def cmd_compare(args: argparse.Namespace, client: GitHubClient) -> None:
     repo1, repo2 = args.repos[0], args.repos[1]
     info1 = client.get_repo_info(repo1)
     info2 = client.get_repo_info(repo2)
-    print(format_compare(info1, info2))
+    print(format_compare_table(info1, info2))
 
 
 def cmd_compare_json(args: argparse.Namespace, client: GitHubClient) -> None:
     """Handle `ara compare --json <repo1> <repo2>`."""
-    repo1, repo2 = args.repos[0], args.repos[1]
-    errors = []
-    try:
-        info1 = client.get_repo_info(repo1)
-    except (ValueError, RuntimeError) as e:
-        info1 = None
-        errors.append({"repo": repo1, "error": str(e)})
+    repos = args.repos[0:2]
+    results = client.get_multiple_repos_info(repos)
 
-    try:
-        info2 = client.get_repo_info(repo2)
-    except (ValueError, RuntimeError) as e:
-        info2 = None
-        errors.append({"repo": repo2, "error": str(e)})
+    errors = [r for r in results if "error" in r]
+    clean = [r for r in results if "error" not in r]
+
+    # Determine winner/leader from clean results only
+    winner = None
+    lead_by = None
+    fork_leader = None
+    issue_leader = None
+
+    if len(clean) == 2:
+        s1, s2 = clean[0].get("stars", 0), clean[1].get("stars", 0)
+        f1, f2 = clean[0].get("forks", 0), clean[1].get("forks", 0)
+        i1, i2 = clean[0].get("open_issues", 0), clean[1].get("open_issues", 0)
+
+        if s1 > s2:
+            winner = clean[0]["full_name"]
+            lead_by = s1 - s2
+        elif s2 > s1:
+            winner = clean[1]["full_name"]
+            lead_by = s2 - s1
+
+        if f1 > f2:
+            fork_leader = clean[0]["full_name"]
+        elif f2 > f1:
+            fork_leader = clean[1]["full_name"]
+
+        if i1 < i2:
+            issue_leader = clean[0]["full_name"]
+        elif i2 < i1:
+            issue_leader = clean[1]["full_name"]
+        else:
+            issue_leader = "Tie"
 
     print(json_result({
         "command": "compare",
-        "repos": [info1, info2],
+        "repos": clean if clean else results,
+        "winner": winner,
+        "lead_by": lead_by,
+        "fork_leader": fork_leader,
+        "issue_leader": issue_leader,
         "errors": errors or None,
     }))
 

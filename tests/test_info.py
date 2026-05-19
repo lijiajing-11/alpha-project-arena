@@ -230,10 +230,7 @@ def test_cmd_compare_json_output(capsys):
         "updated_at": "", "pushed_at": "",
     }
 
-    def mock_get_info(repo):
-        return {"owner/repo-a": info_a, "owner/repo-b": info_b}.get(repo, {})
-
-    mock_client.get_repo_info.side_effect = mock_get_info
+    mock_client.get_multiple_repos_info.return_value = [info_a, info_b]
 
     args = argparse.Namespace(repos=["owner/repo-a", "owner/repo-b"])
     cmd_compare_json(args, mock_client)
@@ -244,6 +241,10 @@ def test_cmd_compare_json_output(capsys):
     assert len(data["repos"]) == 2
     assert data["repos"][0]["full_name"] == "owner/repo-a"
     assert data["repos"][1]["full_name"] == "owner/repo-b"
+    assert data["winner"] == "owner/repo-a"
+    assert data["lead_by"] == 500
+    assert data["fork_leader"] == "owner/repo-a"
+    assert data["issue_leader"] == "owner/repo-a"
 
 
 # ===========================================================================
@@ -278,7 +279,7 @@ def test_format_repo_info_contains_fields():
 
 def test_format_compare_shows_winner():
     """format_compare should indicate the winning repo."""
-    from ara.display import format_compare
+    from ara.display import format_compare_table as format_compare
 
     info_a = {
         "name": "repo-a", "full_name": "owner/repo-a",
@@ -298,12 +299,12 @@ def test_format_compare_shows_winner():
     output = format_compare(info_a, info_b)
     assert "owner/repo-a" in output
     assert "owner/repo-b" in output
-    assert "wins by 500" in output
+    assert "WINS" in output
 
 
 def test_format_compare_tie():
     """format_compare should handle ties."""
-    from ara.display import format_compare
+    from ara.display import format_compare_table as format_compare
 
     info = {
         "name": "repo", "full_name": "owner/repo",

@@ -170,6 +170,23 @@ class GitHubClient:
         set_cached_stars(repo, stars)
         return stars
 
+    def get_multiple_repos_info(self, repos: list[str]) -> list[dict]:
+        """Batch-fetch info for multiple repos.
+
+        Fetches each repo sequentially (synchronous), checking cache first.
+        Returns a list of info dicts in input order.
+        If a single repo fails, its dict contains {"error": "..."}
+        and fetching continues for remaining repos.
+        """
+        results: list[dict] = []
+        for repo in repos:
+            try:
+                info = self.get_repo_info(repo)
+                results.append(info)
+            except (ValueError, RuntimeError) as e:
+                results.append({"error": str(e), "full_name": repo})
+        return results
+
     def get_repo_info(self, repo: str) -> dict:
         """Fetch full repository information from GitHub API.
 

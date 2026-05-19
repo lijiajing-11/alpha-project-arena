@@ -131,6 +131,214 @@ def format_multi_watch(data: list) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Watch dashboard (Task 002-A)
+# ---------------------------------------------------------------------------
+
+
+def _format_value(val) -> str:
+    """Format a single value for table cells — numbers get comma-separated."""
+    if val is None:
+        return "—"
+    if isinstance(val, int):
+        return f"{val:,}"
+    return str(val)
+
+
+def _delta_cell(delta: int | None) -> str:
+    """Format a delta cell with color: green +N, red -N, reset 0."""
+    if delta is None:
+        return " —  "
+    if delta > 0:
+        return f" {GREEN}(+{delta}){RESET} "
+    elif delta < 0:
+        return f" {RED}({delta}){RESET} "
+    return "  (0)  "
+
+
+def format_watch_dashboard(
+    repo_name: str,
+    info: dict,
+    previous_info: dict | None = None,
+    timestamp: str = "",
+) -> str:
+    """Format a single-repo watch dashboard with box-drawing table.
+
+    Args:
+        repo_name: Repository name (owner/repo).
+        info: Full repo info dict from GitHubClient.get_repo_info().
+        previous_info: Previous tick's info dict (for delta), or None.
+        timestamp: Current time string.
+
+    Returns:
+        A formatted string for terminal with CLEAR prefix so it refreshes.
+    """
+    stars = info.get("stars", 0)
+    forks = info.get("forks", 0)
+    issues = info.get("open_issues", 0)
+    lang = info.get("language") or "—"
+    lic = info.get("license") or "—"
+    updated = (info.get("updated_at") or "")[:19].replace("T", " ")
+    created = (info.get("created_at") or "")[:10]
+
+    prev_stars = previous_info.get("stars") if previous_info else None
+    prev_forks = previous_info.get("forks") if previous_info else None
+    prev_issues = previous_info.get("open_issues") if previous_info else None
+
+    delta_stars = stars - prev_stars if prev_stars is not None else None
+    delta_forks = forks - prev_forks if prev_forks is not None else None
+    delta_issues = issues - prev_issues if prev_issues is not None else None
+
+    stars_str = f"{stars:,}"
+    forks_str = f"{forks:,}"
+    issues_str = f"{issues:,}"
+
+    now = timestamp or datetime.now().strftime("%H:%M:%S")
+
+    lines = [
+        f"{CLEAR}",
+        f"{BOLD}{CYAN}╔════════════════════════════════════════════╗{RESET}",
+        f"{BOLD}{CYAN}║        📡 ARA Star Tracker — WATCH         ║{RESET}",
+        f"{BOLD}{CYAN}╚════════════════════════════════════════════╝{RESET}",
+        "",
+        "┌────────────────────┬────────────────────────┐",
+        f"│ Repository         │ {repo_name:<22} │",
+        "├────────────────────┼────────────────────────┤",
+        f"│ ⭐ Stars           │ {stars_str:<12}{_delta_cell(delta_stars)} │",
+        f"│ ⑂ Forks            │ {forks_str:<12}{_delta_cell(delta_forks)} │",
+        f"│ ⚠ Issues           │ {issues_str:<12}{_delta_cell(delta_issues)} │",
+        f"│ 🔤 Language        │ {lang:<22} │",
+        f"│ 📜 License         │ {lic:<22} │",
+        f"│ 🕐 Updated         │ {updated:<22} │",
+        f"│ 📅 Created         │ {created:<22} │",
+        "└────────────────────┴────────────────────────┘",
+        "",
+        f"Last updated: {now}  |  Press Ctrl+C to stop",
+    ]
+    return "\n".join(lines)
+
+
+def format_multi_watch_dashboard(
+    snapshots: list[tuple[str, dict, dict | None]],
+    timestamp: str = "",
+) -> str:
+    """Format a compact multi-repo watch table.
+
+    Args:
+        snapshots: List of (repo_name, info_dict, previous_info_or_None) tuples.
+        timestamp: Current time string.
+
+    Returns:
+        A formatted string for terminal with CLEAR prefix.
+    """
+    now = timestamp or datetime.now().strftime("%H:%M:%S")
+    n = len(snapshots)
+
+    # Determine column widths
+    repo_w = max(len(r) for r, _, _ in snapshots) + 2  # padding
+    repo_w = max(repo_w, 8)
+
+    col_defs = [
+        ("Stars", 8),
+        ("Forks", 6),
+        ("Issues", 6),
+        ("Lang", 6),
+        ("Lic", 6),
+    ]
+
+    def _format_compact(val, delta=None):
+        """Format a compact cell value, optionally with colored delta."""
+        s = _format_value(val)
+        if delta is not None:
+            if delta > 0:
+                s = f"{GREEN}{s}{RESET}"
+            elif delta < 0:
+                s = f"{RED}{s}{RESET}"
+        return s
+
+    rows = []
+    # Header row
+    header_parts = [f"│ {'Repo'.ljust(repo_w)} "]
+    for label, w in col_defs:
+        header_parts.append(f"│ {label.ljust(w)} ")
+    header_parts.append("│")
+    header = "".join(header_parts)
+
+    # Separator
+    sep_parts = ["├"]
+    sep_parts.append("─" * (repo_w + 2))
+    sep_parts.append("┤")
+    for _, w in col_defs:
+        sep_parts.append("─" * (w + 2))
+        sep_parts.append("┤")
+    sep = "".join(sep_parts[:-1])  # remove last extra
+
+    top_sep = "┌" + "─" * (len(header) - 2) + "┐"
+    bot_sep = "└" + "─" * (len(header) - 2) + "┘"
+
+    # Fix top separator — measure actual header width
+    header_len = len(header)
+    top_sep = "┌" + "─" * (header_len - 2) + "┐"
+    bot_sep = "└" + "─" * (header_len - 2) + "┘"
+
+    _headers = []
+    _headers.append(f"│ {'Repo'.ljust(repo_w)} ")
+    for label, w in col_defs:
+        _headers.append(f"│ {label.ljust(w)} ")
+    _headers.append("│")
+    header_str = "".join(_headers)
+
+    _sep = []
+    _sep.append("├" + "─" * (repo_w + 2) + "┤")
+    for _, w in col_defs:
+        _sep.append("─" * (w + 2) + "┤")
+    sep_str = "".join(_sep)
+
+    _top = "┌" + "─" * (len(header_str) - 2) + "┐"
+    _bot = "└" + "─" * (len(header_str) - 2) + "┘"
+
+    lines = [
+        f"{CLEAR}",
+        f"{BOLD}{CYAN}╔══════════════════════════════════════════════════════════════════╗{RESET}",
+        f"{BOLD}{CYAN}║        📡 ARA Multi-Watch                                       ║{RESET}",
+        f"{BOLD}{CYAN}╚══════════════════════════════════════════════════════════════════╝{RESET}",
+        "",
+        _top,
+        header_str,
+        sep_str,
+    ]
+
+    for repo, info, prev in snapshots:
+        stars = info.get("stars", 0)
+        forks = info.get("forks", 0)
+        issues = info.get("open_issues", 0)
+        lang = (info.get("language") or "—")[:6]
+        lic = (info.get("license") or "—")[:6]
+
+        p_stars = prev.get("stars") if prev else None
+        p_forks = prev.get("forks") if prev else None
+        p_issues = prev.get("open_issues") if prev else None
+
+        d_stars = stars - p_stars if p_stars is not None else None
+        d_forks = forks - p_forks if p_forks is not None else None
+        d_issues = issues - p_issues if p_issues is not None else None
+
+        row_parts = [f"│ {repo.ljust(repo_w)} "]
+        row_parts.append(f"│ {_format_compact(stars, d_stars).ljust(8)} ")
+        row_parts.append(f"│ {_format_compact(forks, d_forks).ljust(6)} ")
+        row_parts.append(f"│ {_format_compact(issues, d_issues).ljust(6)} ")
+        row_parts.append(f"│ {lang.ljust(6)} ")
+        row_parts.append(f"│ {lic.ljust(6)} ")
+        row_parts.append("│")
+        lines.append("".join(row_parts))
+
+    lines.append(_bot)
+    lines.append("")
+    lines.append(f"Watching {n} repo{'s' if n > 1 else ''}  ·  {now}  ·  Ctrl+C to stop")
+
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
 # Repo info display
 # ---------------------------------------------------------------------------
 
@@ -176,110 +384,118 @@ def format_repo_info(info: dict) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Repo comparison display
+# Repo comparison display — table layout (Task 002-B)
 # ---------------------------------------------------------------------------
 
 
-def _compare_cell(
-    label: str,
-    val1: str | int | list | None,
-    val2: str | int | list | None,
-    width: int = 28,
-    higher_is_better: bool = True,
-) -> tuple[str, str]:
-    """Format two cells for a comparison row, highlighting the better value.
-
-    Returns:
-        Tuple of (col1_str, col2_str) for the left and right columns.
-    """
-    if isinstance(val1, (int, float)) and isinstance(val2, (int, float)):
-        color1 = GREEN if val1 > val2 else (RED if val1 < val2 else RESET)
-        color2 = GREEN if val2 > val1 else (RED if val2 < val1 else RESET)
-        if not higher_is_better:
-            color1 = RED if color1 == GREEN else (GREEN if color1 == RED else RESET)
-            color2 = RED if color2 == GREEN else (GREEN if color2 == RED else RESET)
-        s1 = f"{color1}{val1:,}{RESET}" if isinstance(val1, int) else f"{color1}{val1}{RESET}"
-        s2 = f"{color2}{val2:,}{RESET}" if isinstance(val2, int) else f"{color2}{val2}{RESET}"
-    elif val1 and not val2:
-        s1 = f"{GREEN}{val1}{RESET}"
-        s2 = f"{RED}—{RESET}"
-    elif val2 and not val1:
-        s1 = f"{RED}—{RESET}"
-        s2 = f"{GREEN}{val2}{RESET}"
-    else:
-        if val1 is not None and val2 is not None and val1 == val2:
-            s1 = s2 = str(val1)
-        else:
-            s1 = str(val1 or "—")
-            s2 = str(val2 or "—")
-
-    if isinstance(val1, list):
-        s1 = ", ".join(val1) if val1 else "—"
-    if isinstance(val2, list):
-        s2 = ", ".join(val2) if val2 else "—"
-
-    return s1.ljust(width), s2.ljust(width)
-
-
-def format_compare(repo1: dict, repo2: dict) -> str:
-    """Format a side-by-side comparison of two repositories.
+def format_compare_table(repo1: dict, repo2: dict) -> str:
+    """Format a side-by-side comparison using table layout with box-drawing chars.
 
     Args:
         repo1: Dict from GitHubClient.get_repo_info().
         repo2: Dict from GitHubClient.get_repo_info().
 
     Returns:
-        A formatted multi-line string.
+        A formatted string with borders, ANSI colors, and winner declaration.
     """
-    # Determine column widths based on repo names
-    name_w = max(len(repo1["full_name"]), len(repo2["full_name"]), 20)
-    val_w = name_w + 4
+    name1 = repo1.get("full_name", "Repo A")
+    name2 = repo2.get("full_name", "Repo B")
 
-    name1 = f"{BOLD}{CYAN}{repo1['full_name']}{RESET}"
-    name2 = f"{BOLD}{CYAN}{repo2['full_name']}{RESET}"
+    # Column widths based on repo names, min 18
+    col_w = max(len(name1), len(name2), 18) + 2
+
+    def _fmt_num(val) -> str:
+        if val is None:
+            return "—"
+        return f"{val:,}"
+
+    fields = [
+        ("⭐ Stars", "stars", True),
+        ("⑂ Forks", "forks", True),
+        ("⚠ Issues", "open_issues", False),
+        ("🔤 Language", "language", None),
+        ("📜 License", "license", None),
+        ("📅 Created", "created_at", None),
+        ("🕐 Updated", "updated_at", None),
+    ]
+
+    rows = []
+    for label, key, higher_better in fields:
+        v1 = repo1.get(key)
+        v2 = repo2.get(key)
+        is_numeric = isinstance(v1, (int, float)) and isinstance(v2, (int, float))
+
+        if is_numeric:
+            s1 = _fmt_num(v1)
+            s2 = _fmt_num(v2)
+            if higher_better or higher_better is None:
+                c1 = GREEN if v1 > v2 else (RED if v1 < v2 else RESET)
+                c2 = GREEN if v2 > v1 else (RED if v2 < v1 else RESET)
+            else:
+                c1 = GREEN if v1 < v2 else (RED if v1 > v2 else RESET)
+                c2 = GREEN if v2 < v1 else (RED if v2 > v1 else RESET)
+        else:
+            s1 = str(v1) if v1 else "—"
+            s2 = str(v2) if v2 else "—"
+            c1 = c2 = RESET
+
+        # Determine victor column
+        if is_numeric and higher_better is not None:
+            if v1 > v2:
+                victor = f"🏆 {name1.split('/')[-1]}"
+            elif v2 > v1:
+                victor = f"🏆 {name2.split('/')[-1]}"
+            else:
+                victor = "—"
+        else:
+            victor = "—"
+
+        rows.append(
+            f"│ {label.ljust(14)} │ {c1}{s1.rjust(col_w)}{RESET} │ {c2}{s2.rjust(col_w)}{RESET} │ {victor.ljust(int(col_w * 0.6 + 4))} │"
+        )
+
+    label_w = 14
+    victor_w = int(col_w * 0.6 + 4)
+
+    header_line = f"│ {'Metric'.ljust(label_w)} │ {name1.ljust(col_w)} │ {name2.ljust(col_w)} │ {'Victor'.ljust(victor_w)} │"
+    top_sep = "┌" + "─" * (len(header_line) - 2) + "┐"
+    sep_line = "├" + "─" * (label_w + 2) + "┼" + "─" * (col_w + 2) + "┼" + "─" * (col_w + 2) + "┼" + "─" * (victor_w + 2) + "┤"
+    bot_sep = "└" + "─" * (len(header_line) - 2) + "┘"
 
     lines = [
         "",
-        f"{BOLD}╔══ Repo Comparison ══╗{RESET}",
-        f"║  {name1}  vs  {name2}",
-        f"{BOLD}╚══════════════════════╝{RESET}",
+        f"{BOLD}{CYAN}╔══════════════════════════════════════════════════════════╗{RESET}",
+        f"{BOLD}{CYAN}║             ⚖️  REPO COMPARISON                          ║{RESET}",
+        f"{BOLD}{CYAN}╚══════════════════════════════════════════════════════════╝{RESET}",
         "",
-        f"  {'Metric'.ljust(16)}  {repo1['full_name'].ljust(val_w)}  {repo2['full_name'].ljust(val_w)}",
-        f"  {'─' * 16}  {'─' * val_w}  {'─' * val_w}",
+        top_sep,
+        header_line,
+        sep_line,
     ]
-
-    fields = [
-        ("Stars", "stars", True),
-        ("Forks", "forks", True),
-        ("Open Issues", "open_issues", False),
-        ("Language", "language", None),
-        ("License", "license", None),
-    ]
-
-    for label, key, higher_better in fields:
-        c1, c2 = _compare_cell(
-            label,
-            repo1.get(key),
-            repo2.get(key),
-            width=val_w,
-            higher_is_better=higher_better if higher_better is not None else True,
-        )
-        lines.append(f"  {label.ljust(16)}  {c1}  {c2}")
-
-    # Topics line
-    t1 = ", ".join(repo1.get("topics", [])) or "—"
-    t2 = ", ".join(repo2.get("topics", [])) or "—"
-    lines.append(f"  {'Topics'.ljust(16)}  {t1.ljust(val_w)}  {t2.ljust(val_w)}")
-
+    lines.extend(rows)
+    lines.append(bot_sep)
     lines.append("")
 
     # Winner declaration
-    s1 = repo1.get("stars", 0)
-    s2 = repo2.get("stars", 0)
+    s1 = repo1.get("stars", 0) or 0
+    s2 = repo2.get("stars", 0) or 0
+    f1 = repo1.get("forks", 0) or 0
+    f2 = repo2.get("forks", 0) or 0
+
     if s1 > s2:
-        lines.append(f"  {GREEN}★ {repo1['full_name']} wins by {s1 - s2:,} stars!{RESET}")
+        lines.append(f"🏆 {BOLD}{GREEN}{name1}{RESET} WINS!")
+        lines.append(f"   Leads by {s1 - s2:,} stars over {name2.split('/')[-1]}")
+        if f1 > f2:
+            lines.append(f"   Also leads in forks: {f1 - f2} more")
+        elif f2 > f1:
+            lines.append(f"   Trails in forks by {f2 - f1}")
     elif s2 > s1:
-        lines.append(f"  {GREEN}★ {repo2['full_name']} wins by {s2 - s1:,} stars!{RESET}")
+        lines.append(f"🏆 {BOLD}{GREEN}{name2}{RESET} WINS!")
+        lines.append(f"   Leads by {s2 - s1:,} stars over {name1.split('/')[-1]}")
+        if f2 > f1:
+            lines.append(f"   Also leads in forks: {f2 - f1} more")
+        elif f1 > f2:
+            lines.append(f"   Trails in forks by {f1 - f2}")
     else:
         lines.append(f"  {YELLOW}★ It's a tie at {s1:,} stars each!{RESET}")
 

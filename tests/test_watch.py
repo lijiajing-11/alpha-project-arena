@@ -131,3 +131,169 @@ def test_watch_command_integration(MockClient):
     result = run_watch("owner/repo", mock_instance)
     mock_instance.get_stars.assert_called_once_with("owner/repo")
     assert result == 1234, f"Expected star count 1234, got: {result}"
+
+
+# ===========================================================================
+# Dashboard format tests (Task 002-A)
+# ===========================================================================
+
+
+def _make_info(
+    full_name="owner/repo",
+    stars=12345,
+    forks=234,
+    open_issues=12,
+    language="Python",
+    license="MIT",
+    created_at="2020-01-15T00:00:00Z",
+    updated_at="2026-05-19T14:30:22Z",
+) -> dict:
+    return {
+        "full_name": full_name,
+        "stars": stars,
+        "forks": forks,
+        "open_issues": open_issues,
+        "language": language,
+        "license": license,
+        "created_at": created_at,
+        "updated_at": updated_at,
+        "description": "A test repo",
+        "topics": ["test"],
+        "html_url": f"https://github.com/{full_name}",
+    }
+
+
+def test_format_watch_dashboard_has_box_chars():
+    """Single-repo dashboard should use box-drawing characters."""
+    from ara.display import format_watch_dashboard
+
+    info = _make_info()
+    result = format_watch_dashboard("owner/repo", info)
+    assert "╔" in result
+    assert "╗" in result
+    assert "┌" in result
+    assert "┐" in result
+    assert "│" in result
+    assert "└" in result
+
+
+def test_format_watch_dashboard_shows_repo_name():
+    """Dashboard should display the repository name."""
+    from ara.display import format_watch_dashboard
+
+    info = _make_info(full_name="owner/awesome")
+    result = format_watch_dashboard("owner/awesome", info)
+    assert "owner/awesome" in result
+
+
+def test_format_watch_dashboard_shows_all_fields():
+    """Dashboard should include Stars, Forks, Issues, Language, License, Created, Updated."""
+    from ara.display import format_watch_dashboard
+
+    info = _make_info(stars=5000, forks=100, open_issues=5, language="Rust", license="Apache-2.0")
+    result = format_watch_dashboard("owner/repo", info)
+    assert "Stars" in result
+    assert "Forks" in result
+    assert "Issues" in result
+    assert "Language" in result
+    assert "License" in result
+    assert "Updated" in result
+    assert "Created" in result
+    assert "5,000" in result
+    assert "100" in result
+    assert "Rust" in result
+    assert "Apache" in result or "Apache-2.0" in result
+
+
+def test_format_watch_dashboard_delta_green():
+    """Positive delta should show green ANSI (+N)."""
+    from ara.display import format_watch_dashboard
+
+    info = _make_info(stars=100)
+    prev = _make_info(stars=95)
+    result = format_watch_dashboard("owner/repo", info, prev)
+    # Green ANSI code around (+5)
+    assert "[92m" in result
+    assert "(+5)" in result
+
+
+def test_format_watch_dashboard_delta_red():
+    """Negative delta should show red ANSI (-N)."""
+    from ara.display import format_watch_dashboard
+
+    info = _make_info(stars=90)
+    prev = _make_info(stars=100)
+    result = format_watch_dashboard("owner/repo", info, prev)
+    # Red ANSI code around (-10)
+    assert "[91m" in result
+    assert "(-10)" in result
+
+
+def test_format_watch_dashboard_no_prev_no_delta():
+    """First tick (no previous_info) should not show delta sign."""
+    from ara.display import format_watch_dashboard
+
+    info = _make_info(stars=100)
+    result = format_watch_dashboard("owner/repo", info)
+    assert "(+0)" not in result or "(0)" in result
+
+
+def test_format_watch_dashboard_with_timestamp():
+    """Dashboard should accept a custom timestamp string."""
+    from ara.display import format_watch_dashboard
+
+    info = _make_info()
+    result = format_watch_dashboard("owner/repo", info, timestamp="12:34:56")
+    assert "12:34:56" in result
+
+
+def test_format_multi_watch_dashboard_has_box_chars():
+    """Multi-repo dashboard should use box-drawing characters."""
+    from ara.display import format_multi_watch_dashboard
+
+    snapshots = [
+        ("owner/a", _make_info(full_name="owner/a", stars=100), None),
+        ("owner/b", _make_info(full_name="owner/b", stars=50), None),
+    ]
+    result = format_multi_watch_dashboard(snapshots)
+    assert "╔" in result
+    assert "┌" in result
+    assert "│" in result
+    assert "└" in result
+
+
+def test_format_multi_watch_dashboard_shows_both_repos():
+    """Multi-repo table should include all repo names."""
+    from ara.display import format_multi_watch_dashboard
+
+    snapshots = [
+        ("owner/alpha", _make_info(full_name="owner/alpha", stars=1000), None),
+        ("owner/beta", _make_info(full_name="owner/beta", stars=500), None),
+    ]
+    result = format_multi_watch_dashboard(snapshots)
+    assert "owner/alpha" in result
+    assert "owner/beta" in result
+
+
+def test_format_multi_watch_dashboard_shows_count():
+    """Multi-repo footer should show watching N repos."""
+    from ara.display import format_multi_watch_dashboard
+
+    snapshots = [
+        ("owner/a", _make_info(full_name="owner/a"), None),
+        ("owner/b", _make_info(full_name="owner/b"), None),
+    ]
+    result = format_multi_watch_dashboard(snapshots)
+    assert "2 repos" in result or "2 repo" in result
+
+
+def test_format_multi_watch_dashboard_single_repo_footer():
+    """Single-repo in multi-watch should say '1 repo' not '1 repos'."""
+    from ara.display import format_multi_watch_dashboard
+
+    snapshots = [
+        ("owner/solo", _make_info(full_name="owner/solo"), None),
+    ]
+    result = format_multi_watch_dashboard(snapshots)
+    assert "1 repo" in result
+
