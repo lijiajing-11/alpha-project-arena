@@ -53,8 +53,8 @@
   <a href="https://github.com/lijiajing-11/alpha-project-arena/actions/workflows/ci.yml">
     <img src="https://img.shields.io/github/actions/workflow/status/lijiajing-11/alpha-project-arena/ci.yml?branch=main&label=CI&logo=github" alt="CI"/>
   </a>
-  <a href="https://img.shields.io/badge/tests-242_passing-22c55e">
-    <img src="https://img.shields.io/badge/tests-242_passing-22c55e" alt="Tests"/>
+  <a href="https://img.shields.io/badge/tests-251_passing-22c55e">
+    <img src="https://img.shields.io/badge/tests-251_passing-22c55e" alt="Tests"/>
   </a>
   <a href="https://img.shields.io/badge/code_style-ruff-22c55e">
     <img src="https://img.shields.io/badge/code_style-ruff-22c55e" alt="Ruff"/>
@@ -512,7 +512,7 @@ alpha-project-arena/
 │   ├── generate_stars.py # Stargazer JSON tool
 │   ├── colors.py         # Shared ANSI colour constants
 │   └── console.py        # Console entry point
-├── tests/                # Test suite (pytest, 242+ tests)
+├── tests/                # Test suite (pytest, 251+ tests)
 ├── scripts/
 │   └── demo.py           # Demo output generator
 ├── docs/                 # Documentation & screenshots (coming soon)
