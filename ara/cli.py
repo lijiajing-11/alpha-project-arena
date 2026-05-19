@@ -29,6 +29,7 @@ from ara.generate_stars import cmd_generate_stars
 from ara.dashboard import cmd_dashboard
 from ara.summary import cmd_summary, cmd_summary_json
 from ara.rank import cmd_rank, cmd_rank_json
+from ara.insight import cmd_insight
 
 
 def run_watch(repo: str, client: GitHubClient, previous: int | None = None) -> int:
@@ -429,6 +430,14 @@ def build_parser() -> argparse.ArgumentParser:
         "--json", action="store_true", help="Output as JSON"
     )
     summary_parser.set_defaults(func=cmd_summary)
+
+    # ara insight <repo>
+    insight_parser = subparsers.add_parser(
+        "insight",
+        help="Deep repository insight -- star velocity, topics, age, and more",
+    )
+    insight_parser.add_argument("repo", help="Repository (owner/repo)")
+    insight_parser.set_defaults(func=lambda args: cmd_insight(args.repo))
 
     # ara rank [--top N] [--json] [<repo> ...]
     rank_parser = subparsers.add_parser(

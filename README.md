@@ -225,11 +225,11 @@ Every command supports `--json` for piping into dashboards, CI pipelines, or `jq
 
 ## 📖 Commands
 
-All 10 commands, sorted from quick-check to head-to-head analysis. Every command supports `--json`.
+All 11 commands, sorted from quick-check to head-to-head analysis. Every command supports `--json`.
 
 | Command | Description | Quick example |
 |---------|-------------|---------------|
-| 🆕 `ara summary <repo...>` | One-line repo summary (README-ready) | `ara summary owner/project` |
+| 🆕 `ara summary <repo>` | One-line repo summary (README-ready) | `ara summary owner/project` |
 | 📊 `ara dashboard <repo...>` | Full repo overview panel | `ara dashboard owner/project` |
 | 🔍 `ara stars <repo...>` | Quick star count(s) | `ara stars owner/project` |
 | 👀 `ara watch <repo...>` | Real-time live watch (30s refresh) | `ara watch owner/project` |
@@ -237,6 +237,7 @@ All 10 commands, sorted from quick-check to head-to-head analysis. Every command
 | 🏆 `ara rank [--top N]` | Live Top N repo leaderboard 🔥 | `ara rank --top 10` |
 | 📈 `ara trends <repo>` | Star trend chart over time | `ara trends owner/repo` |
 | 📋 `ara info <repo...>` | Full repo metadata dump | `ara info owner/project` |
+| 🧠 `ara insight <repo>` | Deep insight — star velocity, topics, age | `ara insight owner/project` |
 | 🛠️ `ara generate-stars <repo>` | Fetch stargazers to JSON (demo tool) | `ara generate-stars python/cpython` |
 | ⚖️ `ara compare <r1> <r2>` | Head-to-head comparison table | `ara compare a/A b/B` |
 
