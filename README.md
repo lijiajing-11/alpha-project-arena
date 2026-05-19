@@ -184,9 +184,26 @@ Watching 1 repo(s). Press Ctrl+C to stop.
   ⏱  Press Ctrl+C to stop — a summary will print.
 ```
 
+### 4. `ara insight` — Deep Repository Intelligence
+
+```text
+$ ara insight facebook/react
+
+  facebook/react  — Insight
+  A declarative UI library
+
+  ★ 226,000 stars  ·  46.2/day  🔥 Hypersonic
+  ⑂ 47,000 forks  ·  ⚠ 1,200 open issues
+  ⎆ JavaScript  ·  © MIT
+  🏷  react, ui, javascript, declarative, frontend
+  📅 Created 2013-05-29  ·  Last updated 2 hours ago
+```
+
 > 💡 **Every command supports `--json`** — pipe into dashboards, CI, or `jq`.
 >
 > 🆕 **New in v0.3.0:** `ara rank` — live Top 10 repo leaderboard. Try `ara rank --top 20`!
+>
+> 🆕 **Hot off the press:** `ara insight` — star velocity, topics, age, and more. Try `ara insight facebook/react`!
 
 ---
 
