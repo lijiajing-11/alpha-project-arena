@@ -92,12 +92,11 @@ def test_format_forks_small():
 # ===========================================================================
 
 
-@patch("ara.rank.GitHubClient")
-def test_cmd_rank_basic(MockClient, capsys):
+def test_cmd_rank_basic(capsys):
     """cmd_rank should print ranking table with sorted repos."""
     from ara.rank import cmd_rank
 
-    mock_client = MockClient.return_value
+    mock_client = MagicMock()
     infos = [REPO_A, REPO_B, REPO_C]
 
     def mock_get_repo_info(repo):
