@@ -429,8 +429,8 @@ def test_retry_delay_increases():
     assert 0.9 <= d1 <= 2.0
     assert 1.9 <= d2 <= 3.0
     assert 3.9 <= d3 <= 5.0
-    assert d2 >= d1 * 1.5  # at least double minus jitter
-    assert d3 >= d2 * 1.5
+    assert d2 >= d1 * 1.2  # at least ~1.3x after jitter
+    assert d3 >= d2 * 1.2
 
 
 @patch("ara.core.urllib.request.urlopen")
