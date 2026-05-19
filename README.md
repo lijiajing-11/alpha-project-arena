@@ -53,8 +53,8 @@
   <a href="https://github.com/lijiajing-11/alpha-project-arena/actions/workflows/ci.yml">
     <img src="https://img.shields.io/github/actions/workflow/status/lijiajing-11/alpha-project-arena/ci.yml?branch=main&label=CI&logo=github" alt="CI"/>
   </a>
-  <a href="https://img.shields.io/badge/tests-242_passing-22c55e">
-    <img src="https://img.shields.io/badge/tests-242_passing-22c55e" alt="Tests"/>
+  <a href="https://img.shields.io/badge/tests-248_passing-22c55e">
+    <img src="https://img.shields.io/badge/tests-248_passing-22c55e" alt="Tests"/>
   </a>
   <a href="https://img.shields.io/badge/code_style-ruff-22c55e">
     <img src="https://img.shields.io/badge/code_style-ruff-22c55e" alt="Ruff"/>

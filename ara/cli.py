@@ -504,6 +504,15 @@ def main(argv: list | None = None) -> int:
     except RuntimeError as e:
         print(f"Error: {e}", file=sys.stderr)
         return 1
+    except KeyboardInterrupt:
+        print("\nInterrupted by user.", file=sys.stderr)
+        return 130
+    except (ConnectionError, TimeoutError) as e:
+        print(f"Network error: {e}", file=sys.stderr)
+        return 1
+    except Exception as e:
+        print(f"Unexpected error: {type(e).__name__}: {e}", file=sys.stderr)
+        return 1
 
     return 0
 
