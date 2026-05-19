@@ -112,6 +112,7 @@ options:
 | 6 | ⏳ **Smart retry + caching** | Exponential backoff on rate limits, 60s TTL cache |
 | 7 | 🔧 **Extensible** | Add a new command by adding one function to `cli.py` |
 | 8 | 📈 **Trend analysis** | `ara trends` shows stargazer history as an ASCII chart. Custom time windows and JSON export |
+| 9 | 🛠️ **Demo-friendly** | `ara generate-stars` fetches stargazers to JSON for analysis, demos, and README screenshots |
 
 ---
 
@@ -158,6 +159,7 @@ Six commands, sorted from quick-check to head-to-head analysis. Every command su
 | 🏟️ `ara battle <repo...>` | Arena bar-chart battle | `ara battle libA libB libC` |
 | 📈 `ara trends <repo>` | Star trend chart over time | `ara trends owner/repo` |
 | 📋 `ara info <repo...>` | Full repo metadata dump | `ara info owner/project` |
+| 🛠️ `ara generate-stars <repo>` | Fetch stargazers to JSON (demo tool) | `ara generate-stars python/cpython` |
 | ⚖️ `ara compare <r1> <r2>` | Head-to-head comparison table | `ara compare a/A b/B` |
 
 ---
