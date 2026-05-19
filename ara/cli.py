@@ -376,6 +376,7 @@ def main(argv: list | None = None) -> int:
         "battle": cmd_battle_json,
         "info": cmd_info_json,
         "compare": cmd_compare_json,
+        "trends": trends_cmd,
     }
     if getattr(args, "json", False) and args.command in json_handlers:
         args.func = json_handlers[args.command]
