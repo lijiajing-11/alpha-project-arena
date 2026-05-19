@@ -619,13 +619,16 @@ def test_main_passes_retry_params():
     """main() should pass --retries and --retry-delay to GitHubClient."""
     from ara.cli import main
 
-    with patch("ara.cli.GitHubClient.__init__", return_value=None) as mock_init:
-        with patch("ara.cli.GitHubClient.get_stars", return_value=42):
-            result = main(
-                ["--retries", "7", "--retry-delay", "0.5", "stars", "--json", "owner/repo"]
-            )
+    with patch("ara.cli.GitHubClient") as mock_client_class:
+        mock_instance = MagicMock()
+        mock_client_class.return_value = mock_instance
+        mock_instance.get_stars.return_value = 42
+        # get_stars_json calls get_stars internally
+        result = main(
+            ["--retries", "7", "--retry-delay", "0.5", "stars", "--json", "owner/repo"]
+        )
     # Verify GitHubClient received the custom retry params
-    call_kwargs = mock_init.call_args[1]
+    call_kwargs = mock_client_class.call_args[1]
     assert call_kwargs["max_retries"] == 7
     assert call_kwargs["retry_delay"] == 0.5
     assert result == 0
