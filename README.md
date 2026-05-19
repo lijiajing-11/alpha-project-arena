@@ -618,6 +618,24 @@ MIT © [lijiajing-11](https://github.com/lijiajing-11)
 
 ---
 
+## 💬 Stay Connected
+
+| Channel | Where | What for |
+|---------|-------|----------|
+| 🐙 **GitHub** | [alpha-project-arena](https://github.com/lijiajing-11/alpha-project-arena) | Issues, PRs, star history |
+| 📦 **PyPI** | [`ara`](https://pypi.org/project/ara/) | `pip install ara` |
+| 🐦 **X / Twitter** | [@ATechInc](https://x.com/ATechInc) | Announcements, teasers |
+| 📧 **Email** | dev@alpha-project.dev | Direct feedback |
+| ⭐ **Star us** | [Click here](https://github.com/lijiajing-11/alpha-project-arena) | Every star fuels the arena! |
+
+---
+
+## ⭐ Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=lijiajing-11/alpha-project-arena&type=Date)](https://star-history.com/#lijiajing-11/alpha-project-arena&Date)
+
+---
+
 <p align="center">
   <sub>
     <b>Built by </b>
