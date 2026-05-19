@@ -29,7 +29,7 @@ from ara.generate_stars import cmd_generate_stars
 from ara.dashboard import cmd_dashboard
 from ara.summary import cmd_summary, cmd_summary_json
 from ara.rank import cmd_rank, cmd_rank_json
-from ara.insight import cmd_insight
+from ara.insight import cmd_insight, cmd_insight_json
 
 
 def run_watch(repo: str, client: GitHubClient, previous: int | None = None) -> int:

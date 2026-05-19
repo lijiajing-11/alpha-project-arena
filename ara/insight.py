@@ -134,15 +134,9 @@ def _render_insight_text(data: dict) -> None:
     print()
 
 
-def cmd_insight(repo_str: str, client: GitHubClient | None = None):
-    """Execute the insight command for a single repo.
-
-    Args:
-        repo_str: Repository name (owner/repo).
-        client: Optional GitHubClient instance. Creates one if not provided.
-    """
-    client = client or GitHubClient()
-    data = _build_insight_data(repo_str, client)
+def cmd_insight(args, client: GitHubClient):
+    """Handle `ara insight <repo>` — deep repository insight."""
+    data = _build_insight_data(args.repo, client)
     _render_insight_text(data)
 
 
