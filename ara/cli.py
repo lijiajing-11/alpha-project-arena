@@ -30,6 +30,7 @@ from ara.dashboard import cmd_dashboard
 from ara.summary import cmd_summary, cmd_summary_json
 from ara.rank import cmd_rank, cmd_rank_json
 from ara.insight import cmd_insight, cmd_insight_json
+from ara.history import cmd_history
 
 
 def run_watch(repo: str, client: GitHubClient, previous: int | None = None) -> int:
@@ -62,6 +63,11 @@ def run_battle(repos: list, client: GitHubClient) -> str:
         stars = client.get_stars(repo)
         data.append((repo, stars))
     return format_battle(data)
+
+
+def _cmd_history_wrapper(args: argparse.Namespace, client: GitHubClient) -> None:
+    """Handle `ara history <repo>` — dispatch to cmd_history."""
+    cmd_history(args.repo, client=client, as_json=getattr(args, "json", False))
 
 
 # ---------------------------------------------------------------------------
@@ -439,6 +445,15 @@ def build_parser() -> argparse.ArgumentParser:
     insight_parser.add_argument("repo", help="Repository (owner/repo)")
     insight_parser.add_argument("--json", action="store_true", help="Output as JSON")
     insight_parser.set_defaults(func=cmd_insight)
+
+    # ara history <repo>
+    history_parser = subparsers.add_parser(
+        "history",
+        help="Show star growth history as an ASCII chart",
+    )
+    history_parser.add_argument("repo", help="Repository (owner/repo)")
+    history_parser.add_argument("--json", action="store_true", help="Output as JSON")
+    history_parser.set_defaults(func=_cmd_history_wrapper)
 
     # ara rank [--top N] [--json] [<repo> ...]
     rank_parser = subparsers.add_parser(
