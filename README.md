@@ -52,6 +52,73 @@
   </a>
 </p>
 
+## 🎬 Gallery
+
+> Get a feel for ARA in action — four commands, four vibes.
+
+### 🏆 `ara rank` — Live Repository Leaderboard
+
+```text
+🏆 ARA Rank — Top 10 Hot Repos
+┌───┬──────────────────────────────┬────────────┬────────┬────────────┐
+│ # │ Repo                         │     Stars   │  Forks │ Language   │
+├───┼──────────────────────────────┼────────────┼────────┼────────────┤
+│ 🥇 1 │ facebook/react               │    226,000 │  47k   │ JavaScript │
+│ 🥈 2 │ sveltejs/svelte              │     82,000 │   4k   │ TypeScript │
+│ 🥉 3 │ vuejs/core                   │     47,000 │   7k   │ TypeScript │
+│   4 │ vercel/next.js               │    126,000 │  26k   │ JavaScript │
+│   5 │ twbs/bootstrap               │    170,000 │  79k   │ CSS        │
+│   6 │ angular/angular              │     96,000 │  26k   │ TypeScript │
+│   7 │ d3/d3                        │    110,000 │  33k   │ JavaScript │
+│   8 │ nodejs/node                  │    108,000 │  30k   │ JavaScript │
+│   9 │ lodash/lodash                │     60,000 │   7k   │ JavaScript │
+│  10 │ jquery/jquery                │     60,000 │  21k   │ JavaScript │
+└───┴──────────────────────────────┴────────────┴────────┴────────────┘
+```
+
+### 📝 `ara summary` — One-Line Repo Overview
+
+```text
+$ ara summary facebook/react
+★ facebook/react · 226,000 stars · 47,000 forks · 1,200 issues · JavaScript · MIT License  —  A declarative UI library
+```
+
+### 🔔 `ara watch --notify` — Real-Time Monitoring + Desktop Notification
+
+```text
+$ ara watch --notify facebook/react
+
+ARA Star Tracker v0.3.0
+Watching 1 repo(s). Press Ctrl+C to stop.
+🔔 Notification mode: you'll hear a beep when stars change.
+
+┌ facebook/react ─────────────────────────────────────────────┐
+│ ⭐ 226,000 stars                                             │
+│ 🍴 47,000  forks                                             │
+│ ⚠  1,200   issues                                            │
+│ 📦 JavaScript                                                │
+│ 📄 MIT License                                               │
+└─────────────────────────────────────────────────────────────┘
+✨ +3 new stars gained while watching!
+```
+
+### 📊 `ara dashboard` — Full Repo Overview
+
+```text
+$ ara dashboard facebook/react
+
+╔══════════════════════════════════════╗
+║  📊 ARA Dashboard                   ║
+╟──────────────────────────────────────╢
+║  🔥 facebook/react                   ║
+║  ⭐ 226,000  stars                    ║
+║  🍴 47,000   forks                    ║
+║  ⚠  1,200    open issues              ║
+║  📦 JavaScript                       ║
+║  📄 MIT License                      ║
+╚══════════════════════════════════════╝
+```
+
 ---
 
 ## 🖼️ See It in Action ⚡
