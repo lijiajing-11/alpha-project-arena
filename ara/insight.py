@@ -49,7 +49,7 @@ def compute_star_velocity(stars: int, created_at: str) -> tuple:
 def compute_repo_age(created_at: str) -> tuple[float, str]:
     """Return (years, label) based on how many years since repo creation.
 
-    >>> yrs, label = compute_repo_age(\"2013-05-29T21:12:00Z\")
+    >>> yrs, label = compute_repo_age("2013-05-29T21:12:00Z")
     >>> yrs >= 12
     True
     """
@@ -106,15 +106,21 @@ def relative_time(iso_date: str) -> str:
         return "Unknown"
 
 
-def compute_influence_score(stars: int, forks: int, open_issues: int) -> float:
-    """Compute community influence score.
+def compute_influence_score(data: dict) -> float:
+    """Compute community influence score from an insight data dict.
 
     Formula: (Stars × 0.5 + Forks × 0.3 + Open Issues × 0.2) / 1000
 
-    >>> round(compute_influence_score(230000, 47000, 1200), 2)
-    129.1
+    A score > 100 is 'High Influence', > 10 is 'Moderate', < 10 is 'Low'.
+
+    >>> score = compute_influence_score({"stars": 226000, "forks": 47000, "open_issues": 1200})
+    >>> score > 100
+    True
     """
-    return round((stars * 0.5 + forks * 0.3 + open_issues * 0.2) / 1000, 2)
+    stars = data.get("stars", 0)
+    forks = data.get("forks", 0)
+    issues = data.get("open_issues", 0)
+    return round((stars * 0.5 + forks * 0.3 + issues * 0.2) / 1000, 2)
 
 
 def _build_insight_data(repo_str: str, client: GitHubClient) -> dict:
@@ -135,7 +141,7 @@ def _build_insight_data(repo_str: str, client: GitHubClient) -> dict:
     spd, speed_label = compute_star_velocity(stars, created_at)
     age_years, age_label = compute_repo_age(created_at)
     updated_rel = relative_time(updated_at)
-    influence = compute_influence_score(stars, forks, open_issues)
+    influence = compute_influence_score(repo)
 
     return {
         "full_name": full_name,
@@ -255,7 +261,7 @@ def cmd_insight(repo: str, client: GitHubClient, as_json: bool = False, show_tre
 # ===========================================================================
 
 
-_MEDAL_MAP = {0: "\\U0001f947", 1: "\\U0001f948", 2: "\\U0001f949"}
+def _add_influence_to_datas(datas: list[dict]) -> list[dict]:
     """Add influence score if missing and sort descending.
 
     _build_insight_data already includes influence_score. This ensures
@@ -269,11 +275,7 @@ _MEDAL_MAP = {0: "\\U0001f947", 1: "\\U0001f948", 2: "\\U0001f949"}
     """
     for d in datas:
         if "influence_score" not in d:
-            d["influence_score"] = compute_influence_score(
-                d.get("stars", 0),
-                d.get("forks", 0),
-                d.get("open_issues", 0),
-            )
+            d["influence_score"] = compute_influence_score(d)
     datas.sort(key=lambda d: d.get("influence_score", 0), reverse=True)
     return datas
 
@@ -301,10 +303,10 @@ def _pick_age_color(age_text: str) -> str:
 
 
 def _render_insight_compare_text(datas: list[dict]) -> None:
-    """Render N insight data dicts in a single-column ranked list.
+    """Render N insight data dicts in side-by-side columns.
 
-    Each repo shows full insight data plus influence score and medal.
-    Repos are sorted by influence score descending.
+    Each repo gets its own column with full insight data. Repos are sorted
+    by influence score descending, showing the strongest first.
 
     Args:
         datas: list of dicts from _build_insight_data().
@@ -313,14 +315,14 @@ def _render_insight_compare_text(datas: list[dict]) -> None:
         return
 
     datas = _add_influence_to_datas(datas)
+    n = len(datas)
+    COL_WIDTH = min(44, max(28, 88 // n))
 
-    print()
-    print(f"  {BOLD}{CYAN}\U0001f3c6 Insight Influence Ranking{RESET}")
-    print(f"  {GRAY}{'─' * 50}{RESET}")
-    print()
+    # Helper to format a single repo's insight into a list of lines
+    def _build_column(data: dict) -> tuple[list[str], list[str]]:
+        plain_lines: list[str] = []
+        ansi_lines: list[str] = []
 
-    for idx, data in enumerate(datas):
-        medal = _medal(idx)
         name = data["full_name"]
         desc = data.get("description", "")
         stars = data["stars"]
@@ -329,46 +331,118 @@ def _render_insight_compare_text(datas: list[dict]) -> None:
         lang = data.get("language", "N/A")
         lic = data.get("license", "None")
         topics = data.get("topics", [])
-        created = data.get("created_at", "")[:10] if data.get("created_at") else "N/A"
-        updated = data.get("updated_relative", "Unknown")
-        influence = data.get("influence_score", 0)
 
         spd = data["star_velocity"]["per_day"]
         vel_label = data["star_velocity"]["label"]
         age_label = data["repo_age"]["label"]
         age_text = age_label.split(" ", 1)[-1] if " " in age_label else age_label
         age_years = data["repo_age"]["years"]
-
+        influence = data.get("influence_score", 0)
         speed_color = _pick_speed_color(vel_label)
         age_color = _pick_age_color(age_text)
 
-        # Medal + name
-        print(f"  {medal} {BOLD}{CYAN}{name}{RESET}")
+        # Row 0: repo name
+        plain_lines.append(name)
+        ansi_lines.append(f"{BOLD}{CYAN}{name}{RESET}")
 
-        # Description
-        if desc:
-            print(f"     {GRAY}{desc[:70]}{'...' if len(desc) > 70 else ''}{RESET}")
+        # Row 1: description (truncated to COL_WIDTH)
+        desc_plain = desc[:COL_WIDTH] + ("..." if len(desc) > COL_WIDTH else "")
+        plain_lines.append(desc_plain)
+        ansi_lines.append(f"{GRAY}{desc_plain}{RESET}" if desc else "")
 
-        # Influence score — gold highlight
-        print(f"     {YELLOW}\U0001f4a1 Influence{RESET}: {BOLD}{GOLD}{influence:.2f}{RESET}  "
-              f"{YELLOW}\u2605{RESET} {BOLD}{stars:,}{RESET} stars  "
-              f"\u2382 {forks:,} forks  \u26a0 {open_issues:,} issues")
+        # Row 2: blank separator
+        plain_lines.append("")
+        ansi_lines.append("")
 
-        # Velocity + age
-        print(f"     +{spd}/day  {speed_color}{vel_label}{RESET}  \u00b7  "
-              f"{age_color}\U0001f4c5 {int(age_years)}yo {age_text}{RESET}")
+        # Row 3: stars + velocity + influence label
+        influence_label = "High" if influence > 100 else ("Moderate" if influence > 10 else "Low")
+        stars_str = f"{YELLOW}\u2605{RESET} {BOLD}{stars:,}{RESET} stars \u00b7 +{spd}/day  {speed_color}{vel_label}{RESET}"
+        stars_str += f"  {GRAY}({influence_label}){RESET}"
+        stars_plain = f"\u2605 {stars:,} stars \u00b7 +{spd}/day  {vel_label}  ({influence_label})"
+        plain_lines.append(stars_plain)
+        ansi_lines.append(stars_str)
 
-        # Language + license
-        print(f"     \u2386 {lang}  \u00a9 {lic}")
+        # Row 4: forks + issues
+        forks_str = f"{CYAN}\u2382{RESET} {forks:,} forks \u00b7 \u2620 {open_issues:,} open issues"
+        forks_plain = f"\u2382 {forks:,} forks \u00b7 \u2620 {open_issues:,} open issues"
+        plain_lines.append(forks_plain)
+        ansi_lines.append(forks_str)
 
-        # Topics
+        # Row 5: language + license + age
+        age_display = f"{int(age_years)}yo {age_text}"
+        meta_plain = f"\u2386 {lang} \u00b7 \u00a9 {lic} \u00b7 \U0001f4c5 {age_display}"
+        meta_ansi = f"{GRAY}\u2386{RESET} {lang} \u00b7 {GRAY}\u00a9{RESET} {lic} \u00b7 {age_color}\U0001f4c5 {age_display}{RESET}"
+        plain_lines.append(meta_plain)
+        ansi_lines.append(meta_ansi)
+
+        # Row 6: topics
+        SEP = " \u00b7 "
         if topics:
             display_topics = [t.capitalize() if t[0].islower() else t for t in topics[:5]]
-            print(f"     \U0001f3f7  {' · '.join(display_topics)}")
+            topics_plain = "\U0001f3f7  " + SEP.join(display_topics)
+            topics_ansi = f"\U0001f3f7  {SEP.join(display_topics)}"
+        else:
+            topics_plain = "\U0001f3f7  None"
+            topics_ansi = f"\U0001f3f7  {GRAY}None{RESET}"
+        plain_lines.append(topics_plain)
+        ansi_lines.append(topics_ansi)
 
-        # Created + updated
-        print(f"     \U0001f4c5 Created {created}  \u00b7 Last updated {updated}")
-        print()
+        return plain_lines, ansi_lines
+
+    # Build all columns
+    columns_plain: list[list[str]] = []
+    columns_ansi: list[list[str]] = []
+
+    for data in datas:
+        pl, an = _build_column(data)
+        columns_plain.append(pl)
+        columns_ansi.append(an)
+
+    # Normalise line counts
+    max_lines = max(len(c) for c in columns_plain)
+    for i in range(n):
+        while len(columns_plain[i]) < max_lines:
+            columns_plain[i].append("")
+            columns_ansi[i].append("")
+
+    # Render side-by-side
+    print()
+    for row_i in range(max_lines):
+        rendered = []
+        for col_i in range(n):
+            plain = columns_plain[col_i][row_i]
+            ansi = columns_ansi[col_i][row_i]
+            pad = COL_WIDTH - _visible_width(plain)
+            rendered.append(ansi + (" " * max(0, pad)))
+        COL_SEP = " \u2502 "
+        print(f"  {COL_SEP.join(rendered)}")
+
+    # ── COMPARISON SUMMARY ──
+    print()
+    print(f"  {'═' * 30}  COMPARISON  {'═' * 30}")
+    print()
+
+    # Star leader
+    stars_sorted = sorted(datas, key=lambda d: d["stars"], reverse=True)
+    print(f"  \u2605 Top: {BOLD}{CYAN}{stars_sorted[0]['full_name']}{RESET} ({stars_sorted[0]['stars']:,} \u2605)")
+
+    if len(datas) >= 2:
+        # Influence ranking
+        print(f"  \U0001f4c8 Influence Ranking:")
+        medals = ["\U0001f947", "\U0001f948", "\U0001f949", " 4.", " 5.", " 6.", " 7.", " 8.", " 9.", "10."]
+        for i, d in enumerate(datas):
+            medal = medals[i] if i < len(medals) else f" {i+1}."
+            label = "High" if d["influence_score"] > 100 else ("Moderate" if d["influence_score"] > 10 else "Low")
+            print(f"    {medal} {d['full_name']:<30} {d['influence_score']:>8.2f}  ({label})")
+
+        # Average velocity
+        avg_vel = sum(d["star_velocity"]["per_day"] for d in datas) / len(datas)
+        print(f"  \u26a1 Average velocity: {avg_vel:.1f} stars/day")
+
+        # Youngest
+        youngest = min(datas, key=lambda d: d["repo_age"]["years"])
+        print(f"  \U0001f4c5 Youngest: {BOLD}{CYAN}{youngest['full_name']}{RESET} ({youngest['repo_age']['years']}yo)")
+    print()
 
 
 def _render_compare_json(datas: list[dict]) -> str:
@@ -397,7 +471,7 @@ def _render_compare_json(datas: list[dict]) -> str:
         for i, d in enumerate(sorted_datas)
     ]
 
-    # Pairwise comparison for exactly 2 repos
+    # Comparison summary: 2-repo pairwise or 3+ multi-repo
     comparison = {}
     if len(sorted_datas) == 2:
         d0, d1 = sorted_datas
@@ -411,6 +485,19 @@ def _render_compare_json(datas: list[dict]) -> str:
             "velocity_ratio": round(max(v0, v1) / max(0.1, min(v0, v1)), 1),
             "younger": d0["full_name"] if d0["repo_age"]["years"] <= d1["repo_age"]["years"] else d1["full_name"],
             "age_gap_years": round(abs(d0["repo_age"]["years"] - d1["repo_age"]["years"]), 1),
+        }
+    elif len(sorted_datas) >= 3:
+        comparison = {
+            "top_repo": sorted_datas[0]["full_name"],
+            "top_stars": sorted_datas[0]["stars"],
+            "influence_ranking": [
+                {"repo": d["full_name"], "influence_score": d["influence_score"]}
+                for d in sorted_datas
+            ],
+            "average_velocity": round(
+                sum(d["star_velocity"]["per_day"] for d in sorted_datas) / len(sorted_datas), 1
+            ),
+            "youngest": min(sorted_datas, key=lambda d: d["repo_age"]["years"])["full_name"],
         }
 
     return _json.dumps({

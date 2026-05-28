@@ -467,6 +467,7 @@ def test_age_exact_teen():
 
 def _make_insight_data(full_name, stars, spd, age_years, topics=None):
     """Helper to build a mock insight data dict as produced by _build_insight_data."""
+    influence = (stars * 0.5 + (stars // 10) * 0.3 + (stars // 100) * 0.2) / 1000
     return {
         "full_name": full_name,
         "description": f"Description for {full_name}",
@@ -481,6 +482,7 @@ def _make_insight_data(full_name, stars, spd, age_years, topics=None):
         "created_at": "2020-01-01T00:00:00Z",
         "updated_at": "2026-01-01T00:00:00Z",
         "updated_relative": "4 months ago",
+        "influence_score": round(influence, 2),
     }
 
 
@@ -502,6 +504,150 @@ def test_render_compare_json_basic():
     assert parsed["comparison"]["star_gap"] == 500
     assert parsed["comparison"]["velocity_leader"] == "owner/alpha"
     assert parsed["comparison"]["younger"] == "owner/alpha"
+
+
+def test_render_compare_json_three_repos():
+    """_render_compare_json with 3 repos uses multi-repo comparison."""
+    from ara.insight import _render_compare_json
+    import json
+
+    d1 = _make_insight_data("owner/alpha", stars=1000, spd=20.0, age_years=3.0)
+    d2 = _make_insight_data("owner/beta", stars=500, spd=5.0, age_years=5.0)
+    d3 = _make_insight_data("owner/gamma", stars=200, spd=2.0, age_years=8.0)
+
+    result = _render_compare_json([d2, d1, d3])
+    parsed = json.loads(result)
+
+    assert parsed["command"] == "insight"
+    assert parsed["mode"] == "compare"
+    assert len(parsed["repos"]) == 3
+    assert parsed["comparison"]["top_repo"] == "owner/alpha"
+    assert parsed["comparison"]["top_stars"] == 1000
+    assert len(parsed["comparison"]["influence_ranking"]) == 3
+    assert parsed["comparison"]["influence_ranking"][0]["repo"] == "owner/alpha"
+
+
+# ===========================================================================
+# compute_influence_score
+# ===========================================================================
+
+
+def test_compute_influence_score():
+    """Influence score calculation is correct."""
+    from ara.insight import compute_influence_score
+    score = compute_influence_score({"stars": 226000, "forks": 47000, "open_issues": 1200})
+    assert score > 100
+
+
+def test_compute_influence_zero():
+    """Empty data returns 0."""
+    from ara.insight import compute_influence_score
+    score = compute_influence_score({"stars": 0, "forks": 0, "open_issues": 0})
+    assert score == 0.0
+
+
+# ===========================================================================
+# cmd_insight_compare — N-repo smoke tests (3+, influence sorting)
+# ===========================================================================
+
+
+def test_cmd_insight_compare_three_repos(monkeypatch):
+    """3-repo compare should not crash."""
+    from ara.insight import cmd_insight_compare
+
+    def mock_repo_info(self, repo):
+        data = _make_mock_react_data()
+        data["full_name"] = repo
+        data["stars"] = {"alpha/react": 226000, "vuejs/core": 47000, "sveltejs/svelte": 18000}.get(repo, 1000)
+        data["forks"] = data["stars"] // 5
+        data["open_issues"] = data["stars"] // 100
+        return data
+
+    monkeypatch.setattr("ara.core.GitHubClient.get_repo_info", mock_repo_info)
+
+    class Fake3Client:
+        def get_repo_info(self, repo):
+            return mock_repo_info(self, repo)
+
+    cmd_insight_compare(["alpha/react", "vuejs/core", "sveltejs/svelte"], Fake3Client())
+    # Should not raise
+
+
+def test_cmd_insight_compare_five_repos(monkeypatch):
+    """5-repo compare should not crash."""
+    from ara.insight import cmd_insight_compare
+
+    repos = ["repo/a", "repo/b", "repo/c", "repo/d", "repo/e"]
+
+    def mock_repo_info(self, repo):
+        stars_map = {r: (i + 1) * 1000 for i, r in enumerate(repos)}
+        return {
+            "full_name": repo,
+            "stars": stars_map.get(repo, 1000),
+            "forks": stars_map.get(repo, 1000) // 5,
+            "open_issues": stars_map.get(repo, 1000) // 100,
+            "language": "Python",
+            "license": "MIT",
+            "topics": ["web"],
+            "description": f"Description for {repo}",
+            "created_at": "2020-01-01T00:00:00Z",
+            "updated_at": "2026-05-19T00:00:00Z",
+            "pushed_at": "2026-05-19T00:00:00Z",
+            "html_url": f"https://github.com/{repo}",
+        }
+
+    monkeypatch.setattr("ara.core.GitHubClient.get_repo_info", mock_repo_info)
+
+    class Fake5Client:
+        def get_repo_info(self, repo):
+            return mock_repo_info(self, repo)
+
+    cmd_insight_compare(repos, Fake5Client())
+    # Should not raise
+
+
+def test_cmd_insight_compare_influence_sorting(monkeypatch):
+    """Output is sorted by influence score descending."""
+    from ara.insight import cmd_insight_compare
+
+    repos = ["low/impact", "medium/impact", "high/impact"]
+
+    def mock_repo_info(self, repo):
+        stars_map = {"low/impact": 100, "medium/impact": 1000, "high/impact": 10000}
+        s = stars_map.get(repo, 100)
+        return {
+            "full_name": repo,
+            "stars": s,
+            "forks": s // 5,
+            "open_issues": s // 100,
+            "language": "Python",
+            "license": "MIT",
+            "topics": ["web"],
+            "description": f"Description for {repo}",
+            "created_at": "2020-01-01T00:00:00Z",
+            "updated_at": "2026-05-19T00:00:00Z",
+            "pushed_at": "2026-05-19T00:00:00Z",
+            "html_url": f"https://github.com/{repo}",
+        }
+
+    monkeypatch.setattr("ara.core.GitHubClient.get_repo_info", mock_repo_info)
+
+    # Capture stdout
+    import io, sys
+    captured = io.StringIO()
+    old = sys.stdout
+    sys.stdout = captured
+    try:
+        cmd_insight_compare(repos, type("FakeClient", (), {"get_repo_info": mock_repo_info})())
+    finally:
+        sys.stdout = old
+
+    output = captured.getvalue()
+    # Check high/impact appears before low/impact
+    high_pos = output.index("high/impact")
+    medium_pos = output.index("medium/impact")
+    low_pos = output.index("low/impact")
+    assert high_pos < medium_pos < low_pos, "Should be sorted by influence descending"
 
 
 def test_render_compare_json_single_repo():
