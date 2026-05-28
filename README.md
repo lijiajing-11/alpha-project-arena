@@ -1,3 +1,18 @@
+<div align="center">
+
+# ⚡ ARA — GitHub 仓库分析利器
+
+> **中文** | [English ↓](#english-version)
+
+**实时追踪、PK 对比、深度分析任何 GitHub 仓库 — 全在终端里完成。**  
+*零依赖 · 一条命令 · 实时刷新 · 无需浏览器*
+
+</div>
+
+---
+
+<a name="english-version"></a>
+
 <h1 align="center">⚡ ARA — Arena Star Tracker</h1>
 
 <p align="center">
