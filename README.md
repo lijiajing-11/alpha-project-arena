@@ -80,7 +80,7 @@ pip install ara
 > ARA auto-retries on 429s with exponential backoff + jitter.
 
 ```bash
-# No pip? Clone and run directly — same zero-dependency experience.
+# Clone and run directly — zero dependency setup.
 git clone https://github.com/lijiajing-11/alpha-project-arena.git
 cd alpha-project-arena
 python -m ara stars python/cpython
@@ -251,6 +251,8 @@ $ ara history --compare facebook/react vuejs/core sveltejs/svelte
 | 📊 `ara dashboard <repo...>` | Full repo overview panel | `ara dashboard owner/project` |
 | 🔍 `ara stars <repo...>` | Quick star count(s) | `ara stars owner/project` |
 | 👀 `ara watch <repo...>` | Real-time live watch (30s refresh) | `ara watch owner/project` |
+| 👀 `ara watch --alert <condition>` | Live watch + alert when condition met | `ara watch owner/proj --alert "velocity > 50"` |
+| 📄 **`ara report <repo>`** | **Generate Markdown/HTML report** | **`ara report owner/proj --format md`** |
 | 📈 `ara history <repo>` | Star growth ASCII timeline chart | `ara history owner/project` |
 | 📈 `ara history --compare <repo...>` | Multi-repo star history comparison (coloured bars) | `ara history --compare react vue svelte` |
 | 🏟️ `ara battle <repo...>` | Arena bar-chart battle | `ara battle libA libB libC` |
@@ -261,7 +263,7 @@ $ ara history --compare facebook/react vuejs/core sveltejs/svelte
 | 🛠️ `ara generate-stars <repo>` | Fetch stargazers to JSON (demo tool) | `ara generate-stars python/cpython` |
 | ⚖️ `ara compare <r1> <r2>` | Head-to-head comparison table | `ara compare a/A b/B` |
 
-> 💡 **New in v0.3.2:** `ara watch --notify` — desktop notifications when star count changes.
+> 💡 **New in v0.4.0:** `ara report <repo>` — generate Markdown/HTML reports. `ara watch --alert <condition>` — threshold alerting for stars, forks, velocity.
 > Terminal bell + plyer desktop notification with graceful fallback on WSL.
 >
 > 🚀 **New in v0.4.0:** `ara insight repo1 repo2 repo3 ...` — **multi-repo comparison** with community **Influence Score** (Stars×0.5 + Forks×0.3 + Issues×0.2 / 1000). Up to N repos, side-by-side, ranked by influence.
@@ -364,6 +366,51 @@ $ ara battle facebook/react vuejs/core
 # Winner declared in JSON
 ara battle --json facebook/react vuejs/core
 ```
+
+```
+
+### 📄 `ara report` — One-Command README-Ready Report
+
+Generate a full Markdown report (ready to paste into README or article) or an HTML snippet (ready to embed in a webpage).
+
+```text
+$ ara report facebook/react --format md
+
+# 📊 facebook/react
+> The library for web and native user interfaces.
+
+| ⭐ Stars          | 245,363  | 🚀 Star Velocity   | 51.6/day (🚀 Hypersonic) |
+| 📅 Created        | 2013-05  | 🏆 Influence Score | 138.3                    |
+| 🍴 Forks          | 51,147   | 🐛 Open Issues     | 1,308                    |
+```
+
+```bash
+# Save HTML snippet to file
+ara report facebook/react --format html --output react-card.html
+
+# Generate Markdown and pipe to clipboard
+ara report facebook/react --format md | pbcopy   # macOS
+ara report facebook/react --format md | clip      # Windows
+```
+
+> 💡 **Use case:** Write a tech article. Run `ara report owner/repo --format md`. Paste the output. Done.
+
+### 👀 `ara watch --alert` — Threshold Alerting
+
+```bash
+# Alert when star velocity exceeds 50/day
+ara watch facebook/react --alert "velocity > 50"
+# 🚨 ALERT: facebook/react velocity(51.6/day) > 50
+
+# Alert when total stars exceed 200K
+ara watch facebook/react --alert "stars > 200000"
+# 🚨 ALERT: facebook/react stars(245363.0) > 200000
+
+# Alert when a small project breaks into 4-digit stars
+ara watch your-new-project/repo --alert "stars > 1000"
+```
+
+Triggered alerts fire once (no repeat spam) + desktop notification when available.
 
 ### 📋 `ara info` — Repository Details
 
@@ -640,7 +687,7 @@ ARA automatically **retries** on rate limits (429), server errors (5xx), and tra
 | `ara battle` | ✅ | Arena bar-chart showdown |
 | `ara compare` | ✅ | Head-to-head comparison table |
 | `ara watch` | ✅ | Real-time live dashboard (30s refresh) |
-| `ara watch --notify` | ✅ | Desktop notifications on star changes |
+| `ara watch --alert` | ✅ | Threshold alerting (stars, forks, velocity) | | `ara report` | ✅ | Generate Markdown/HTML reports |
 | `ara history` | ✅ | Star growth ASCII timeline chart |
 | `ara history --compare` | ✅ | Multi-repo star history comparison |
 | `ara trends` | ✅ | Star trend analysis over time |
