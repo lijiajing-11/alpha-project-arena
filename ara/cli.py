@@ -30,6 +30,7 @@ from ara.history import cmd_history, cmd_history_compare
 from ara.insight import cmd_insight, cmd_insight_compare
 from ara.rank import cmd_rank, cmd_rank_json
 from ara.summary import cmd_summary, cmd_summary_json
+from ara.report import cmd_report
 from ara.trends import cmd_trends as trends_cmd
 
 
@@ -200,6 +201,8 @@ def cmd_watch(args: argparse.Namespace, client: GitHubClient) -> None:
     notify = getattr(args, "notify", False)
     changed_repos: set[str] = set()
     total_new_stars = 0
+    alert_condition = getattr(args, "alert", None)
+    alert_triggered: set[str] = set()  # track which repos already triggered
 
     print(f"{BOLD}{CYAN}ARA Star Tracker v{__version__}{RESET}")
     print(f"Watching {len(repos)} repo(s). Press Ctrl+C to stop.")
@@ -243,6 +246,48 @@ def cmd_watch(args: argparse.Namespace, client: GitHubClient) -> None:
                 output = format_watch_dashboard(repo, info, prev)
             else:
                 output = format_multi_watch_dashboard(snapshots)
+
+            # --alert evaluation
+            if alert_condition and snapshots:
+                try:
+                    parts = alert_condition.split()
+                    if len(parts) == 3:
+                        field, op, threshold_str = parts
+                        threshold = float(threshold_str)
+                        for repo_name, info, _prev in snapshots:
+                            if repo_name in alert_triggered:
+                                continue
+                            # Compute the field value
+                            stars = info.get("stars", 0)
+                            forks = info.get("forks", 0)
+                            if field == "stars":
+                                val = float(stars)
+                            elif field == "forks":
+                                val = float(forks)
+                            elif field == "velocity":
+                                from ara.insight import compute_star_velocity
+                                val, _ = compute_star_velocity(stars, info.get("created_at", ""))
+                            else:
+                                val = 0.0
+                            # Evaluate
+                            triggered = False
+                            if op == ">" and val > threshold:
+                                triggered = True
+                            elif op == ">=" and val >= threshold:
+                                triggered = True
+                            elif op == "<" and val < threshold:
+                                triggered = True
+                            elif op == "<=" and val <= threshold:
+                                triggered = True
+                            elif op == "==" and abs(val - threshold) < 0.01:
+                                triggered = True
+                            if triggered:
+                                alert_triggered.add(repo_name)
+                                msg = f"🚨 ALERT: {repo_name} {field} = {val:.1f} {op} {threshold:.0f}"
+                                print(f"\n  {BOLD}{RED}{msg}{RESET}")
+                                _send_notification("ARA Alert", msg)
+                except (ValueError, IndexError):
+                    pass  # silently ignore malformed alert conditions
 
             print(output, end="")
 
@@ -442,6 +487,10 @@ def build_parser() -> argparse.ArgumentParser:
         "--notify", action="store_true",
         help="Desktop notification + terminal bell on star changes"
     )
+    watch_parser.add_argument(
+        "--alert", type=str, default=None,
+        help='Alert condition, e.g. "velocity > 100" or "stars > 10000"'
+    )
     watch_parser.set_defaults(func=cmd_watch)
 
     # ara battle <repo1> <repo2> [<repo3> ...]
@@ -566,6 +615,22 @@ def build_parser() -> argparse.ArgumentParser:
     )
     rank_parser.add_argument("--json", action="store_true", help="Output as JSON")
     rank_parser.set_defaults(func=cmd_rank)
+
+    # ara report <repo> [--format md|html] [--output FILE]
+    report_parser = subparsers.add_parser(
+        "report",
+        help="Generate a detailed Markdown/HTML report for a repo",
+    )
+    report_parser.add_argument("repo", help="Repository (owner/repo)")
+    report_parser.add_argument(
+        "--format", type=str, default="md", choices=["md", "html"],
+        help="Output format: md (default) or html",
+    )
+    report_parser.add_argument(
+        "--output", "-o", type=str, default=None,
+        help="Save report to file instead of stdout",
+    )
+    report_parser.set_defaults(func=cmd_report)
 
     return parser
 
